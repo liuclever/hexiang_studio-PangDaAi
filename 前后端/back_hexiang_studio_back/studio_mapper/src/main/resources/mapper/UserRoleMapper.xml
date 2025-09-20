@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.back_hexiang_studio.mapper.UserRoleMapper">
+
+    <!-- 删除单个用户的角色关联 -->
+    <delete id="deleteByUserId" parameterType="java.lang.Long">
+        DELETE FROM user_role
+        WHERE user_id = #{userId}
+    </delete>
+    
+    <!-- 批量删除用户的角色关联 -->
+    <delete id="deleteByUserIds" parameterType="java.util.List">
+        DELETE FROM user_role
+        WHERE user_id IN
+        <foreach collection="userIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper> 

@@ -1,0 +1,9 @@
+{
+  "usingComponents": {
+    "t-icon": "tdesign-miniprogram/icon/icon"
+  },
+  "navigationBarTitleText": "值班考勤",
+  "enablePullDownRefresh": true,
+  "onReachBottomDistance": 50,
+  "backgroundColor": "#f5f5f7"
+} 

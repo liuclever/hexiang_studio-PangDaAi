@@ -1,0 +1,60 @@
+<view class="login-container">
+  <!-- Logo区域 -->
+  <view class="logo-area">
+    <view class="logo-card" hover-class="logo-card-hover" hover-stay-time="100">
+      <image class="logo" src="/images/logo.svg" mode="aspectFit"></image>
+      <text class="title">何湘技能大师工作室</text>
+      <text class="subtitle">高效管理工作室各项业务</text>
+    </view>
+  </view>
+
+  <!-- 登录表单 -->
+  <view class="form-area" hover-class="form-area-hover" hover-stay-time="100">
+    <view class="input-group">
+      <view class="input-item">
+        <view class="input-icon">
+          <image src="/images/icons/user.png" mode="aspectFit"></image>
+        </view>
+        <input 
+          class="input-field" 
+          type="text" 
+          placeholder="用户名/学号" 
+          placeholder-class="placeholder"
+          value="{{username}}"
+          bindinput="inputUsername"
+        />
+      </view>
+
+      <view class="input-item">
+        <view class="input-icon">
+          <image src="/images/icons/password.png" mode="aspectFit"></image>
+        </view>
+        <input 
+          class="input-field" 
+          password 
+          placeholder="密码" 
+          placeholder-class="placeholder"
+          value="{{password}}"
+          bindinput="inputPassword"
+        />
+      </view>
+    </view>
+
+    <!-- 忘记密码 -->
+    <view class="options-row">
+      <text class="forgot-password" bindtap="goToForgotPassword">忘记密码?</text>
+    </view>
+
+    <!-- 登录按钮 -->
+    <button 
+      class="login-btn" 
+      type="primary" 
+      loading="{{isLoading}}" 
+      disabled="{{isLoading}}"
+      bindtap="submitLogin"
+    >登录</button>
+    
+  </view>
+
+
+</view> 

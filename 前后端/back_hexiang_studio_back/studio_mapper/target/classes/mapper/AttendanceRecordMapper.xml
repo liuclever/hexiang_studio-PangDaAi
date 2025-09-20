@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.back_hexiang_studio.mapper.AttendanceRecordMapper">
+    
+    <!-- 结果映射 -->
+    <resultMap id="recordResultMap" type="com.back_hexiang_studio.entity.AttendanceRecord">
+        <id column="record_id" property="recordId"/>
+        <result column="plan_id" property="planId"/>
+        <result column="student_id" property="studentId"/>
+        <result column="status" property="status"/>
+        <result column="sign_in_time" property="signInTime"/>
+        <result column="location" property="location"/>
+        <result column="location_lat" property="locationLat"/>
+        <result column="location_lng" property="locationLng"/>
+        <result column="remark" property="remark"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="update_user" property="updateUser"/>
+    </resultMap>
+    
+    <!-- 插入考勤记录 -->
+    <insert id="insert" parameterType="com.back_hexiang_studio.entity.AttendanceRecord" useGeneratedKeys="true" keyProperty="recordId">
+        INSERT INTO attendance_record (
+            plan_id, student_id, status, sign_in_time, location, location_lat, 
+            location_lng, remark, create_time, update_time, update_user
+        ) VALUES (
+            #{planId}, #{studentId}, #{status}, #{signInTime}, #{location}, #{locationLat}, 
+            #{locationLng}, #{remark}, #{createTime}, #{updateTime}, #{updateUser}
+        )
+    </insert>
+    
+    <!-- 根据ID查询考勤记录 -->
+    <select id="selectById" parameterType="long" resultMap="recordResultMap">
+        SELECT * FROM attendance_record WHERE record_id = #{recordId}
+    </select>
+    
+    <!-- 更新考勤记录 (动态SQL) -->
+    <update id="update" parameterType="com.back_hexiang_studio.entity.AttendanceRecord">
+        UPDATE attendance_record
+        <set>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="signInTime != null">
+                sign_in_time = #{signInTime},
+            </if>
+            <if test="location != null and location != ''">
+                location = #{location},
+            </if>
+            <if test="locationLat != null">
+                location_lat = #{locationLat},
+            </if>
+            <if test="locationLng != null">
+                location_lng = #{locationLng},
+            </if>
+            <if test="remark != null">
+                remark = #{remark},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime},
+            </if>
+            <if test="updateUser != null">
+                update_user = #{updateUser},
+            </if>
+        </set>
+        WHERE record_id = #{recordId}
+    </update>
+    
+    <!-- 删除考勤记录 -->
+    <delete id="deleteById" parameterType="long">
+        DELETE FROM attendance_record WHERE record_id = #{recordId}
+    </delete>
+    
+    <!-- 根据计划ID和学生ID查询考勤记录 -->
+    <select id="findByPlanAndStudent" resultMap="recordResultMap">
+        SELECT * FROM attendance_record 
+        WHERE plan_id = #{planId} AND student_id = #{studentId}
+    </select>
+    
+    <!-- 调整现有方法，使其符合Java接口的命名 -->
+    <select id="findByPlanIdAndStudentId" resultMap="recordResultMap">
+        SELECT * FROM attendance_record 
+        WHERE plan_id = #{planId} AND student_id = #{studentId}
+    </select>
+    
+    <!-- 查询考勤记录列表 -->
+    <select id="selectByPage" parameterType="map" resultType="map">
+        SELECT
+            r.record_id as record_id, r.plan_id as plan_id, r.student_id as student_id, r.status as status, r.sign_in_time as sign_in_time, r.location as location,
+            r.location_lat as location_lat, r.location_lng as location_lng, r.remark as remark, r.create_time as create_time, r.update_time as update_time,
+            p.name as plan_name, p.type as plan_type, p.location as plan_location, p.start_time as start_time, p.end_time as end_time,
+            p.location_lat as plan_location_lat, p.location_lng as plan_location_lng, p.radius as plan_radius,
+            u.name as student_name,
+            c.name as course_name
+        FROM attendance_record r
+        LEFT JOIN attendance_plan p ON r.plan_id = p.plan_id
+        LEFT JOIN student s ON r.student_id = s.student_id
+        LEFT JOIN user u ON s.user_id = u.user_id
+        LEFT JOIN course c ON p.course_id = c.course_id
+        <where>
+            <if test="params.planId != null">
+                AND r.plan_id = #{params.planId}
+            </if>
+            <if test="params.type != null and params.type != ''">
+                AND p.type = #{params.type}
+            </if>
+            <if test="params.keyword != null and params.keyword != ''">
+                AND p.name LIKE CONCAT('%', #{params.keyword}, '%')
+            </if>
+            <if test="params.studentName != null and params.studentName != ''">
+                AND u.name LIKE CONCAT('%', #{params.studentName}, '%')
+            </if>
+            <if test="params.status != null and params.status != ''">
+                AND r.status = #{params.status}
+            </if>
+            <if test="params.studentId != null">
+                AND r.student_id = #{params.studentId}
+            </if>
+            <if test="params.startDate != null">
+                AND p.start_time >= #{params.startDate}
+            </if>
+            <if test="params.endDate != null">
+                AND p.end_time &lt;= #{params.endDate}
+            </if>
+        </where>
+        ORDER BY p.start_time DESC, r.record_id DESC
+    </select>
+    
+    <!-- 查询考勤记录总数 -->
+    <select id="selectCount" parameterType="map" resultType="int">
+        SELECT COUNT(*) 
+        FROM attendance_record r
+        LEFT JOIN attendance_plan p ON r.plan_id = p.plan_id
+        LEFT JOIN student s ON r.student_id = s.student_id
+        LEFT JOIN user u ON s.user_id = u.user_id
+        <where>
+            <if test="params.planId != null">
+                AND r.plan_id = #{params.planId}
+            </if>
+            <if test="params.type != null and params.type != ''">
+                AND p.type = #{params.type}
+            </if>
+            <if test="params.keyword != null and params.keyword != ''">
+                AND p.name LIKE CONCAT('%', #{params.keyword}, '%')
+            </if>
+            <if test="params.studentName != null and params.studentName != ''">
+                AND u.name LIKE CONCAT('%', #{params.studentName}, '%')
+            </if>
+            <if test="params.status != null and params.status != ''">
+                AND r.status = #{params.status}
+            </if>
+            <if test="params.startDate != null">
+                AND p.start_time >= #{params.startDate}
+            </if>
+            <if test="params.endDate != null">
+                AND p.end_time &lt;= #{params.endDate}
+            </if>
+        </where>
+    </select>
+    
+    <!-- 查询学生的考勤统计数据 -->
+    <select id="getStudentStatistics" parameterType="long" resultType="map">
+        SELECT 
+      r.student_id,
+      COUNT(*) as totalCount,
+      SUM(CASE WHEN r.status = 'present' THEN 1 ELSE 0 END) as presentCount,
+      SUM(CASE WHEN r.status = 'late' THEN 1 ELSE 0 END) as lateCount,
+      SUM(CASE WHEN r.status = 'absent' THEN 1 ELSE 0 END) as absentCount,
+      SUM(CASE WHEN r.status = 'leave' THEN 1 ELSE 0 END) as leaveCount
+        FROM attendance_record r
+        WHERE r.student_id = #{studentId}
+        GROUP BY r.student_id
+    </select>
+    
+    <!-- 查询课程的考勤统计数据 -->
+    <select id="getCourseStatistics" parameterType="long" resultType="map">
+        SELECT 
+        p.course_id,
+        COUNT(*) as totalCount,
+        SUM(CASE WHEN r.status = 'present' THEN 1 ELSE 0 END) as presentCount,
+        SUM(CASE WHEN r.status = 'late' THEN 1 ELSE 0 END) as lateCount,
+        SUM(CASE WHEN r.status = 'absent' THEN 1 ELSE 0 END) as absentCount,
+        SUM(CASE WHEN r.status = 'leave' THEN 1 ELSE 0 END) as leaveCount
+        FROM attendance_record r
+        JOIN attendance_plan p ON r.plan_id = p.plan_id
+        WHERE p.course_id = #{courseId}
+        GROUP BY p.course_id
+    </select>
+    
+    <!-- 查询指定日期范围内的考勤记录 -->
+    <select id="selectByDateRange" resultMap="recordResultMap">
+        SELECT r.* FROM attendance_record r
+        JOIN attendance_plan p ON r.plan_id = p.plan_id
+        WHERE DATE(p.start_time) BETWEEN #{startDate} AND #{endDate}
+    </select>
+    
+    <!-- 按类型和状态统计考勤记录数量,DATE(p.start_time)转为年月日 -->
+    <select id="countByTypeAndStatus" resultType="map">
+        SELECT 
+       CAST(COUNT(*) AS SIGNED) as total,
+       CAST(SUM(CASE WHEN r.status = 'present' THEN 1 ELSE 0 END) AS SIGNED) as present,
+       CAST(SUM(CASE WHEN r.status = 'late' THEN 1 ELSE 0 END) AS SIGNED) as late,
+       CAST(SUM(CASE WHEN r.status = 'absent' THEN 1 ELSE 0 END) AS SIGNED) as absent,
+       CAST(SUM(CASE WHEN r.status = 'leave' THEN 1 ELSE 0 END) AS SIGNED) as leave_count
+        FROM attendance_record r
+        JOIN attendance_plan p ON r.plan_id = p.plan_id
+        WHERE p.type = #{type} AND DATE(p.start_time) = #{date}
+
+    </select>
+    <!--查询类型和考勤计划为未签到的记录-->
+    <select id="findByPlanAndStatus" resultType="com.back_hexiang_studio.entity.AttendanceRecord">
+    SELECT * FROM attendance_record WHERE plan_id = #{planId} AND status = #{attendanceStatus}
+    </select>
+    
+    <!-- 根据计划ID删除所有考勤记录 -->
+    <delete id="deleteByPlanId" parameterType="long">
+        DELETE FROM attendance_record WHERE plan_id = #{planId}
+    </delete>
+    
+    <!-- 批量插入考勤记录 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO attendance_record (
+            plan_id, student_id, status, sign_in_time, location, location_lat, 
+            location_lng, remark, create_time, update_time, update_user
+        ) VALUES 
+        <foreach collection="list" item="record" separator=",">
+            (
+                #{record.planId}, #{record.studentId}, #{record.status}, #{record.signInTime}, 
+                #{record.location}, #{record.locationLat}, #{record.locationLng}, 
+                #{record.remark}, #{record.createTime}, #{record.updateTime}, #{record.updateUser}
+            )
+        </foreach>
+    </insert>
+
+    <!-- 根据计划ID获取考勤统计 -->
+    <select id="getStatisticsForPlan" parameterType="long" resultType="map">
+        SELECT 
+            COUNT(*) as total,
+            SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END) as presentCount,
+            SUM(CASE WHEN status = 'late' THEN 1 ELSE 0 END) as lateCount,
+            SUM(CASE WHEN status = 'absent' THEN 1 ELSE 0 END) as absentCount,
+            SUM(CASE WHEN status = 'leave' THEN 1 ELSE 0 END) as leaveCount
+        FROM attendance_record
+        WHERE plan_id = #{planId}
+    </select>
+
+    <!-- 根据计划ID查询所有考勤记录（包括学生姓名） -->
+    <select id="selectRecordsByPlanId" parameterType="long" resultType="map">
+        SELECT
+            r.*,
+            u.name as student_name
+        FROM attendance_record r
+        JOIN student s ON r.student_id = s.student_id
+        JOIN user u ON s.user_id = u.user_id
+        WHERE r.plan_id = #{planId}
+        ORDER BY r.create_time DESC
+    </select>
+
+    <!-- 更新考勤状态和备注 -->
+    <update id="updateStatusAndRemark">
+        UPDATE attendance_record
+        SET
+            status = #{status},
+            remark = #{remark},
+            update_time = NOW()
+        WHERE record_id = #{recordId}
+    </update>
+
+    <!-- Get Student Rankings By Status -->
+    <select id="getStudentRankingsByStatus" resultType="map">
+        SELECT
+            s.student_id,
+            u.name as student_name,
+            COUNT(ar.record_id) as count
+        FROM attendance_record ar
+        JOIN student s ON ar.student_id = s.student_id
+        JOIN user u ON s.user_id = u.user_id
+        <where>
+            ar.status = #{status}
+            <if test="params.type != null and params.type != ''">
+                AND ar.plan_id IN (SELECT plan_id FROM attendance_plan WHERE type = #{params.type})
+            </if>
+            <if test="params.startDate != null">
+                AND ar.sign_in_time >= #{params.startDate}
+            </if>
+            <if test="params.endDate != null">
+                AND ar.sign_in_time &lt;= #{params.endDate}
+            </if>
+        </where>
+        GROUP BY s.student_id, u.name
+        ORDER BY count DESC
+        LIMIT 10
+    </select>
+
+    <!-- Get Course Rankings By Status -->
+    <select id="getCourseRankingsByStatus" resultType="map">
+        SELECT
+            c.course_id,
+            c.name as course_name,
+            COUNT(ar.record_id) as total_records,
+            SUM(CASE WHEN ar.status = #{status} THEN 1 ELSE 0 END) as status_count,
+            (SUM(CASE WHEN ar.status = #{status} THEN 1 ELSE 0 END) * 100.0 / COUNT(ar.record_id)) as rate
+        FROM attendance_record ar
+        JOIN attendance_plan ap ON ar.plan_id = ap.plan_id
+        JOIN course c ON ap.course_id = c.course_id
+        <where>
+            ap.type = 'course'
+            <if test="params.startDate != null">
+                AND ap.start_time >= #{params.startDate}
+            </if>
+            <if test="params.endDate != null">
+                AND ap.end_time &lt;= #{params.endDate}
+            </if>
+        </where>
+        GROUP BY c.course_id, c.name
+        ORDER BY rate DESC
+        LIMIT 10
+    </select>
+
+    <!-- 根据计划ID查询考勤记录 -->
+    <select id="selectByPlanId" parameterType="long" resultMap="recordResultMap">
+        SELECT * FROM attendance_record WHERE plan_id = #{planId}
+    </select>
+
+    <!-- 查询学生考勤统计列表 -->
+    <select id="getStudentStatisticsList" parameterType="map" resultType="map">
+        SELECT
+            s.student_id,
+            u.name as student_name,
+            s.student_number as student_number,
+            COUNT(r.record_id) as total_count,
+            SUM(CASE WHEN r.status = 'present' THEN 1 ELSE 0 END) as present_count,
+            SUM(CASE WHEN r.status = 'late' THEN 1 ELSE 0 END) as late_count,
+            SUM(CASE WHEN r.status = 'absent' THEN 1 ELSE 0 END) as absent_count,
+            SUM(CASE WHEN r.status = 'leave' THEN 1 ELSE 0 END) as leave_count
+        FROM student s
+        JOIN user u ON s.user_id = u.user_id
+        LEFT JOIN attendance_record r ON s.student_id = r.student_id
+        LEFT JOIN attendance_plan p ON r.plan_id = p.plan_id
+        <where>
+            <if test="params.type != null and params.type != ''">
+                AND p.type = #{params.type}
+            </if>
+            <if test="params.startDate != null">
+                AND p.start_time >= #{params.startDate}
+            </if>
+            <if test="params.endDate != null">
+                AND p.end_time &lt;= #{params.endDate}
+            </if>
+        </where>
+        GROUP BY s.student_id, u.name, s.student_number
+        ORDER BY total_count DESC
+    </select>
+
+    <!-- 根据日期范围查询值班考勤记录 -->
+    <select id="findAttendanceRecordsByDateRange" resultType="map">
+        SELECT 
+            ar.record_id as id, 
+            ar.plan_id, 
+            ar.student_id, 
+            ar.status as attendance_status, 
+            ap.start_time,
+            DATE_FORMAT(ap.start_time, '%Y-%m-%d') AS duty_date,
+            CONCAT(
+                DATE_FORMAT(ap.start_time, '%H:%i'), 
+                '-', 
+                DATE_FORMAT(ap.end_time, '%H:%i')
+            ) AS time_slot,
+            s.student_name,
+            s.student_number
+        FROM 
+            attendance_record ar
+        JOIN 
+            attendance_plan ap ON ar.plan_id = ap.plan_id
+        JOIN 
+            student s ON ar.student_id = s.student_id
+        WHERE 
+            DATE(ap.start_time) BETWEEN #{startDate} AND #{endDate}
+            AND ap.type = 'duty'
+        ORDER BY 
+            ap.start_time ASC
+    </select>
+
+    <!-- 根据日期范围获取值班考勤状态 -->
+    <select id="getDutyAttendanceStatusInRange" resultType="map">
+        SELECT 
+            ar.student_id, 
+            DATE_FORMAT(ap.start_time, '%Y-%m-%d') AS duty_date,
+            CONCAT(
+                DATE_FORMAT(ap.start_time, '%H:%i'), 
+                '-', 
+                DATE_FORMAT(ap.end_time, '%H:%i')
+            ) AS time_slot,
+            ar.status as attendance_status
+        FROM 
+            attendance_record ar
+        JOIN 
+            attendance_plan ap ON ar.plan_id = ap.plan_id
+        WHERE 
+            DATE(ap.start_time) BETWEEN #{startDate} AND #{endDate}
+            AND ap.type = 'duty'
+        ORDER BY 
+            ap.start_time ASC
+    </select>
+
+    <!-- 根据学生ID和时间范围，将考勤记录状态更新为“请假” -->
+    <update id="updateStatusToLeaveByTimeRange">
+        UPDATE attendance_record ar
+        JOIN attendance_plan ap ON ar.plan_id = ap.plan_id
+        SET 
+            ar.status = 'leave',
+            ar.remark = '经批准的请假',
+            ar.update_time = NOW(),
+            ar.update_user = #{updateUser}
+        WHERE 
+            ar.student_id = #{studentId}
+            AND ap.start_time &lt;= #{endTime}
+            AND ap.end_time >= #{startTime}
+    </update>
+
+    <!-- 根据学生ID和考勤计划ID查询考勤记录列表 -->
+    <select id="getByPlanIdAndStudentId" resultMap="recordResultMap">
+        SELECT * FROM attendance_record 
+        WHERE plan_id = #{planId} AND student_id = #{studentId}
+    </select>
+
+</mapper> 

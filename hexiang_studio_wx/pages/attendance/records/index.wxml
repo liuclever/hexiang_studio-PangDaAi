@@ -1,0 +1,134 @@
+<!--pages/attendance/records/index.wxml-->
+<view class="container">
+  <!-- 顶部导航区域 -->
+  <view class="header">
+    <view class="title-area">
+      <text class="page-title">我的考勤记录</text>
+    </view>
+    
+    <!-- 筛选区域 -->
+    <view class="filter-bar">
+      <view class="filter-chips">
+        <view class="chip {{filters.status === '' ? 'active' : ''}}" bindtap="setQuickFilter" data-type="status" data-value="">
+          全部状态
+        </view>
+        <view class="chip {{filters.status === 'present' ? 'active' : ''}}" bindtap="setQuickFilter" data-type="status" data-value="present">
+          已签到
+        </view>
+        <view class="chip {{filters.status === 'late' ? 'active' : ''}}" bindtap="setQuickFilter" data-type="status" data-value="late">
+          迟到
+        </view>
+        <view class="chip {{filters.status === 'absent' ? 'active' : ''}}" bindtap="setQuickFilter" data-type="status" data-value="absent">
+          缺勤
+        </view>
+        <view class="chip {{filters.status === 'leave' ? 'active' : ''}}" bindtap="setQuickFilter" data-type="status" data-value="leave">
+          请假
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 统计卡片 -->
+  <view class="stats-section">
+    <view class="stats-card">
+      <view class="stats-item">
+        <view class="stats-number">{{statistics.totalRecords}}</view>
+        <view class="stats-label">总记录</view>
+      </view>
+      <view class="stats-item">
+        <view class="stats-number success">{{statistics.presentCount}}</view>
+        <view class="stats-label">已签到</view>
+      </view>
+      <view class="stats-item">
+        <view class="stats-number warning">{{statistics.lateCount}}</view>
+        <view class="stats-label">迟到</view>
+      </view>
+      <view class="stats-item">
+        <view class="stats-number danger">{{statistics.absentCount}}</view>
+        <view class="stats-label">缺勤</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 考勤记录列表 -->
+  <view class="record-list">
+    <!-- 空状态 -->
+    <view wx:if="{{isEmpty && !loading}}" class="empty-state">
+      <image src="/images/icons/empty.png" mode="aspectFit" class="empty-icon"></image>
+      <text class="empty-text">暂无考勤记录</text>
+    </view>
+
+    <!-- 记录卡片 -->
+    <view wx:for="{{records}}" wx:key="record_id" class="record-card" bindtap="viewRecordDetail" data-record="{{item}}">
+      <view class="record-card-content">
+        <view class="record-header">
+          <view class="record-title-row">
+            <text class="record-title">{{item.plan_name || item.planName || '考勤计划'}}</text>
+            <view class="status-indicator {{item.status}}">
+              {{item.status === 'present' ? '已签到' : 
+                item.status === 'late' ? '迟到' : 
+                item.status === 'absent' ? '缺勤' : 
+                item.status === 'leave' ? '请假' : 
+                item.status === 'pending' ? '待签到' : item.status}}
+            </view>
+          </view>
+          
+          <view class="record-meta">
+            <text class="record-type">{{item.plan_type || item.type === 'activity' ? '活动考勤' : item.plan_type || item.type === 'course' ? '课程考勤' : item.plan_type || item.type === 'duty' ? '值班考勤' : '考勤'}}</text>
+            <text class="record-time">{{tools.formatDateTime(item.start_time || item.startTime)}} - {{tools.formatDateTime(item.end_time || item.endTime)}}</text>
+          </view>
+        </view>
+        
+        <view class="record-body">
+          <view wx:if="{{item.sign_in_time || item.signInTime}}" class="signin-info">
+            <view class="signin-row">
+              <text class="signin-label">签到时间：</text>
+              <text class="signin-value">{{tools.formatDateTime(item.sign_in_time || item.signInTime)}}</text>
+            </view>
+            <view wx:if="{{item.location}}" class="signin-row">
+              <text class="signin-label">签到地点：</text>
+              <text class="signin-value">{{item.location}}</text>
+            </view>
+          </view>
+          
+          <view wx:if="{{item.remark}}" class="record-remark">
+            <text class="remark-label">备注：</text>
+            <text class="remark-content">{{item.remark}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 加载更多 -->
+    <view wx:if="{{loading}}" class="loading-more">
+      <text class="loading-text">{{refreshing ? '刷新中...' : '加载中...'}}</text>
+    </view>
+
+    <view wx:elif="{{!hasMore && records.length > 0}}" class="no-more">
+      <text>没有更多记录了</text>
+    </view>
+  </view>
+</view>
+
+<!-- 工具类 WXS 模块 -->
+<wxs module="tools">
+  // 格式化日期时间
+  function formatDateTime(timeStr) {
+    if (!timeStr) return '';
+    var time = getDate(timeStr);
+    var month = padZero(time.getMonth() + 1);
+    var day = padZero(time.getDate());
+    var hours = padZero(time.getHours());
+    var minutes = padZero(time.getMinutes());
+    return month + '-' + day + ' ' + hours + ':' + minutes;
+  }
+  
+  // 补零
+  function padZero(num) {
+    return num < 10 ? '0' + num : num;
+  }
+  
+  module.exports = {
+    formatDateTime: formatDateTime
+  };
+</wxs>

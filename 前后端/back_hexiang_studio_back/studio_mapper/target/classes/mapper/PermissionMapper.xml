@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.back_hexiang_studio.mapper.PermissionsMapper">
+
+    <select id="findPermissionsByUserId" parameterType="long" resultType="string">
+        -- 查询权限编码
+        SELECT p.permission_code
+        FROM permission p
+                 INNER JOIN role_permission rp ON p.permission_id = rp.permission_id
+        WHERE rp.role_id = #{roleId}
+
+        UNION
+
+        -- 查询角色编码
+        SELECT r.role_code
+        FROM role r
+        WHERE r.role_id = #{roleId}
+    </select>
+
+</mapper>
+

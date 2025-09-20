@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.back_hexiang_studio.mapper.AttendanceStatisticsMapper">
+    
+    <!-- 结果映射 -->
+    <resultMap id="statisticsResultMap" type="com.back_hexiang_studio.entity.AttendanceStatistics">
+        <id column="id" property="id"/>
+        <result column="type" property="type"/>
+        <result column="date" property="date"/>
+        <result column="total_count" property="totalCount"/>
+        <result column="present_count" property="presentCount"/>
+        <result column="late_count" property="lateCount"/>
+        <result column="absent_count" property="absentCount"/>
+        <result column="leave_count" property="leaveCount"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+    
+    <!-- 插入统计数据 -->
+    <insert id="insert" parameterType="com.back_hexiang_studio.entity.AttendanceStatistics" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO attendance_statistics (
+            type, date, total_count, present_count, late_count, absent_count, leave_count, create_time, update_time
+        ) VALUES (
+            #{type}, #{date}, #{totalCount}, #{presentCount}, #{lateCount}, #{absentCount}, #{leaveCount}, #{createTime}, #{updateTime}
+        )
+    </insert>
+    
+    <!-- 更新统计数据 -->
+    <update id="update" parameterType="com.back_hexiang_studio.entity.AttendanceStatistics">
+        UPDATE attendance_statistics
+        SET 
+            total_count = #{totalCount},
+            present_count = #{presentCount},
+            late_count = #{lateCount},
+            absent_count = #{absentCount},
+            leave_count = #{leaveCount},
+            update_time = #{updateTime}
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 根据类型和日期查询统计数据 -->
+    <select id="selectByTypeAndDate" resultMap="statisticsResultMap">
+        SELECT * FROM attendance_statistics 
+        WHERE type = #{type} AND date = #{date}
+    </select>
+    
+    <!-- 查询指定日期范围的统计数据 -->
+    <select id="selectByDateRange" resultMap="statisticsResultMap">
+        SELECT * FROM attendance_statistics
+        WHERE date BETWEEN #{startDate} AND #{endDate}
+        ORDER BY date
+    </select>
+    
+    <!-- 查询统计数据 -->
+    <select id="selectStatistics" parameterType="map" resultType="map">
+        SELECT 
+            s.type, s.date, s.total_count, s.present_count, s.late_count, s.absent_count, s.leave_count
+        FROM attendance_statistics s
+        <where>
+            <if test="type != null and type != ''">
+                AND s.type = #{type}
+            </if>
+            <if test="startDate != null">
+                AND s.date >= #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND s.date &lt;= #{endDate}
+            </if>
+        </where>
+        ORDER BY s.date DESC
+    </select>
+
+    <!-- Get Overall Statistics -->
+    <select id="getOverallStatistics" resultType="map">
+        SELECT
+            COALESCE(SUM(total_count), 0) as total,
+            COALESCE(SUM(present_count), 0) as present,
+            COALESCE(SUM(late_count), 0) as late,
+            COALESCE(SUM(absent_count), 0) as absent,
+            COALESCE(SUM(leave_count), 0) as `leave`
+        FROM attendance_statistics
+        <where>
+            <if test="type != null and type != ''">
+                AND type = #{type}
+            </if>
+            <if test="startDate != null">
+                AND date >= #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND date &lt;= #{endDate}
+            </if>
+        </where>
+    </select>
+
+    <!-- Get Attendance Trends -->
+    <select id="getAttendanceTrends" resultType="map">
+        SELECT
+            date,
+            COALESCE(SUM(present_count), 0) as present,
+            COALESCE(SUM(late_count), 0) as late,
+            COALESCE(SUM(absent_count), 0) as absent,
+            COALESCE(SUM(leave_count), 0) as `leave`
+        FROM attendance_statistics
+        <where>
+            <if test="type != null and type != ''">
+                AND type = #{type}
+            </if>
+            <if test="startDate != null">
+                AND date >= #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND date &lt;= #{endDate}
+            </if>
+        </where>
+        GROUP BY date
+        ORDER BY date ASC
+    </select>
+
+    <!-- Get Attendance Type Distribution -->
+    <select id="getAttendanceTypeDistribution" resultType="map">
+        SELECT
+            type,
+            COALESCE(SUM(total_count), 0) as total,
+            COALESCE(SUM(present_count), 0) as present,
+            COALESCE(SUM(late_count), 0) as late,
+            COALESCE(SUM(absent_count), 0) as absent,
+            COALESCE(SUM(leave_count), 0) as `leave`
+        FROM attendance_statistics
+        <where>
+            <if test="startDate != null">
+                AND date >= #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND date &lt;= #{endDate}
+            </if>
+        </where>
+        GROUP BY type
+    </select>
+</mapper> 

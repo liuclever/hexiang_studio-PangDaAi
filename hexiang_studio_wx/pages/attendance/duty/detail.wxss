@@ -1,0 +1,416 @@
+/* pages/attendance/duty/detail.wxss */
+
+.container {
+  min-height: 100vh;
+  background: #f5f7fa;
+  padding-bottom: 120rpx;
+}
+
+/* 页面头部 */
+.page-header {
+  background: #ffffff;
+  padding: 20rpx 32rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.nav-section-centered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.page-title-centered {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+/* 滚动区域 */
+.detail-scroll {
+  height: calc(100vh - 180rpx);
+  padding: 20rpx 32rpx;
+}
+
+/* 卡片通用样式 */
+.card {
+  background: #ffffff;
+  border-radius: 16rpx;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+/* 值班主要信息卡片 */
+.duty-main-card {
+  position: relative;
+}
+
+.duty-header {
+  margin-bottom: 32rpx;
+}
+
+.duty-title {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 12rpx;
+}
+
+.duty-creator {
+  display: flex;
+  align-items: center;
+  font-size: 26rpx;
+  color: #999;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24rpx;
+  margin-bottom: 32rpx;
+  padding: 24rpx;
+  background: #f8fafc;
+  border-radius: 12rpx;
+}
+
+.info-item {
+  text-align: center;
+}
+
+.info-label {
+  font-size: 24rpx;
+  color: #666;
+  margin-bottom: 8rpx;
+}
+
+.info-value {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.ongoing-text {
+  color: #52c41a;
+}
+
+.ended-text {
+  color: #999;
+}
+
+.upcoming-text {
+  color: #1890ff;
+}
+
+/* 时间段样式 */
+.duty-period, .location-section, .note-section {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 24rpx;
+  padding: 20rpx;
+  background: #f8fafc;
+  border-radius: 12rpx;
+}
+
+.duty-period:last-child,
+.location-section:last-child,
+.note-section:last-child {
+  margin-bottom: 0;
+}
+
+.period-info, .location-info, .note-info {
+  margin-left: 16rpx;
+  flex: 1;
+}
+
+.period-label, .location-label, .note-label {
+  font-size: 24rpx;
+  color: #666;
+  margin-bottom: 8rpx;
+}
+
+.period-value, .location-value, .note-value {
+  font-size: 28rpx;
+  color: #1a1a1a;
+  line-height: 1.4;
+}
+
+.duration-text {
+  font-size: 24rpx;
+  color: #1890ff;
+  margin-top: 8rpx;
+}
+
+/* 区域卡片 */
+.section-card {
+  padding: 24rpx;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+  padding-bottom: 16rpx;
+  border-bottom: 2rpx solid #f0f0f0;
+}
+
+/* 没有右侧操作的section-header */
+.section-header.no-actions {
+  justify-content: flex-start;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-left: 12rpx;
+}
+
+/* 统计网格 */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16rpx;
+}
+
+.stats-item {
+  text-align: left;
+  padding: 20rpx 12rpx;
+  background-color: #f8f9fa;
+  border-radius: 12rpx;
+}
+
+.stats-value {
+  font-size: 36rpx;
+  font-weight: 700;
+  margin-bottom: 8rpx;
+  display: block;
+}
+
+.stats-value.present {
+  color: #52c41a;
+}
+
+.stats-value.late {
+  color: #faad14;
+}
+
+.stats-value.absent {
+  color: #ff4d4f;
+}
+
+.stats-value.leave {
+  color: #1890ff;
+}
+
+.stats-label {
+  font-size: 22rpx;
+  color: #666;
+}
+
+/* 记录卡片 */
+.records-card {
+  margin-bottom: 24rpx;
+}
+
+.records-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.filter-btn {
+  display: flex;
+  align-items: center;
+  padding: 12rpx 20rpx;
+  background: #f0f9ff;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  color: #0052d9;
+}
+
+.filter-btn text {
+  margin-left: 8rpx;
+}
+
+/* 筛选面板 */
+.filter-panel {
+  margin-bottom: 24rpx;
+  padding: 20rpx;
+  background: #f8fafc;
+  border-radius: 12rpx;
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.filter-chip {
+  padding: 12rpx 24rpx;
+  background: #ffffff;
+  border: 2rpx solid #e8e8e8;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  color: #666;
+  transition: all 0.3s ease;
+}
+
+.filter-chip.active {
+  background: #0052d9;
+  border-color: #0052d9;
+  color: #ffffff;
+}
+
+/* 记录列表 */
+.records-list {
+  min-height: 200rpx;
+}
+
+.record-item {
+  background: #ffffff;
+  border-radius: 12rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.record-item:last-child {
+  margin-bottom: 0;
+}
+
+.record-content {
+  padding: 24rpx;
+}
+
+.title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.student-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.status-badge {
+  padding: 4rpx 12rpx;
+  border-radius: 16rpx;
+  font-size: 20rpx;
+  font-weight: 500;
+}
+
+.status-badge.status-present {
+  background-color: #f6ffed;
+  color: #52c41a;
+  border: 1rpx solid #b7eb8f;
+}
+
+.status-badge.status-late {
+  background-color: #fffbe6;
+  color: #faad14;
+  border: 1rpx solid #ffe58f;
+}
+
+.status-badge.status-absent {
+  background-color: #fff2f0;
+  color: #ff4d4f;
+  border: 1rpx solid #ffccc7;
+}
+
+.status-badge.status-leave {
+  background-color: #f0f7ff;
+  color: #1890ff;
+  border: 1rpx solid #bae7ff;
+}
+
+.status-badge.status-pending {
+  background-color: #f5f5f5;
+  color: #999;
+  border: 1rpx solid #d9d9d9;
+}
+
+.meta-row {
+  display: flex;
+  gap: 24rpx;
+  margin-bottom: 12rpx;
+}
+
+.extra-row {
+  display: flex;
+  gap: 24rpx;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  font-size: 24rpx;
+  color: #666;
+}
+
+.meta-text {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.coordinates {
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+/* 空状态 */
+.empty-records {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80rpx 0;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
+  margin-top: 24rpx;
+}
+
+
+
+/* 响应式适配 */
+@media (max-width: 375px) {
+  .info-grid {
+    gap: 16rpx;
+    padding: 20rpx;
+  }
+  
+  .stats-grid {
+    gap: 12rpx;
+  }
+  
+  .stats-item {
+    padding: 16rpx 10rpx;
+  }
+  
+  .stats-value {
+    font-size: 32rpx;
+  }
+  
+  .duty-title {
+    font-size: 36rpx;
+  }
+}
+
+/* 动画效果 */
+.record-item:active {
+  transform: scale(0.98);
+}
+
+.filter-chip:active {
+  transform: scale(0.95);
+}
+
+.action-btn:active {
+  transform: scale(0.98);
+} 

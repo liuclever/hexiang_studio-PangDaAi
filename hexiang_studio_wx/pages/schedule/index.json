@@ -1,0 +1,8 @@
+{
+  "usingComponents": {
+    "duty-schedule-table": "/components/duty-schedule-table/duty-schedule-table"
+  },
+  "navigationBarTitleText": "工作室值班表",
+  "enablePullDownRefresh": true,
+  "backgroundColor": "#f5f5f7"
+} 

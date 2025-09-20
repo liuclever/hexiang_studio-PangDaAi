@@ -1,0 +1,9 @@
+{
+  "usingComponents": {
+    "t-icon": "tdesign-miniprogram/icon/icon"
+  },
+  "navigationBarTitleText": "值班详情",
+  "enablePullDownRefresh": true,
+  "backgroundColor": "#f5f7fa",
+  "backgroundTextStyle": "dark"
+} 

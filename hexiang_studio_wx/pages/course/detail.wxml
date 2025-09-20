@@ -1,0 +1,244 @@
+<!--pages/course/detail.wxml-->
+<view class="container">
+  <!-- 使用TDesign导航栏 -->
+  <t-navbar
+    title="课程详情"
+    fixed
+    bg-color="#fff"
+    home-icon="{{false}}"
+    class="custom-navbar">
+    <view slot="left" class="navbar-back-button" bind:tap="goBack">
+      <t-icon name="chevron-left" size="48rpx" />
+    </view>
+    <view slot="right" class="nav-right" bindtap="showMoreOptions">
+      <t-icon name="more" size="40rpx" />
+    </view>
+  </t-navbar>
+
+  <!-- 加载状态 -->
+  <view class="loading-container" wx:if="{{loading}}">
+    <t-loading theme="circular" size="40rpx" text="加载中..." />
+  </view>
+
+  <!-- 课程详情内容 -->
+  <scroll-view scroll-y="true" class="detail-scroll" wx:elif="{{course}}">
+    <!-- 主要课程信息卡片 -->
+    <view class="card course-main-card">
+      <!-- 课程封面和标题 -->
+      <view class="course-header">
+        <image class="course-cover" src="{{course.coverImage}}" mode="aspectFill"></image>
+        <view class="course-header-info">
+          <view class="course-title">{{course.title}}</view>
+          <view class="course-instructor">
+            <t-icon name="user" size="28rpx" color="#999" />
+            <text style="margin-left: 4rpx;">{{course.instructor || '未指定讲师'}}</text>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 课程状态和进度 -->
+      <view class="info-grid">
+        <view class="info-item">
+          <view class="info-label">课程状态</view>
+          <view class="info-value status-{{course.status}}">
+            {{course.status === 'published' ? '已发布' : course.status === 'draft' ? '草稿' : course.status === 'offline' ? '已下架' : course.status === 'ongoing' ? '进行中' : course.status === 'completed' ? '已结束' : course.status === 'not-started' ? '未开始' : '待定'}}
+          </view>
+        </view>
+        <view class="info-item">
+          <view class="info-label">学生人数</view>
+          <view class="info-value">{{course.studentCount || 0}}人</view>
+        </view>
+      </view>
+      
+      <!-- 课程时间信息 -->
+      <view class="course-period" wx:if="{{course.startTime || course.endTime}}">
+        <t-icon name="time" size="40rpx" color="#0052d9" />
+        <view class="period-info">
+          <view class="period-label">课程周期</view>
+          <view class="period-value">{{tools.formatDate(course.startTime)}} ~ {{tools.formatDate(course.endTime)}}</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 基本信息 -->
+    <view class="card section-card">
+      <t-cell title="基本信息" leftIcon="info-circle" bordered="{{false}}" t-class-title="cell-title" />
+      <view class="section-content">
+        <view class="info-grid-layout">
+          <view class="info-grid-row">
+            <view class="info-item-grid">
+              <t-icon name="time" size="28rpx" color="#0052d9" />
+              <view class="info-content-grid">
+                <view class="info-label">课程时长</view>
+                <view class="info-text">{{course.courseTime || '待定'}}</view>
+              </view>
+            </view>
+            
+            <view class="info-item-grid">
+              <t-icon name="location" size="28rpx" color="#0052d9" />
+              <view class="info-content-grid">
+                <view class="info-label">上课地点</view>
+                <view class="info-text">{{course.location || '待定'}}</view>
+              </view>
+            </view>
+          </view>
+          
+          <view class="info-grid-row">
+            <view class="info-item-grid">
+              <t-icon name="calendar" size="28rpx" color="#0052d9" />
+              <view class="info-content-grid">
+                <view class="info-label">课程安排</view>
+                <view class="info-text">{{course.schedule || '待定'}}</view>
+              </view>
+            </view>
+            
+            <view class="info-item-grid">
+              <t-icon name="bookmark" size="28rpx" color="#0052d9" />
+              <view class="info-content-grid">
+                <view class="info-label">课程分类</view>
+                <view class="info-text">{{course.categoryName || '未分类'}}</view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 课程介绍 -->
+    <view class="card section-card">
+      <t-cell title="课程介绍" leftIcon="file-paste" bordered="{{false}}" t-class-title="cell-title" />
+      <view class="section-content">
+        <text wx:if="{{course.description}}" class="course-description">{{course.description}}</text>
+        <t-empty wx:else icon="info-circle" description="暂无课程介绍" />
+      </view>
+    </view>
+
+    <!-- 学生名单 -->
+    <view class="card section-card">
+      <t-cell 
+        title="学生名单" 
+        leftIcon="usergroup" 
+        note="{{students.length}}人" 
+        bordered="{{false}}"
+        t-class-title="cell-title"
+        arrow
+        bind:click="toggleStudents" />
+      
+      <view class="section-content" wx:if="{{showStudents}}">
+        <view wx:if="{{loadingStudents}}" class="loading-mini">
+          <t-loading theme="circular" size="32rpx" text="加载中..." />
+        </view>
+        
+        <view wx:elif="{{students.length === 0}}" class="empty-content">
+          <t-empty icon="user-clear" description="暂无学生选修此课程" />
+        </view>
+        
+                 <view wx:else class="students-grid">
+           <view 
+             wx:for="{{students}}" 
+             wx:key="studentId"
+             class="student-card"
+             bind:tap="viewStudentDetail"
+             data-id="{{item.studentId}}">
+             <view class="student-name">{{item.name}}</view>
+             <view class="student-class">{{item.majorClass || ''}}</view>
+           </view>
+         </view>
+      </view>
+    </view>
+
+    <!-- 课程资料 -->
+    <view class="card section-card">
+      <t-cell 
+        title="课程资料" 
+        leftIcon="folder" 
+        note="{{course.materials ? course.materials.length : 0}}个文件" 
+        bordered="{{false}}"
+        t-class-title="cell-title"
+        arrow
+        bind:click="toggleMaterials" />
+      
+      <view class="section-content" wx:if="{{showMaterials}}">
+        <view wx:if="{{!course.materials || course.materials.length === 0}}" class="empty-content">
+          <t-empty icon="folder" description="暂无课程资料" />
+        </view>
+        
+                 <view wx:else class="materials-list">
+           <t-cell
+             wx:for="{{course.materials}}" 
+             wx:key="id"
+             title="{{item.name}}"
+             description="{{item.size}} • 下载{{item.downloadCount || 0}}次"
+             bordered="{{true}}"
+             hover="{{true}}"
+             align="top">
+             <view slot="left-icon" class="material-icon">
+               <t-icon name="{{tools.getFileIconName(item.name)}}" size="40rpx" class="file-type-icon" />
+             </view>
+             <view slot="right-icon" class="material-actions">
+               <button class="action-button preview-button" bindtap="previewMaterial" data-url="{{item.url}}" data-name="{{item.name}}" data-id="{{item.id}}">
+                 <t-icon name="browse" size="44rpx" class="action-icon preview-icon" />
+                 <text class="action-text">预览</text>
+               </button>
+               <button class="action-button download-button" bindtap="downloadMaterial" data-url="{{item.url}}" data-name="{{item.name}}" data-id="{{item.id}}">
+                 <t-icon name="download" size="44rpx" class="action-icon download-icon" />
+                 <text class="action-text">下载</text>
+               </button>
+             </view>
+           </t-cell>
+         </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 错误状态 -->
+  <view class="error-container" wx:if="{{!loading && !course}}">
+    <t-empty icon="error" description="未找到课程信息">
+      <t-button slot="action" theme="primary" size="small" bind:tap="goBack">返回</t-button>
+    </t-empty>
+  </view>
+</view>
+
+<!-- 工具类 WXS 模块 -->
+<wxs module="tools">
+  // 格式化日期
+  function formatDate(dateStr) {
+    if (!dateStr) return '待定';
+    var date = getDate(dateStr);
+    return date.getFullYear() + '-' + 
+           padZero(date.getMonth() + 1) + '-' + 
+           padZero(date.getDate());
+  }
+  
+  // 补零
+  function padZero(num) {
+    return num < 10 ? '0' + num : num;
+  }
+
+  // 根据文件名获取图标名称
+  function getFileIconName(fileName) {
+    if (!fileName) return 'file';
+    
+    var lowerFileName = fileName.toLowerCase();
+    
+    if (lowerFileName.indexOf('.docx') > -1 || lowerFileName.indexOf('.doc') > -1) {
+      return 'file-word';
+    } else if (lowerFileName.indexOf('.xlsx') > -1 || lowerFileName.indexOf('.xls') > -1) {
+      return 'file-excel';
+    } else if (lowerFileName.indexOf('.pptx') > -1 || lowerFileName.indexOf('.ppt') > -1) {
+      return 'file-powerpoint';
+    } else if (lowerFileName.indexOf('.pdf') > -1) {
+      return 'file-pdf';
+    } else if (lowerFileName.indexOf('.jpg') > -1 || lowerFileName.indexOf('.jpeg') > -1 || 
+               lowerFileName.indexOf('.png') > -1 || lowerFileName.indexOf('.gif') > -1) {
+      return 'image';
+    } else {
+      return 'file';
+    }
+  }
+  
+  module.exports = {
+    formatDate: formatDate,
+    getFileIconName: getFileIconName
+  };
+</wxs>

@@ -1,0 +1,134 @@
+/* pages/login/index.wxss */
+
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  padding: 40rpx;
+  box-sizing: border-box;
+}
+
+/* Logo区域 */
+.logo-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 60rpx;
+  margin-bottom: 60rpx;
+}
+
+.logo-card {
+  background-color: #ffffff;
+  border-radius: 20rpx;
+  padding: 50rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 350rpx;
+  min-height: 250rpx;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.logo-card-hover {
+  transform: scale(0.98);
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.15);
+}
+
+.logo {
+  width: 150rpx;
+  height: 150rpx;
+  margin-bottom: 20rpx;
+}
+
+.title {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #333333;
+  margin-bottom: 10rpx;
+  text-align: center;
+}
+
+.subtitle {
+  font-size: 28rpx;
+  color: #666666;
+  text-align: center;
+}
+
+/* 表单区域 */
+.form-area {
+  width: 85%;
+  background-color: #ffffff;
+  border-radius: 20rpx;
+  padding: 40rpx 30rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
+  margin-bottom: 40rpx;
+}
+
+.input-group {
+  margin-bottom: 30rpx;
+}
+
+.input-item {
+  display: flex;
+  align-items: center;
+  height: 90rpx;
+  background-color: #f5f7fa;
+  border-radius: 8rpx;
+  padding: 0 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.input-icon {
+  width: 40rpx;
+  height: 40rpx;
+  margin-right: 20rpx;
+}
+
+.input-icon image {
+  width: 100%;
+  height: 100%;
+}
+
+.input-field {
+  flex: 1;
+  height: 90rpx;
+  font-size: 28rpx;
+}
+
+.placeholder {
+  color: #999999;
+}
+
+/* 忘记密码 */
+.options-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 40rpx;
+}
+
+.forgot-password {
+  font-size: 24rpx;
+  color: #1890ff;
+}
+
+/* 登录按钮 */
+.login-btn {
+  width: 100%;
+  height: 90rpx;
+  line-height: 90rpx;
+  background-color: #1890ff;
+  color: #ffffff;
+  font-size: 32rpx;
+  border-radius: 8rpx;
+  margin-bottom: 30rpx;
+}
+
+/* 适配ipx底部 */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+} 

@@ -1,0 +1,199 @@
+/* pages/profile/index.wxss */
+page {
+  background-color: #f5f5f7;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.container {
+  padding: 60rpx 0 190rpx 0;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 100vh;
+}
+
+
+
+/* 用户基本信息卡片 */
+.user-card {
+  background-color: #ffffff;
+  margin: 24rpx 16rpx;
+  border-radius: 16rpx;
+  padding: 40rpx 32rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.user-avatar-section {
+  display: flex;
+  align-items: center;
+}
+
+.avatar-container {
+  margin-right: 24rpx;
+}
+
+.user-avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 60rpx;
+  border: 4rpx solid #f0f0f0;
+}
+
+.default-avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 60rpx;
+  background: linear-gradient(135deg, #0052d9, #1890ff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 4rpx solid #f0f0f0;
+}
+
+.avatar-text {
+  color: #ffffff;
+  font-size: 48rpx;
+  font-weight: 600;
+}
+
+.user-basic-info {
+  flex: 1;
+}
+
+.user-name {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 8rpx;
+}
+
+.user-position {
+  display: block;
+  font-size: 28rpx;
+  color: #0052d9;
+  background-color: #f0f6ff;
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+  display: inline-block;
+}
+
+/* 信息区域 */
+.info-section {
+  background-color: #ffffff;
+  margin: 24rpx 16rpx;
+  border-radius: 16rpx;
+  padding: 32rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 24rpx;
+  padding-bottom: 16rpx;
+  border-bottom: 2rpx solid #f0f0f0;
+  display: flex;
+  align-items: center;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  display: flex;
+  align-items: center;
+  color: #666;
+  font-size: 28rpx;
+}
+
+.info-label text {
+  margin-left: 12rpx;
+}
+
+.info-value {
+  font-size: 28rpx;
+  color: #1a1a1a;
+  font-weight: 500;
+  max-width: 300rpx;
+  text-align: right;
+  word-break: break-all;
+}
+
+/* 培训方向区域 */
+.training-directions {
+  padding: 16rpx 0;
+}
+
+.direction-tag {
+  display: inline-flex;
+  align-items: center;
+  background-color: #f0f6ff;
+  color: #0052d9;
+  padding: 12rpx 16rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  margin: 0 12rpx 12rpx 0;
+  border: 1rpx solid #e6f4ff;
+}
+
+.no-directions {
+  color: #999;
+  font-size: 28rpx;
+  padding: 16rpx 0;
+  display: block;
+}
+
+/* 操作区域 */
+.action-section {
+  margin: 24rpx 16rpx;
+}
+
+.action-btn {
+  width: 100%;
+  height: 88rpx;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  font-weight: 500;
+  border: none;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.logout-btn {
+  background-color: #fff5f5;
+  color: #ff4757;
+  border: 2rpx solid #ffebee;
+}
+
+.logout-btn:active {
+  background-color: #ffebee;
+}
+
+.action-btn text {
+  margin-left: 12rpx;
+}
+
+/* 加载状态 */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 80rpx 0;
+}
+
+.loading-text {
+  color: #999;
+  font-size: 28rpx;
+}

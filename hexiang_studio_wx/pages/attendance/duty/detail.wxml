@@ -1,0 +1,230 @@
+<view class="container">
+  <!-- 页面头部 -->
+  <view class="page-header">
+    <view class="nav-section-centered">
+      <text class="page-title-centered">值班详情</text>
+    </view>
+  </view>
+  
+  <scroll-view scroll-y="true" class="detail-scroll" bindscrolltolower="onReachBottom" lower-threshold="50">
+    <!-- 主要值班信息卡片 -->
+    <view class="card duty-main-card">
+      <view class="duty-header">
+        <view class="duty-title">{{planDetail.name}}</view>
+        <view class="duty-creator">
+          <t-icon name="user" size="28rpx" color="#999" />
+          <text style="margin-left: 4rpx;">{{planDetail.createUserName}} 创建</text>
+        </view>
+      </view>
+      
+      <view class="info-grid">
+        <view class="info-item">
+          <view class="info-label">签到人数</view>
+          <view class="info-value">{{statistics.presentCount || 0}}/{{statistics.totalCount || 0}}</view>
+        </view>
+        <view class="info-item">
+          <view class="info-label">值班状态</view>
+          <view class="info-value {{planDetail.dutyStatus === 'ongoing' ? 'ongoing-text' : (planDetail.dutyStatus === 'ended' ? 'ended-text' : 'upcoming-text')}}">{{planDetail.statusText}}</view>
+        </view>
+      </view>
+      
+      <!-- 值班时间 -->
+      <view class="duty-period">
+        <t-icon name="time" size="40rpx" color="#0052d9" />
+        <view class="period-info">
+          <view class="period-label">值班时间</view>
+          <view class="period-value">{{tools.formatDate(planDetail.startTime) + ' ~ ' + tools.formatDate(planDetail.endTime)}}</view>
+          <view class="duration-text">持续时间：{{planDetail.duration}}</view>
+        </view>
+      </view>
+
+      <!-- 地点信息 -->
+      <view class="location-section">
+        <t-icon name="location" size="40rpx" color="#0052d9" />
+        <view class="location-info">
+          <view class="location-label">值班地点</view>
+          <view class="location-value">{{planDetail.location}}</view>
+        </view>
+      </view>
+
+      <!-- 备注信息 -->
+      <view wx:if="{{planDetail.note}}" class="note-section">
+        <t-icon name="edit" size="40rpx" color="#0052d9" />
+        <view class="note-info">
+          <view class="note-label">备注说明</view>
+          <view class="note-value">{{planDetail.note}}</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 统计卡片 -->
+    <view class="card section-card">
+      <view class="section-header no-actions">
+        <t-icon name="chart-pie" size="32rpx" color="#0052d9" />
+        <text class="section-title">考勤统计</text>
+      </view>
+      
+      <view class="stats-grid">
+        <view class="stats-item">
+          <view class="stats-value present">{{statistics.presentCount || 0}}</view>
+          <view class="stats-label">已签到</view>
+        </view>
+        <view class="stats-item">
+          <view class="stats-value late">{{statistics.lateCount || 0}}</view>
+          <view class="stats-label">迟到</view>
+        </view>
+        <view class="stats-item">
+          <view class="stats-value absent">{{statistics.absentCount || 0}}</view>
+          <view class="stats-label">缺勤</view>
+        </view>
+        <view class="stats-item">
+          <view class="stats-value leave">{{statistics.leaveCount || 0}}</view>
+          <view class="stats-label">请假</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 签到记录卡片 -->
+    <view class="card records-card">
+      <view class="records-header">
+        <view class="section-title">
+          <t-icon name="user-group" size="32rpx" color="#0052d9" />
+          <text>签到记录</text>
+        </view>
+        
+        <!-- 筛选按钮 -->
+        <view class="filter-btn" bindtap="toggleFilter">
+          <t-icon name="filter" size="32rpx" color="#0052d9" />
+          <text>筛选</text>
+        </view>
+      </view>
+
+      <!-- 筛选面板 -->
+      <view wx:if="{{showFilter}}" class="filter-panel">
+        <view class="filter-chips">
+          <view class="filter-chip {{statusFilter === 'all' ? 'active' : ''}}" 
+                bindtap="setStatusFilter" data-filter="all">
+            全部
+          </view>
+          <view class="filter-chip {{statusFilter === 'present' ? 'active' : ''}}" 
+                bindtap="setStatusFilter" data-filter="present">
+            已签到
+          </view>
+          <view class="filter-chip {{statusFilter === 'late' ? 'active' : ''}}" 
+                bindtap="setStatusFilter" data-filter="late">
+            迟到
+          </view>
+          <view class="filter-chip {{statusFilter === 'absent' ? 'active' : ''}}" 
+                bindtap="setStatusFilter" data-filter="absent">
+            缺勤
+          </view>
+          <view class="filter-chip {{statusFilter === 'leave' ? 'active' : ''}}" 
+                bindtap="setStatusFilter" data-filter="leave">
+            请假
+          </view>
+        </view>
+      </view>
+
+      <!-- 记录列表 -->
+      <view class="records-list">
+        <view wx:for="{{filteredRecords}}" wx:key="studentId" class="record-item">
+          <view class="record-content">
+            <!-- 标题行：学生姓名 + 状态标签 -->
+            <view class="title-row">
+              <text class="student-name">{{item.studentName || ('学生' + item.studentId)}}</text>
+              <view class="status-badge status-{{item.attendanceStatus}}">
+                {{tools.getStatusText(item.attendanceStatus)}}
+              </view>
+            </view>
+          
+            <!-- 信息行 -->
+            <view class="meta-row">
+              <view class="meta-item" wx:if="{{item.signInTime}}">
+                <t-icon name="time" size="28rpx" color="#999" />
+                <text class="meta-text">{{tools.formatDateTime(item.signInTime)}}</text>
+              </view>
+              <view class="meta-item" wx:if="{{item.location}}">
+                <t-icon name="location" size="28rpx" color="#999" />
+                <text class="meta-text">{{item.location}}</text>
+              </view>
+            </view>
+            
+            <!-- 扩展信息行 -->
+            <view class="extra-row" wx:if="{{item.studentNumber}}">
+              <view class="meta-item">
+                <t-icon name="user" size="28rpx" color="#999" />
+                <text class="meta-text">{{item.studentNumber}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <!-- 空状态 -->
+        <view wx:if="{{filteredRecords.length === 0}}" class="empty-records">
+          <t-icon name="inbox" size="80rpx" color="#ccc" />
+          <text class="empty-text">暂无记录</text>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+
+</view>
+
+<!-- 工具函数 -->
+<wxs module="tools">
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    var date = getDate(dateStr);
+    var month = date.getMonth() + 1;
+    var day = date.getDate();
+    var hour = date.getHours();
+    var minute = date.getMinutes();
+    
+    return month + '月' + day + '日 ' + 
+           (hour < 10 ? '0' : '') + hour + ':' + 
+           (minute < 10 ? '0' : '') + minute;
+  }
+  
+  function formatTime(dateStr) {
+    if (!dateStr) return '--';
+    var date = getDate(dateStr);
+    var hour = date.getHours();
+    var minute = date.getMinutes();
+    
+    return (hour < 10 ? '0' : '') + hour + ':' + 
+           (minute < 10 ? '0' : '') + minute;
+  }
+  
+  function getStatusText(status) {
+    switch(status) {
+      case 'present': return '已签到';
+      case 'late': return '迟到';
+      case 'absent': return '缺勤';
+      case 'leave': return '请假';
+      case 'pending': return '待签到';
+      default: return '未知';
+    }
+  }
+  
+  function formatDateTime(dateStr) {
+    if (!dateStr) return '--';
+    var date = getDate(dateStr);
+    var month = date.getMonth() + 1;
+    var day = date.getDate();
+    var hour = date.getHours();
+    var minute = date.getMinutes();
+    
+    return (month < 10 ? '0' : '') + month + '/' + 
+           (day < 10 ? '0' : '') + day + ' ' + 
+           (hour < 10 ? '0' : '') + hour + ':' + 
+           (minute < 10 ? '0' : '') + minute;
+  }
+  
+  module.exports = {
+    formatDate: formatDate,
+    formatTime: formatTime,
+    formatDateTime: formatDateTime,
+    getStatusText: getStatusText
+  };
+</wxs> 

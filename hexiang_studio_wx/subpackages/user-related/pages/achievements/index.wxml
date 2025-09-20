@@ -1,0 +1,147 @@
+<!-- pages/user/achievements/index.wxml -->
+<view class="container">
+  <view class="page-header">
+    <view class="header-content">
+      <view class="header-icon">
+        <t-icon name="star" size="32rpx" color="#ff9500"></t-icon>
+      </view>
+      <view class="header-text">
+        <view class="header-title">{{userName}}的荣誉证书</view>
+        <view class="header-subtitle">共{{stats.totalAchievements || achievements.length + certificates.length}}项成就</view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 加载状态 -->
+  <view class="loading-container" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text>加载中...</text>
+  </view>
+  
+  <!-- 内容区域 -->
+  <view class="content-container" wx:else>
+    <!-- 荣誉 -->
+    <view class="section">
+      <view class="section-header">
+        <view class="section-title">获得荣誉</view>
+        <view class="section-count">{{stats.honorsCount || achievements.length}}项</view>
+      </view>
+      
+      <view class="empty-state" wx:if="{{achievements.length === 0}}">
+        <image class="empty-image" src="/images/icons/empty-data.svg" mode="aspectFit"></image>
+        <text>暂无荣誉记录</text>
+      </view>
+      
+      <view class="card-list" wx:else>
+        <view class="card-item" wx:for="{{achievements}}" wx:key="id" bindtap="viewHonorDetail" data-item="{{item}}">
+          <image class="card-image" src="{{item.imagePath || '/images/default-certificate.svg'}}" mode="aspectFill"></image>
+          <view class="card-content">
+            <view class="card-title">{{item.honorTitle || item.honor_name || item.title}}</view>
+            <view class="card-subtitle">
+              <text class="card-issuer">{{item.issuingAuthority || item.issue_org || item.issuer}}</text>
+              <text class="card-date">{{item.awardDate || item.issue_date || item.issueDate}}</text>
+            </view>
+            <view class="card-tags">
+              <text class="card-tag">{{item.honorLevel || item.honor_level || '荣誉奖项'}}</text>
+            </view>
+          </view>
+          <view class="card-arrow">
+            <text class="arrow-icon">›</text>
+          </view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 证书 -->
+    <view class="section">
+      <view class="section-header">
+        <view class="section-title">专业证书</view>
+        <view class="section-count">{{stats.certificatesCount || certificates.length}}项</view>
+      </view>
+      
+      <view class="empty-state" wx:if="{{certificates.length === 0}}">
+        <image class="empty-image" src="/images/icons/empty-data.svg" mode="aspectFit"></image>
+        <text>暂无证书记录</text>
+      </view>
+      
+      <view class="card-list" wx:else>
+        <view class="card-item" wx:for="{{certificates}}" wx:key="id" bindtap="viewCertificateDetail" data-item="{{item}}">
+          <image class="card-image" src="{{item.imagePath || '/images/default-certificate.svg'}}" mode="aspectFill"></image>
+          <view class="card-content">
+            <view class="card-title">{{item.certificateName || item.certificate_name || item.title}}</view>
+            <view class="card-subtitle">
+              <text class="card-issuer">{{item.issueOrg || item.issue_org || item.issuingAuthority || item.issuer}}</text>
+              <text class="card-date">{{item.issueDate || item.issue_date}}颁发</text>
+            </view>
+            <view class="card-tags">
+              <text class="card-tag">{{item.certificateLevel || item.certificate_level || '专业证书'}}</text>
+              <text class="card-tag" wx:if="{{item.certificateNo || item.certificate_no}}">证书编号: {{item.certificateNo || item.certificate_no}}</text>
+            </view>
+          </view>
+          <view class="card-arrow">
+            <text class="arrow-icon">›</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 详情弹窗 -->
+  <view class="detail-modal {{showDetailModal ? 'show' : ''}}" bindtap="closeDetailModal">
+    <view class="modal-mask" catchtap="closeDetailModal"></view>
+    <view class="modal-content" animation="{{animationModal}}" catchtap="preventBubble">
+      <!-- 弹窗头部 -->
+      <view class="modal-header">
+        <view class="modal-title">详情</view>
+        <view class="close-btn" bindtap="closeDetailModal">×</view>
+      </view>
+      
+      <!-- 详情内容 - 使用scroll-view支持滚动 -->
+      <scroll-view class="detail-container" scroll-y="true" enable-flex="true">
+        <!-- 图片预览 -->
+        <view class="detail-image-container" wx:if="{{currentDetail.imagePath}}" bindtap="previewImage" data-url="{{currentDetail.imagePath}}">
+          <image class="detail-image" src="{{currentDetail.imagePath}}" mode="widthFix"></image>
+          <view class="preview-tip">点击查看大图</view>
+        </view>
+        
+        <!-- 详细信息 -->
+        <view class="detail-info-list">
+          <view class="detail-info-item">
+            <view class="info-label">名称:</view>
+            <view class="info-value">{{currentDetail.honorTitle || currentDetail.certificateName || currentDetail.title}}</view>
+          </view>
+          
+          <view class="detail-info-item">
+            <view class="info-label">颁发机构:</view>
+            <view class="info-value">{{currentDetail.issuingAuthority || currentDetail.issueOrg || currentDetail.issuer}}</view>
+          </view>
+          
+          <view class="detail-info-item">
+            <view class="info-label">颁发时间:</view>
+            <view class="info-value">{{currentDetail.awardDate || currentDetail.issueDate}}</view>
+          </view>
+          
+          <view class="detail-info-item" wx:if="{{currentDetail.honorLevel || currentDetail.certificateLevel}}">
+            <view class="info-label">级别:</view>
+            <view class="info-value">{{currentDetail.honorLevel || currentDetail.certificateLevel}}</view>
+          </view>
+          
+          <view class="detail-info-item" wx:if="{{currentDetail.certificateNo}}">
+            <view class="info-label">证书编号:</view>
+            <view class="info-value">{{currentDetail.certificateNo}}</view>
+          </view>
+          
+          <view class="detail-info-item" wx:if="{{currentDetail.description}}">
+            <view class="info-label">描述:</view>
+            <view class="info-value">{{currentDetail.description}}</view>
+          </view>
+          
+          <view class="detail-info-item" wx:if="{{currentDetail.verificationUrl}}">
+            <view class="info-label">验证链接:</view>
+            <view class="info-value link" bindtap="openVerificationUrl" data-url="{{currentDetail.verificationUrl}}">点击验证</view>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,1238 @@
+/* pages/task/detail.wxss */
+
+/* 任务详情页样式 */
+.container {
+  min-height: 100vh;
+  background-color: #f5f5f7;
+  padding-bottom: 110rpx;
+  box-sizing: border-box;
+  padding-top: 92rpx; /* 为固定导航栏留出空间 */
+}
+
+/* 自定义导航栏 */
+.custom-navbar {
+  z-index: 100;
+  width: 100%;
+  color: #333;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+}
+
+.navbar-back-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 16rpx;
+  height: 100%;
+}
+
+/* 任务状态相关样式 */
+.overdue-text {
+  color: #ff4757 !important;
+  font-weight: 500;
+}
+
+.warning-text {
+  color: #ffa502 !important;
+  font-weight: 500;
+}
+
+.completed-text {
+  color: #2ed573 !important;
+  font-weight: 500;
+}
+
+/* 内容滚动区域 */
+.detail-scroll {
+  flex: 1;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 16rpx;
+}
+
+/* 卡片通用样式 */
+.card {
+  background-color: #fff;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08), 0 2rpx 4rpx rgba(0, 0, 0, 0.04);
+  border: 1rpx solid rgba(0, 0, 0, 0.05);
+}
+
+/* 任务卡片样式 */
+.task-main-card {
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+}
+
+.section-card {
+  margin-bottom: 20rpx;
+  padding: 0rpx;
+}
+
+.task-header {
+  margin-bottom: 24rpx;
+}
+
+.task-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12rpx;
+  word-break: break-all;
+}
+
+.task-creator {
+  display: flex;
+  align-items: center;
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 信息网格 */
+.info-grid {
+  display: flex;
+  justify-content: space-between;
+  margin: 24rpx 0;
+  padding: 20rpx 0;
+  border-top: 1rpx solid #f0f0f0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.info-item {
+  flex: 1;
+  text-align: center;
+}
+
+.info-label {
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 8rpx;
+}
+
+.info-value {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+/* 任务描述 */
+.task-description {
+  font-size: 26rpx;
+  color: #333333;
+  line-height: 1.6;
+}
+
+.section-content {
+  padding: 0rpx 24rpx 20rpx 24rpx;
+}
+
+/* 子任务样式 */
+.subtasks-list {
+  margin-top: 6rpx;
+}
+
+/* 子任务状态标签 */
+.subtask-status {
+  margin-right: 10rpx;
+}
+
+.status-tag {
+  border-radius: 4rpx !important;
+  font-size: 20rpx !important;
+  padding: 0 8rpx !important;
+  height: 36rpx !important;
+  line-height: 36rpx !important;
+}
+
+/* Updated Subtask Meta Info Styles */
+.subtask-meta-info {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* 使内容靠右对齐 */
+  gap: 24rpx; /* 增加元素间距 */
+  flex-grow: 1; /* 占据剩余空间 */
+}
+
+.assignee-info, .participant-info {
+  display: flex;
+  align-items: center;
+}
+
+.assignee-info .t-avatar, .participant-info .t-icon {
+  margin-right: 8rpx;
+}
+
+.assignee-details {
+  display: flex;
+  flex-direction: column;
+  font-size: 24rpx;
+  line-height: 1.2;
+}
+
+.assignee-name {
+  color: #333;
+}
+
+.assignee-role {
+  font-size: 20rpx;
+  color: #999;
+}
+
+.participant-count {
+  font-size: 24rpx;
+  color: #666;
+  margin-left: 4rpx;
+}
+
+/* Member List Popup Styles */
+.member-list-popup {
+  background-color: #fff;
+  border-radius: 24rpx 24rpx 0 0;
+  overflow: hidden;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.member-list-popup .popup-body {
+  max-height: 70vh;
+  padding: 0;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 24rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.member-details {
+  margin-left: 16rpx;
+}
+
+.member-name {
+  font-size: 26rpx;
+  color: #333;
+}
+
+.member-role {
+  font-size: 22rpx;
+  color: #999;
+}
+
+/* Custom Tag Colors */
+.t-tag.t-tag--theme-primary.t-tag--light {
+  background-color: #e6f0ff !important;
+  color: #0052d9 !important;
+}
+
+/* 成员信息容器 */
+.member-info-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  margin-top: 4rpx;
+}
+
+.leader-info, .participant-info {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  font-size: 20rpx;
+}
+
+.info-label {
+  color: #999;
+}
+
+.info-value {
+  color: #333;
+  font-weight: 500;
+}
+
+.participant-info {
+  display: flex;
+  align-items: center;
+}
+
+/* 底部操作栏 */
+.footer-action-area {
+  padding: 24rpx 32rpx 40rpx;
+  background-color: #fff;
+  border-top: 1rpx solid #f0f0f0;
+  display: flex;
+  justify-content: center;
+}
+
+.share-btn {
+  width: 100%;
+  border-radius: 48rpx !important;
+  background: linear-gradient(135deg, #0080ff, #0052d9) !important;
+  box-shadow: 0 4rpx 8rpx rgba(0, 82, 217, 0.2) !important;
+  font-weight: 500 !important;
+  font-size: 32rpx !important;
+  letter-spacing: 2rpx;
+  height: 96rpx !important;
+}
+
+/* 原生分享按钮样式 */
+.share-button {
+  width: 100%;
+  height: 96rpx;
+  background: linear-gradient(135deg, #0080ff, #0052d9);
+  color: #fff;
+  border: none;
+  border-radius: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: 500;
+  letter-spacing: 2rpx;
+  box-shadow: 0 4rpx 8rpx rgba(0, 82, 217, 0.2);
+}
+
+.share-button::after {
+  border: none;
+}
+
+.complete-btn {
+  flex: 1;
+  border-radius: 6rpx !important;
+  font-weight: 500 !important;
+  background: linear-gradient(135deg, #0080ff, #0052d9) !important;
+  box-shadow: 0 2rpx 8rpx rgba(0, 82, 217, 0.15) !important;
+  font-size: 26rpx !important;
+}
+
+/* 弹窗样式 */
+.popup-content {
+  padding: 0;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  border-top-left-radius: 24rpx;
+  border-top-right-radius: 24rpx;
+  overflow: hidden;
+  background-color: #f5f5f5;
+}
+
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx 24rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.popup-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.popup-body {
+  flex: 1;
+  padding: 0 0 24rpx 0;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.popup-footer {
+  display: flex;
+  padding: 32rpx;
+  border-top: 1rpx solid #eee;
+  background-color: #fff;
+  box-shadow: 0 -2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.cancel-btn {
+  flex: 1;
+  margin-right: 24rpx;
+  border: 2rpx solid #ddd !important;
+  color: #fff !important;
+  background-color: #999 !important;
+}
+
+.submit-btn {
+  flex: 2;
+  font-weight: 500 !important;
+  box-shadow: 0 4rpx 8rpx rgba(0, 82, 217, 0.2) !important;
+  background: linear-gradient(135deg, #0080ff, #0052d9) !important;
+}
+
+/* 新的任务信息卡片样式 */
+.task-info-card {
+  background-color: #fff;
+  padding: 24rpx 32rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.task-info-header {
+  display: flex;
+  flex-direction: column;
+}
+
+.task-title-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.task-title {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #333;
+  flex: 1;
+  margin-right: 16rpx;
+}
+
+/* 新的表单区域样式 */
+.form-section {
+  background-color: #fff;
+  padding: 24rpx 32rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.form-title {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+.attachment-title {
+  margin-top: 32rpx;
+  margin-bottom: 16rpx;
+}
+
+/* 工作提交表单样式增强 */
+.work-textarea {
+  width: 100%;
+  min-height: 240rpx;
+  border-radius: 8rpx;
+  background-color: #f9f9f9;
+}
+
+.upload-area {
+  width: 100%;
+  padding: 16rpx 0;
+}
+
+/* 确保按钮样式一致 */
+.t-button--size-large {
+  height: 96rpx !important;
+  font-size: 32rpx !important;
+  letter-spacing: 2rpx;
+}
+
+.t-button--shape-round {
+  border-radius: 48rpx !important;
+}
+
+.t-button--theme-primary {
+  background-color: #0052d9 !important;
+}
+
+/* 上传组件样式优化 */
+.t-upload__add {
+  background-color: #f9f9f9 !important;
+  border-radius: 8rpx !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  color: #888 !important;
+}
+
+.t-upload__add::before {
+  content: "+" !important;
+  font-size: 48rpx !important;
+  line-height: 1 !important;
+  margin-bottom: 8rpx !important;
+}
+
+.t-upload__add::after {
+  content: "添加图片" !important;
+  font-size: 24rpx !important;
+}
+
+/* 文件类型提示 */
+.t-upload__add-tips {
+  margin-top: 8rpx;
+  font-size: 20rpx;
+  color: #999;
+  text-align: center;
+}
+
+/* 文件预览样式 */
+.t-upload__card {
+  border-radius: 8rpx !important;
+  overflow: hidden !important;
+}
+
+/* 文本域样式优化 */
+.t-textarea {
+  border-radius: 8rpx !important;
+}
+
+/* 子任务详细信息 */
+.modal-task-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 32rpx;
+  background-color: #f9f9f9;
+  margin-bottom: 16rpx;
+}
+
+.modal-subtitle {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #333;
+  flex: 1;
+  margin-right: 16rpx;
+}
+
+/* 自定义TDesign组件样式 */
+.t-cell {
+  padding: 24rpx 32rpx !important;
+  font-size: 24rpx !important;
+}
+
+/* Cell 标题和描述的自定义类 */
+.cell-title {
+  font-size: 28rpx !important;
+  font-weight: 600 !important;
+  color: #1a1a1a !important;
+}
+
+.cell-note {
+  font-size: 22rpx !important;
+  color: #333 !important;
+}
+
+.cell-description {
+  font-size: 20rpx !important;
+  color: #999 !important;
+}
+
+/* 已完成标题样式 */
+.completed-title {
+  color: #999 !important;
+  text-decoration: line-through;
+}
+
+.t-cell__title {
+  font-size: 24rpx !important;
+}
+
+.t-cell__note {
+  font-size: 22rpx !important;
+  color: #333 !important;
+}
+
+.t-cell__description {
+  font-size: 20rpx !important;
+  color: #999 !important;
+}
+
+.t-progress--thin {
+  padding: 6rpx 0 !important;
+}
+
+.t-progress__info {
+  font-size: 22rpx !important;
+  font-weight: 500 !important;
+}
+
+.t-progress__bar {
+  height: 8rpx !important;
+  border-radius: 4rpx !important;
+}
+
+.t-progress--circle {
+  width: 100rpx !important;
+  height: 100rpx !important;
+}
+
+/* 优化环形进度条样式 */
+.t-progress--circle .t-progress__canvas {
+  width: 100rpx !important;
+  height: 100rpx !important;
+}
+
+.t-progress--circle .t-progress__info {
+  font-size: 24rpx !important;
+  font-weight: 500 !important;
+  color: #0052d9 !important;
+}
+
+.t-progress__bar--status--active {
+  background: linear-gradient(90deg, #0080ff, #0052d9) !important;
+}
+
+.t-tag {
+  font-size: 20rpx !important;
+  font-weight: normal !important;
+  padding: 0 8rpx !important;
+}
+
+/* 自定义滑动单元格样式 */
+.t-swipe-cell {
+  margin-bottom: 10rpx;
+  border-radius: 6rpx;
+  overflow: hidden;
+  box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.03);
+}
+
+/* 头像尺寸调整 */
+.t-avatar {
+  width: 32rpx !important;
+  height: 32rpx !important;
+}
+
+.t-avatar-group {
+  margin-right: 4rpx;
+}
+
+/* 统一子任务标签颜色（与主任务保持一致） */
+.t-tag.t-tag--theme-primary {
+  background-color: rgba(33, 150, 243, 0.1) !important;
+  color: #2196f3 !important;
+  border: 1rpx solid rgba(33, 150, 243, 0.2) !important;
+}
+
+.t-tag.t-tag--theme-success {
+  background-color: rgba(76, 175, 80, 0.1) !important;
+  color: #4caf50 !important;
+  border: 1rpx solid rgba(76, 175, 80, 0.2) !important;
+}
+
+.t-tag.t-tag--theme-warning {
+  background-color: rgba(255, 152, 0, 0.1) !important;
+  color: #ff9800 !important;
+  border: 1rpx solid rgba(255, 152, 0, 0.2) !important;
+}
+
+.t-tag.t-tag--theme-default {
+  background-color: rgba(158, 158, 158, 0.1) !important;
+  color: #9e9e9e !important;
+  border: 1rpx solid rgba(158, 158, 158, 0.2) !important;
+}
+
+/* 已完成子任务的样式 */
+.completed-task {
+  opacity: 0.8;
+  background-color: #fafafa;
+}
+
+.completed-task .task-title {
+  color: #888;
+}
+
+/* 空状态优化 */
+.t-empty {
+  padding: 32rpx 0 !important;
+}
+
+.t-empty__description {
+  font-size: 22rpx !important;
+  color: #999 !important;
+}
+
+/* 图标统一样式 */
+.icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-small {
+  width: 16rpx;
+  height: 16rpx;
+  margin-right: 4rpx;
+}
+
+/* 改进日期显示 */
+.date-display {
+  display: flex;
+  align-items: center;
+  font-size: 22rpx;
+  color: #888;
+}
+
+.date-icon {
+  width: 16rpx;
+  height: 16rpx;
+  margin-right: 4rpx;
+} 
+
+/* Custom Tag Colors & Styles */
+.status-tag.t-tag--theme-primary {
+  background-color: rgba(33, 150, 243, 0.1) !important;
+  color: #2196f3 !important;
+  border: 1rpx solid rgba(33, 150, 243, 0.2) !important;
+}
+
+.status-tag.t-tag--theme-success {
+  background-color: rgba(76, 175, 80, 0.1) !important;
+  color: #4caf50 !important;
+  border: 1rpx solid rgba(76, 175, 80, 0.2) !important;
+}
+
+.status-tag.t-tag--theme-warning {
+  background-color: rgba(255, 152, 0, 0.1) !important;
+  color: #ff9800 !important;
+  border: 1rpx solid rgba(255, 152, 0, 0.2) !important;
+}
+
+.status-tag.t-tag--theme-default {
+  background-color: rgba(158, 158, 158, 0.1) !important;
+  color: #9e9e9e !important;
+  border: 1rpx solid rgba(158, 158, 158, 0.2) !important;
+}
+
+
+
+.assignee-details {
+  display: flex;
+  flex-direction: column;
+  margin-left: 8rpx;
+}
+
+.assignee-role {
+  font-size: 18rpx;
+  color: #999;
+} 
+
+.completed-task .t-cell__title, .completed-task .t-cell__description {
+  text-decoration: line-through;
+  color: #999;
+}
+
+.member-list-popup .member-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 40rpx 24rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.member-list-popup .member-item:last-child {
+  border-bottom: none;
+}
+
+.member-list-popup .member-details {
+  margin-left: 36rpx;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: center;
+}
+
+.member-list-popup .member-info {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 8rpx;
+}
+
+.member-list-popup .member-name {
+  font-size: 36rpx;
+  color: #333;
+  font-weight: 600;
+}
+
+.member-list-popup .member-note {
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.4;
+  margin-top: 12rpx;
+  word-break: break-all;
+}
+
+/* 新增：为角色标签添加额外样式 */
+.member-role-tag {
+  font-weight: 500 !important;
+  border-radius: 8rpx !important;
+}
+
+/* 负责人标签特殊样式 */
+.member-role-tag.t-tag--theme-success.t-tag--variant-dark {
+  background-color: #07c160 !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2rpx 4rpx rgba(7, 193, 96, 0.3) !important;
+}
+
+/* 参与者标签样式 */
+.member-role-tag.t-tag--theme-default {
+  background-color: #f5f5f7 !important;
+  color: #666 !important;
+  border: 1rpx solid #e5e5e7 !important;
+} 
+
+/* 工作提交表单样式增强 */
+.work-textarea {
+  width: 100%;
+  margin: 16rpx 0;
+  min-height: 240rpx;
+}
+
+.upload-area {
+  width: 100%;
+  margin: 16rpx 0;
+  padding: 16rpx 0;
+}
+
+/* 确保t-cell内容有足够的间距 */
+.t-cell {
+  padding: 24rpx 32rpx !important;
+}
+
+/* 确保t-cell-group有合适的间距 */
+.t-cell-group {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* 确保t-cell-group标题有合适的样式 */
+.t-cell-group__title {
+  font-size: 28rpx !important;
+  color: #666 !important;
+  padding: 0 32rpx 16rpx !important;
+} 
+
+/* 子任务状态标签样式 - 与列表中保持一致 */
+.subtask-status {
+  display: flex;
+  align-items: center;
+}
+
+.status-tag {
+  font-size: 24rpx !important;
+  padding: 0 16rpx !important;
+  height: 48rpx !important;
+  line-height: 48rpx !important;
+  border-radius: 6rpx !important;
+} 
+
+/* 附件上传区域样式 */
+.attachment-options {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.attachment-divider {
+  display: flex;
+  align-items: center;
+  margin: 24rpx 0;
+  color: #999;
+  font-size: 24rpx;
+}
+
+.attachment-divider::before,
+.attachment-divider::after {
+  content: '';
+  flex: 1;
+  height: 1rpx;
+  background-color: #eee;
+}
+
+.attachment-divider text {
+  padding: 0 16rpx;
+}
+
+.chat-file-btn {
+  width: 100%;
+  border: 2rpx solid #07c160 !important;
+  border-radius: 8rpx !important;
+  height: 96rpx !important;
+  color: #07c160 !important;
+  background-color: #fff !important;
+}
+
+.chat-file-btn .t-icon {
+  color: #07c160 !important;
+}
+
+.file-list {
+  margin-top: 24rpx;
+  width: 100%;
+}
+
+.file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx;
+  background-color: #f9f9f9;
+  border-radius: 8rpx;
+  margin-bottom: 16rpx;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  overflow: hidden;
+}
+
+.file-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60rpx;
+  height: 60rpx;
+  flex-shrink: 0;
+  margin-right: 16rpx;
+  border-radius: 8rpx;
+  background-color: #f5f5f5;
+}
+
+.file-type-icon {
+  flex-shrink: 0;
+  font-size: 40rpx;
+}
+
+.doc-icon {
+  color: #1890ff; /* Word文档 - 蓝色 */
+}
+
+.excel-icon {
+  color: #52c41a; /* Excel表格 - 绿色 */
+}
+
+.ppt-icon {
+  color: #fa8c16; /* PowerPoint - 橙色 */
+}
+
+.pdf-icon {
+  color: #f5222d; /* PDF - 红色 */
+}
+
+.image-icon {
+  color: #722ed1; /* 图片 - 紫色 */
+}
+
+.text-icon {
+  color: #666; /* 文本文件 - 灰色 */
+}
+
+.zip-icon {
+  color: #faad14; /* 压缩包 - 金黄色 */
+}
+
+.music-icon {
+  color: #13c2c2; /* 音频 - 青色 */
+}
+
+.file-icon {
+  color: #8c8c8c; /* 默认文件 - 深灰色 */
+}
+
+.file-name {
+  font-size: 28rpx;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300rpx;
+  flex: 1;
+}
+
+.delete-icon {
+  color: #999;
+  padding: 10rpx;
+} 
+
+.status-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60rpx 0;
+  background-color: #fff;
+  border-radius: 8rpx;
+  margin-bottom: 16rpx;
+  text-align: center;
+}
+
+.status-icon {
+  margin-bottom: 24rpx;
+}
+
+.success-icon {
+  color: #07c160;
+}
+
+.pending-icon {
+  color: #0052d9;
+}
+
+.status-text {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #333;
+}
+
+.submit-btn {
+  width: 100%;
+  font-weight: 500 !important;
+  box-shadow: 0 4rpx 8rpx rgba(0, 82, 217, 0.2) !important;
+  background: linear-gradient(135deg, #0080ff, #0052d9) !important;
+}
+
+.submit-btn:active {
+  opacity: 0.9 !important;
+}
+
+.close-btn {
+  width: 100%;
+  font-weight: 500 !important;
+  box-shadow: 0 4rpx 8rpx rgba(0, 82, 217, 0.2) !important;
+  background: linear-gradient(135deg, #0080ff, #0052d9) !important;
+}
+
+.close-btn:active {
+  opacity: 0.9 !important;
+} 
+
+/* 任务周期样式 */
+.task-period {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 0;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.period-info {
+  margin-left: 16rpx;
+}
+
+.period-label {
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 4rpx;
+}
+
+.period-value {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+} 
+
+.member-list-popup .member-item .member-avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  flex-shrink: 0; /* 防止被压缩 */
+} 
+
+.file-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80rpx;
+  height: 80rpx;
+}
+
+.file-type-icon {
+  color: #0052d9;
+}
+
+.file-actions {
+  display: flex;
+  gap: 8rpx;
+  flex-shrink: 0;
+  min-width: 200rpx;
+}
+
+.action-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6rpx;
+  border-radius: 8rpx;
+  min-width: 60rpx;
+  max-width: 60rpx;
+  background: none;
+  border: none;
+  line-height: normal;
+  margin: 0;
+  font-size: inherit;
+}
+
+.action-button::after {
+  border: none;
+}
+
+.preview-button {
+  background-color: rgba(0, 82, 217, 0.1);
+}
+
+.download-button {
+  background-color: rgba(7, 193, 96, 0.1);
+}
+
+.delete-button {
+  background-color: rgba(255, 77, 79, 0.1);
+}
+
+.action-icon {
+  margin-bottom: 4rpx;
+}
+
+.action-text {
+  font-size: 22rpx;
+  line-height: 1;
+}
+
+.preview-icon {
+  color: #0052d9;
+}
+
+.download-icon {
+  color: #07c160;
+}
+
+.delete-icon {
+  color: #ff4d4f;
+}
+
+/* 添加按钮交互效果 */
+.action-button:active {
+  opacity: 0.7 !important;
+}
+
+.attachments-list .t-cell {
+  padding: 24rpx;
+} 
+
+.file-title-container {
+  display: flex;
+  align-items: center;
+}
+
+.file-name {
+  font-size: 30rpx;
+  color: #333;
+  max-width: 300rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-size {
+  font-size: 26rpx;
+  color: #999;
+  margin-top: 8rpx;
+  padding-left: 76rpx;
+} 
+
+/* 审批流程步骤条样式 */
+.approval-process-card {
+  background-color: #fff;
+  padding: 24rpx 32rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.approval-title {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 24rpx;
+}
+
+.approval-process-card .t-steps {
+  padding: 16rpx 0;
+}
+
+.approval-process-card .t-step-item__title {
+  font-size: 26rpx !important;
+}
+
+.approval-process-card .t-step-item__description {
+  font-size: 22rpx !important;
+  margin-top: 4rpx !important;
+} 
+
+/* 已提交附件列表样式 */
+.review-comment {
+  padding: 16rpx;
+  background-color: #f9f9f9;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.5;
+}
+
+/* 附件操作按钮样式 */
+.file-actions {
+  display: flex;
+  gap: 16rpx;
+}
+
+.action-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8rpx;
+  border-radius: 8rpx;
+  min-width: 80rpx;
+  background: none;
+  border: none;
+  line-height: normal;
+  margin: 0;
+  font-size: inherit;
+}
+
+.action-button::after {
+  border: none;
+}
+
+.preview-button {
+  background-color: rgba(0, 82, 217, 0.1);
+  border: 1px solid rgba(0, 82, 217, 0.2);
+}
+
+.download-button {
+  background-color: rgba(22, 163, 74, 0.1);
+  border: 1px solid rgba(22, 163, 74, 0.2);
+}
+
+.delete-button {
+  background-color: rgba(255, 77, 79, 0.1);
+  border: 1px solid rgba(255, 77, 79, 0.2);
+}
+
+.button-hover {
+  opacity: 0.7;
+  transform: scale(0.95);
+}
+
+.action-icon {
+  margin-bottom: 4rpx;
+}
+
+.action-text {
+  font-size: 22rpx;
+  line-height: 1;
+  font-weight: 500;
+}
+
+.preview-icon {
+  color: #0052d9;
+}
+
+.download-icon {
+  color: #16a34a;
+}
+
+.delete-icon {
+  color: #ff4d4f;
+} 

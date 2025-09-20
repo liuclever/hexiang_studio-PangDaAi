@@ -1,0 +1,431 @@
+/* pages/materials/detail.wxss */
+
+/* 容器样式 */
+.detail-container {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.loading-container,
+.error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+
+.detail-content {
+  padding: 24rpx;
+  padding-bottom: 120rpx; /* 为浮动按钮留出空间 */
+}
+
+/* 资料卡片 */
+.material-card {
+  background-color: #ffffff;
+  border-radius: 20rpx;
+  padding: 40rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+}
+
+/* 文件头部 */
+.file-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 40rpx;
+}
+
+.file-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 24rpx;
+  flex: 1;
+}
+
+.file-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64rpx;
+  height: 64rpx;
+}
+
+.file-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-name {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #333;
+  line-height: 1.4;
+  margin-bottom: 12rpx;
+  word-break: break-all;
+}
+
+.file-meta {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.file-size,
+.file-type {
+  font-size: 26rpx;
+  color: #666;
+}
+
+.file-separator {
+  font-size: 26rpx;
+  color: #ddd;
+}
+
+.more-btn {
+  padding: 8rpx;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+}
+
+.more-btn:active {
+  background-color: #f0f0f0;
+}
+
+/* 操作按钮组 */
+.action-group {
+  display: flex;
+  gap: 20rpx;
+  margin-bottom: 40rpx;
+}
+
+.action-button {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  padding: 10rpx 10rpx !important;
+  border-radius: 12rpx !important;
+  min-height: 170rpx;
+}
+
+.btn-text {
+  font-size: 24rpx;
+  font-weight: 500;
+}
+
+.preview-btn {
+  border-color: #4A90E2 !important;
+  color: #4A90E2 !important;
+}
+
+.download-btn {
+  border-color: #4A90E2 !important;
+  color: #4A90E2 !important;
+}
+
+.share-btn {
+  border-color: #50C878 !important;
+  color: #50C878 !important;
+}
+
+/* 描述区域 */
+.description-section {
+  padding-top: 40rpx;
+  border-top: 2rpx solid #f0f0f0;
+}
+
+.section-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.description-text {
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.6;
+  word-break: break-all;
+}
+
+/* 信息卡片 */
+.info-card {
+  background-color: #ffffff;
+  border-radius: 20rpx;
+  padding: 40rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+}
+
+.card-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 32rpx;
+}
+
+.info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 2rpx solid #f8f9fa;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-size: 28rpx;
+  color: #666;
+  font-weight: 500;
+}
+
+.info-value {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 600;
+}
+
+/* 标签样式 */
+.category-tag {
+  background-color: #e8f4fd;
+  border-radius: 20rpx;
+  padding: 8rpx 20rpx;
+}
+
+.category-text {
+  font-size: 24rpx;
+  color: #4A90E2;
+  font-weight: 500;
+}
+
+.permission-tag {
+  border-radius: 20rpx;
+  padding: 8rpx 20rpx;
+}
+
+.permission-tag.public {
+  background-color: #e8f5e8;
+}
+
+.permission-tag.private {
+  background-color: #fff3e0;
+}
+
+.permission-text {
+  font-size: 24rpx;
+  font-weight: 500;
+}
+
+.permission-tag.public .permission-text {
+  color: #4caf50;
+}
+
+.permission-tag.private .permission-text {
+  color: #ff9800;
+}
+
+/* 相关资料区域 */
+.related-section {
+  background-color: #ffffff;
+  border-radius: 20rpx;
+  padding: 40rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32rpx;
+}
+
+.section-subtitle {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.related-list {
+  white-space: nowrap;
+}
+
+.related-item {
+  display: inline-block;
+  margin-right: 24rpx;
+  width: 280rpx;
+  background-color: #f8f9fa;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  transition: all 0.3s ease;
+}
+
+.related-item:active {
+  transform: scale(0.95);
+  background-color: #e3f2fd;
+}
+
+.related-file {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.related-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40rpx;
+  height: 40rpx;
+}
+
+.related-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.related-name {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.4;
+  margin-bottom: 8rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.related-size {
+  font-size: 22rpx;
+  color: #999;
+}
+
+/* 浮动操作按钮 */
+.fab-container {
+  position: fixed;
+  bottom: 40rpx;
+  right: 40rpx;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.fab-item {
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.fab-item:active {
+  transform: scale(0.9);
+}
+
+.edit-fab {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+}
+
+.back-top-fab {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+/* 底部安全距离 */
+.bottom-safe {
+  height: 40rpx;
+}
+
+/* 响应式设计 */
+@media (max-width: 750rpx) {
+  .detail-content {
+    padding: 16rpx;
+  }
+  
+  .material-card,
+  .info-card,
+  .related-section {
+    padding: 32rpx;
+  }
+  
+  .file-name {
+    font-size: 32rpx;
+  }
+  
+  .action-button {
+    padding: 20rpx 12rpx !important;
+    min-height: 100rpx;
+  }
+  
+  .btn-text {
+    font-size: 22rpx;
+  }
+  
+  .fab-container {
+    bottom: 32rpx;
+    right: 32rpx;
+  }
+  
+  .fab-item {
+    width: 100rpx;
+    height: 100rpx;
+  }
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+  .detail-container {
+    background-color: #1a1a1a;
+  }
+  
+  .material-card,
+  .info-card,
+  .related-section {
+    background-color: #2d2d2d;
+  }
+  
+  .file-name,
+  .card-title,
+  .info-value {
+    color: #ffffff;
+  }
+  
+  .section-title,
+  .related-name {
+    color: #ffffff;
+  }
+  
+  .description-text,
+  .info-label {
+    color: #cccccc;
+  }
+  
+  .related-item {
+    background-color: #404040;
+  }
+  
+  .related-item:active {
+    background-color: #4a4a4a;
+  }
+  
+  .info-item {
+    border-bottom-color: #404040;
+  }
+} 

@@ -1,0 +1,496 @@
+<view class="container">
+  <!-- 使用TDesign导航栏 -->
+  <t-navbar
+    title="任务详情"
+    fixed
+    bg-color="#fff"
+    home-icon="{{false}}"
+    class="custom-navbar">
+    <view slot="left" class="navbar-back-button" bind:tap="goBack">
+      <t-icon name="chevron-left" size="48rpx" />
+    </view>
+    <view slot="right" class="nav-right" bindtap="showMoreOptions">
+      <t-icon name="more" size="40rpx" />
+    </view>
+  </t-navbar>
+  
+  <scroll-view scroll-y="true" class="detail-scroll">
+    <!-- 主要任务信息卡片 -->
+    <view class="card task-main-card">
+      <view class="task-header">
+        <view class="task-title">{{task.title}}</view>
+        <view class="task-creator">
+          <t-icon name="user" size="28rpx" color="#999" />
+          <text style="margin-left: 4rpx;">{{task.creatorName || '系统管理员'}} 创建</text>
+        </view>
+      </view>
+      
+      <view class="info-grid">
+        <view class="info-item">
+          <view class="info-label">完成情况</view>
+          <view class="info-value">{{task.completedSubTaskCount || 0}}/{{task.totalSubTaskCount || 0}}</view>
+        </view>
+        <view class="info-item">
+          <view class="info-label">剩余时间</view>
+          <view class="info-value {{task.remainingDays.isCompleted ? 'completed-text' : (task.remainingDays.isOverdue ? 'overdue-text' : (task.remainingDays.days !== null && task.remainingDays.days < 3 ? 'warning-text' : ''))}}">{{task.remainingDays.text}}</view>
+        </view>
+      </view>
+      
+      <!-- 任务时间线 -->
+      <view class="task-period">
+        <t-icon name="time" size="40rpx" color="#0052d9" />
+        <view class="period-info">
+          <view class="period-label">任务周期</view>
+          <view class="period-value">{{tools.formatDate(task.startTime) + ' ~ ' + tools.formatDate(task.endTime)}}</view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 任务描述 -->
+    <view class="card section-card">
+      <t-cell title="任务描述" leftIcon="file-paste" bordered="{{false}}" t-class-title="cell-title" />
+      <view class="section-content">
+        <text wx:if="{{task.description}}" class="task-description">{{task.description}}</text>
+        <t-empty wx:else icon="info-circle" description="暂无任务描述" />
+      </view>
+    </view>
+    
+    <!-- 子任务 -->
+    <view class="card section-card">
+      <t-cell 
+        title="子任务" 
+        leftIcon="layers" 
+        note="{{task.completedSubTaskCount || 0}}/{{task.totalSubTaskCount || 0}}" 
+        bordered="{{false}}"
+        t-class-title="cell-title" />
+      
+      <view class="section-content">
+        <view wx:if="{{task.subTasks && task.subTasks.length > 0}}" class="subtasks-list">
+          <!-- 使用TDesign滑动单元格替代原有子任务列表项 -->
+          <t-swipe-cell wx:for="{{task.subTasks}}" wx:key="id" 
+            right="{{[{text: '详情', style: 'background-color: #0052d9; color: white;'}]}}"
+            bind:click="showSubTaskDetail" data-id="{{item.id}}">
+            <t-cell
+              bind:click="showSubTaskDetail" 
+              data-id="{{item.id}}"
+              title="{{item.title}}"
+              description=""
+              bordered="{{true}}"
+              hover="{{true}}"
+              arrow
+              t-class="{{item.status === 1 ? 'completed-task' : ''}}"
+              t-class-title="{{item.status === 1 ? 'completed-title' : ''}}">
+              <view slot="left-icon" class="subtask-status">
+                <t-tag class="status-tag" theme="{{item.status === 1 ? 'success' : item.status === 2 ? 'warning' : item.status === 3 ? 'default' : 'primary'}}">
+                  {{item.status === 1 ? '已完成' : item.status === 2 ? '待审核' : item.status === 3 ? '已退回' : '进行中'}}
+                </t-tag>
+              </view>
+              
+              <view slot="note" class="subtask-meta-info">
+                <!-- Participant Info -->
+                <view class="participant-info" wx:if="{{item.participantCount > 0}}" catchtap="showSubtaskMembers" data-id="{{item.id}}">
+                  <t-icon name="usergroup" size="32rpx" />
+                  <text class="participant-count">{{item.participantCount}}人</text>
+                </view>
+              </view>
+            </t-cell>
+          </t-swipe-cell>
+        </view>
+        <t-empty wx:else icon="file-unknown" description="暂无子任务" />
+      </view>
+    </view>
+    
+    <!-- 附件 -->
+    <view class="card section-card">
+      <t-cell 
+        title="附件" 
+        leftIcon="folder-open" 
+        note="{{task.attachments ? task.attachments.length : 0}}" 
+        bordered="{{false}}"
+        t-class-title="cell-title" />
+        
+      <view class="section-content">
+        <view wx:if="{{task.attachments && task.attachments.length > 0}}" class="attachments-list">
+          <t-cell
+            wx:for="{{task.attachments}}" 
+            wx:key="id"
+            bordered="{{true}}"
+            hover="{{true}}"
+            align="top"
+            t-class-description="cell-description">
+            <view slot="title" class="file-title-container">
+              <view class="file-icon">
+                <t-icon 
+                  wx:if="{{getFileIconName(item.fileName) === 'file-word'}}"
+                  name="file-word" 
+                  size="48rpx" 
+                  class="file-type-icon doc-icon" />
+                <t-icon 
+                  wx:elif="{{getFileIconName(item.fileName) === 'file-excel'}}"
+                  name="file-excel" 
+                  size="48rpx" 
+                  class="file-type-icon excel-icon" />
+                <t-icon 
+                  wx:elif="{{getFileIconName(item.fileName) === 'file-powerpoint'}}"
+                  name="file-powerpoint" 
+                  size="48rpx" 
+                  class="file-type-icon ppt-icon" />
+                <t-icon 
+                  wx:elif="{{getFileIconName(item.fileName) === 'file-pdf'}}"
+                  name="file-pdf" 
+                  size="48rpx" 
+                  class="file-type-icon pdf-icon" />
+                <t-icon 
+                  wx:elif="{{getFileIconName(item.fileName) === 'image'}}"
+                  name="image" 
+                  size="48rpx" 
+                  class="file-type-icon image-icon" />
+                <t-icon 
+                  wx:elif="{{getFileIconName(item.fileName) === 'file-1'}}"
+                  name="file-1" 
+                  size="48rpx" 
+                  class="file-type-icon text-icon" />
+                <t-icon 
+                  wx:elif="{{getFileIconName(item.fileName) === 'file-zip'}}"
+                  name="file-zip" 
+                  size="48rpx" 
+                  class="file-type-icon zip-icon" />
+                <t-icon 
+                  wx:elif="{{getFileIconName(item.fileName) === 'file-music'}}"
+                  name="file-music" 
+                  size="48rpx" 
+                  class="file-type-icon music-icon" />
+                <t-icon 
+                  wx:else
+                  name="file" 
+                  size="48rpx" 
+                  class="file-type-icon file-icon" />
+              </view>
+              <text class="file-name">{{item.fileName}}</text>
+            </view>
+            <view slot="description" class="file-size">
+              {{item.fileSizeText || ''}}
+            </view>
+            <view slot="right-icon" class="file-actions">
+              <button class="action-button preview-button" bindtap="handlePreviewFile" data-url="{{item.filePath || item.url}}" data-name="{{item.fileName}}">
+                <t-icon name="browse" size="44rpx" class="action-icon preview-icon" />
+                <text class="action-text">预览</text>
+              </button>
+              <button class="action-button download-button" bindtap="handleDownloadFile" data-url="{{item.filePath || item.url}}" data-name="{{item.fileName}}">
+                <t-icon name="download" size="44rpx" class="action-icon download-icon" />
+                <text class="action-text">下载</text>
+              </button>
+            </view>
+          </t-cell>
+        </view>
+        <t-empty wx:else icon="folder" description="暂无附件" />
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- Member List Popup -->
+  <t-popup visible="{{showMemberListModal}}" placement="bottom" bind:visible-change="hideSubtaskMembers">
+    <view class="member-list-popup">
+      <view class="popup-header">
+        <text class="popup-title">参与成员</text>
+        <t-icon name="close" size="36rpx" bind:tap="hideSubtaskMembers" />
+      </view>
+      <scroll-view scroll-y class="popup-body">
+        <view wx:if="{{currentSubtaskMembers && currentSubtaskMembers.length > 0}}">
+          <view wx:for="{{currentSubtaskMembers}}" wx:key="id" class="member-item">
+            <image src="{{item.avatar ? fileBaseUrl + '/admin/file/view/' + item.avatar : '/images/icons/default-avatar.png'}}" class="member-avatar" mode="aspectFill" />
+            <view class="member-details">
+              <view class="member-info">
+                <text class="member-name">{{item.name}}</text>
+                <t-tag
+                  theme="{{item.role === '负责人' ? 'success' : 'default'}}"
+                  variant="{{item.role === '负责人' ? 'dark' : 'light'}}"
+                  size="small"
+                  class="member-role-tag">
+                  {{item.role}}
+                </t-tag>
+              </view>
+              <text wx:if="{{item.note}}" class="member-note">{{item.note}}</text>
+            </view>
+          </view>
+        </view>
+        <t-empty wx:else description="暂无参与成员" />
+      </scroll-view>
+    </view>
+  </t-popup>
+  
+  <!-- 子任务详情弹窗(工作提交) -->
+  <t-popup visible="{{activeSubTaskId ? true : false}}" bind:visible-change="hideSubTaskDetail" placement="bottom">
+    <view class="popup-content">
+      <view class="popup-header">
+        <text class="popup-title">工作提交</text>
+        <t-icon name="close" size="36rpx" bind:tap="hideSubTaskDetail" />
+      </view>
+      
+      <scroll-view scroll-y class="popup-body">
+        <block wx:if="{{currentSubTask}}">
+          <!-- 子任务基本信息 -->
+          <view class="task-info-card">
+            <view class="task-info-header">
+              <view class="task-title-wrap">
+                <view class="task-title">{{currentSubTask.title}}</view>
+                <view class="subtask-status">
+                  <t-tag class="status-tag" theme="{{currentSubTask.status === 1 ? 'success' : currentSubTask.status === 2 ? 'warning' : currentSubTask.status === 3 ? 'default' : 'primary'}}">
+                    {{currentSubTask.status === 1 ? '已完成' : currentSubTask.status === 2 ? '待审核' : currentSubTask.status === 3 ? '已退回' : '进行中'}}
+                  </t-tag>
+                </view>
+              </view>
+            </view>
+          </view>
+
+          <!-- 审批流程 -->
+          <view class="approval-process-card">
+            <view class="approval-title">审批流程</view>
+            <t-steps layout="horizontal" theme="dot" current="{{currentSubTask.status === 0 ? 0 : currentSubTask.status === 2 ? 1 : 2}}">
+              <t-step-item 
+                title="提交" 
+                status="{{currentSubTask.status === 0 ? 'process' : 'finish'}}" 
+                content="{{currentSubTask.status === 0 ? '进行中' : '已提交'}}"
+              />
+              <t-step-item 
+                title="审核中" 
+                status="{{currentSubTask.status === 2 ? 'process' : (currentSubTask.status === 1 || currentSubTask.status === 3) ? 'finish' : 'default'}}" 
+                content="{{currentSubTask.status === 0 ? '等待提交' : currentSubTask.status === 2 ? '审核进行中' : '审核完成'}}"
+              />
+              <t-step-item 
+                title="审核结果" 
+                status="{{currentSubTask.status === 1 ? 'finish' : currentSubTask.status === 3 ? 'error' : 'default'}}" 
+                content="{{currentSubTask.status === 0 ? '等待审核' : currentSubTask.status === 1 ? '已通过' : currentSubTask.status === 3 ? '已退回' : '等待审核'}}"
+              />
+            </t-steps>
+          </view>
+
+          <!-- 提交表单部分 -->
+          <view class="form-section" wx:if="{{currentSubTask.status !== 1 && currentSubTask.status !== 2}}">
+            <view class="form-title">完成情况说明</view>
+            <t-textarea
+              placeholder="请输入工作完成情况（选填）..." 
+              value="{{submissionData.remark}}" 
+              bindinput="onRemarkInput"
+              bindchange="onRemarkInput"
+              bordered="{{true}}" 
+              maxcharacter="500" 
+              indicator="{{true}}" 
+              disableDefaultPadding="{{false}}" 
+              class="work-textarea"
+            />
+            
+            <view class="form-title attachment-title">上传附件</view>
+            <view class="attachment-options">
+              <t-button theme="light" size="large" icon="chat" class="chat-file-btn" bind:tap="chooseMessageFile">从聊天记录选择文件</t-button>
+              <view class="file-list" wx:if="{{submissionData.files && submissionData.files.length > 0}}">
+                <view class="file-item" wx:for="{{submissionData.files}}" wx:key="index">
+                  <view class="file-info">
+                    <t-icon name="{{item.fileType === 'image' ? 'image' : item.fileType === 'word' ? 'file-word' : item.fileType === 'excel' ? 'file-excel' : item.fileType === 'ppt' ? 'file-powerpoint' : item.fileType === 'pdf' ? 'file-pdf' : 'file'}}" size="40rpx" class="file-icon"></t-icon>
+                    <text class="file-name">{{item.name}}</text>
+                  </view>
+                  <t-icon name="close" size="36rpx" class="delete-icon" data-index="{{index}}" bind:tap="removeFile" />
+                </view>
+              </view>
+            </view>
+          </view>
+          
+          <!-- 已提交附件列表 -->
+          <view class="form-section" wx:if="{{submissionAttachments && submissionAttachments.length > 0}}">
+            <view class="form-title">已提交附件</view>
+            <view class="file-list">
+              <view class="file-item" wx:for="{{submissionAttachments}}" wx:key="id">
+                <view class="file-info">
+                  <view class="file-icon">
+                    <t-icon 
+                      wx:if="{{tools.getFileIconName(item.fileName) === 'file-word'}}"
+                      name="file-word" 
+                      size="40rpx" 
+                      class="file-type-icon doc-icon" />
+                    <t-icon 
+                      wx:elif="{{tools.getFileIconName(item.fileName) === 'file-excel'}}"
+                      name="file-excel" 
+                      size="40rpx" 
+                      class="file-type-icon excel-icon" />
+                    <t-icon 
+                      wx:elif="{{tools.getFileIconName(item.fileName) === 'file-powerpoint'}}"
+                      name="file-powerpoint" 
+                      size="40rpx" 
+                      class="file-type-icon ppt-icon" />
+                    <t-icon 
+                      wx:elif="{{tools.getFileIconName(item.fileName) === 'file-pdf'}}"
+                      name="file-pdf" 
+                      size="40rpx" 
+                      class="file-type-icon pdf-icon" />
+                    <t-icon 
+                      wx:elif="{{tools.getFileIconName(item.fileName) === 'image'}}"
+                      name="image" 
+                      size="40rpx" 
+                      class="file-type-icon image-icon" />
+                    <t-icon 
+                      wx:elif="{{tools.getFileIconName(item.fileName) === 'file-1'}}"
+                      name="file-1" 
+                      size="40rpx" 
+                      class="file-type-icon text-icon" />
+                    <t-icon 
+                      wx:elif="{{tools.getFileIconName(item.fileName) === 'file-zip'}}"
+                      name="file-zip" 
+                      size="40rpx" 
+                      class="file-type-icon zip-icon" />
+                    <t-icon 
+                      wx:elif="{{tools.getFileIconName(item.fileName) === 'file-music'}}"
+                      name="file-music" 
+                      size="40rpx" 
+                      class="file-type-icon music-icon" />
+                    <t-icon 
+                      wx:else
+                      name="file" 
+                      size="40rpx" 
+                      class="file-type-icon file-icon" />
+                  </view>
+                  <text class="file-name">{{item.fileName}}</text>
+                </view>
+                <view class="file-actions">
+                  <button class="action-button preview-button" bindtap="handlePreviewFile" data-url="{{item.filePath}}" data-name="{{item.fileName}}">
+                    <t-icon name="browse" size="44rpx" class="action-icon preview-icon" />
+                    <text class="action-text">预览</text>
+                  </button>
+                  <button class="action-button download-button" bindtap="downloadFile" data-url="{{item.filePath}}" data-name="{{item.fileName}}">
+                    <t-icon name="download" size="44rpx" class="action-icon download-icon" />
+                    <text class="action-text">下载</text>
+                  </button>
+                  <!-- 只有在任务未完成和未提交审核时才显示删除按钮 -->
+                  <button 
+                    wx:if="{{currentSubTask.status !== 1 && currentSubTask.status !== 2}}" 
+                    class="action-button delete-button" 
+                    bindtap="removeSubmittedFile" 
+                    data-id="{{item.attachmentId}}" 
+                    data-name="{{item.fileName}}"
+                    data-index="{{index}}">
+                    <t-icon name="delete" size="44rpx" class="action-icon delete-icon" />
+                    <text class="action-text">移除</text>
+                  </button>
+                </view>
+              </view>
+            </view>
+          </view>
+          
+          <!-- 审核评论 -->
+          <view class="form-section" wx:if="{{currentSubTask.status === 1 || currentSubTask.status === 3}}">
+            <view class="form-title">审核评论</view>
+            <view class="review-comment">
+              <text>{{currentSubTask.reviewComment || '无审核评论'}}</text>
+            </view>
+          </view>
+        </block>
+      </scroll-view>
+      
+      <!-- 底部按钮 -->
+      <view class="popup-footer">
+        <t-button shape="round" theme="primary" size="large" class="submit-btn" bind:tap="submitSubTaskWork" wx:if="{{currentSubTask && currentSubTask.status !== 1 && currentSubTask.status !== 2}}">提交工作</t-button>
+        <t-button shape="round" theme="primary" size="large" class="close-btn" bind:tap="hideSubTaskDetail" wx:if="{{currentSubTask && (currentSubTask.status === 1 || currentSubTask.status === 2)}}">关闭</t-button>
+      </view>
+    </view>
+  </t-popup>
+  
+  <!-- 底部操作区域 -->
+  <view class="footer-action-area">
+    <button open-type="share" class="share-btn share-button">
+      <t-icon name="share" size="32rpx" style="margin-right: 12rpx;" />
+      <text>分享任务</text>
+    </button>
+  </view>
+</view>
+
+<!-- 工具类 WXS 模块 -->
+<wxs module="tools">
+  // 格式化日期
+  function formatDate(dateStr) {
+    if (!dateStr) return '无期限';
+    var date = getDate(dateStr);
+    return date.getFullYear() + '-' + 
+           padZero(date.getMonth() + 1) + '-' + 
+           padZero(date.getDate());
+  }
+  
+  // 补零
+  function padZero(num) {
+    return num < 10 ? '0' + num : num;
+  }
+
+  // 格式化文件大小
+  function getFileSizeText(size) {
+    if (size === null || size === undefined) {
+      return '';
+    }
+    if (size < 1024) {
+      return size + 'B';
+    } else if (size < 1024 * 1024) {
+      return (size / 1024).toFixed(2) + 'KB';
+    } else {
+      return (size / (1024 * 1024)).toFixed(2) + 'MB';
+    }
+  }
+
+  // 根据文件名获取图标名称
+  function getFileIconName(fileName) {
+    if (!fileName) return 'file';
+    
+    var lowerFileName = fileName.toLowerCase();
+    
+    var iconName;
+    if (lowerFileName.indexOf('.docx') > -1 || lowerFileName.indexOf('.doc') > -1) {
+      iconName = 'file-word';
+    } else if (lowerFileName.indexOf('.xlsx') > -1 || lowerFileName.indexOf('.xls') > -1) {
+      iconName = 'file-excel';
+    } else if (lowerFileName.indexOf('.pptx') > -1 || lowerFileName.indexOf('.ppt') > -1) {
+      iconName = 'file-powerpoint';
+    } else if (lowerFileName.indexOf('.pdf') > -1) {
+      iconName = 'file-pdf';
+    } else if (lowerFileName.indexOf('.jpg') > -1 || lowerFileName.indexOf('.jpeg') > -1 || 
+               lowerFileName.indexOf('.png') > -1 || lowerFileName.indexOf('.gif') > -1 ||
+               lowerFileName.indexOf('.bmp') > -1 || lowerFileName.indexOf('.webp') > -1) {
+      iconName = 'image';
+    } else if (lowerFileName.indexOf('.txt') > -1) {
+      iconName = 'file-1';
+    } else if (lowerFileName.indexOf('.zip') > -1 || lowerFileName.indexOf('.rar') > -1 || 
+               lowerFileName.indexOf('.7z') > -1) {
+      iconName = 'file-zip';
+    } else if (lowerFileName.indexOf('.mp4') > -1 || lowerFileName.indexOf('.avi') > -1 || 
+               lowerFileName.indexOf('.mov') > -1) {
+      iconName = 'file-1';
+    } else if (lowerFileName.indexOf('.mp3') > -1 || lowerFileName.indexOf('.wav') > -1) {
+      iconName = 'file-music';
+    } else {
+      iconName = 'file';
+    }
+    
+    return iconName;
+  }
+  
+  // 备用图标映射方案（如果主方案不工作）
+  function getSimpleFileIconName(fileName) {
+    if (!fileName) return 'folder';
+    
+    var lowerFileName = fileName.toLowerCase();
+    
+    if (lowerFileName.indexOf('.xlsx') > -1 || lowerFileName.indexOf('.xls') > -1 ||
+        lowerFileName.indexOf('.docx') > -1 || lowerFileName.indexOf('.doc') > -1 ||
+        lowerFileName.indexOf('.pptx') > -1 || lowerFileName.indexOf('.ppt') > -1 ||
+        lowerFileName.indexOf('.pdf') > -1) {
+      return 'file-1'; // 使用通用文档图标
+    } else if (lowerFileName.indexOf('.jpg') > -1 || lowerFileName.indexOf('.jpeg') > -1 || 
+               lowerFileName.indexOf('.png') > -1 || lowerFileName.indexOf('.gif') > -1) {
+      return 'image';
+    } else {
+      return 'folder'; // 默认图标
+    }
+  }
+  
+  module.exports = {
+    formatDate: formatDate,
+    getFileSizeText: getFileSizeText,
+    getFileIconName: getFileIconName,
+    getSimpleFileIconName: getSimpleFileIconName
+  };
+</wxs> 

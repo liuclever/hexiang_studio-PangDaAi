@@ -1,0 +1,339 @@
+<view class="container">
+  <!-- 页面头部 -->
+  <view class="page-header">
+    <view class="nav-section-centered">
+      <text class="page-title-centered">活动详情</text>
+    </view>
+  </view>
+  
+  <scroll-view scroll-y="true" class="detail-scroll" bindscrolltolower="onReachBottom" lower-threshold="50">
+    <!-- 主要活动信息卡片 -->
+    <view class="card activity-main-card">
+      <view class="activity-header">
+        <view class="activity-title">{{planDetail.name}}</view>
+        <view class="activity-creator">
+          <t-icon name="user" size="28rpx" color="#999" />
+          <text style="margin-left: 4rpx;">{{planDetail.createUserName || '系统管理员'}} 创建</text>
+        </view>
+      </view>
+      
+      <view class="info-grid">
+        <view class="info-item">
+          <view class="info-label">签到人数</view>
+          <view class="info-value">{{statistics.presentCount || 0}}/{{statistics.totalCount || 0}}</view>
+        </view>
+        <view class="info-item">
+          <view class="info-label">活动状态</view>
+          <view class="info-value {{planDetail.activityStatus === 'ongoing' ? 'ongoing-text' : (planDetail.activityStatus === 'ended' ? 'ended-text' : 'upcoming-text')}}">{{planDetail.statusText}}</view>
+        </view>
+      </view>
+      
+      <!-- 活动时间线 -->
+      <view class="activity-period">
+        <t-icon name="time" size="40rpx" color="#0052d9" />
+        <view class="period-info">
+          <view class="period-label">活动时间</view>
+          <view class="period-value">{{tools.formatDate(planDetail.startTime) + ' ~ ' + tools.formatDate(planDetail.endTime)}}</view>
+        </view>
+      </view>
+
+      <!-- 地点信息 -->
+      <view class="location-section">
+        <t-icon name="location" size="40rpx" color="#0052d9" />
+        <view class="location-info">
+          <view class="location-label">活动地点</view>
+          <view class="location-value">{{planDetail.location}}</view>
+          <view wx:if="{{planDetail.locationLat && planDetail.locationLng}}" class="coordinates">
+            经纬度：{{planDetail.locationLat}}, {{planDetail.locationLng}}
+          </view>
+          <view class="radius-info">签到半径：{{planDetail.radius}}米</view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 活动描述 -->
+    <view wx:if="{{planDetail.note}}" class="card section-card">
+      <view class="section-header no-actions">
+        <t-icon name="file-text" size="32rpx" color="#0052d9" />
+        <text class="section-title">活动说明</text>
+      </view>
+      <view class="description-content">
+        {{planDetail.note}}
+      </view>
+    </view>
+
+    <!-- 预约学生列表 -->
+    <view class="card section-card">
+      <view class="section-header no-actions">
+        <t-icon name="user-group" size="32rpx" color="#0052d9" />
+        <text class="section-title">预约学生</text>
+        <view class="reservation-count">{{reservedStudents.length}}人</view>
+      </view>
+      
+      <view wx:if="{{reservedStudentsLoading}}" class="loading-container">
+        <t-icon name="loading" size="40rpx" color="#999" />
+        <text class="loading-text">加载中...</text>
+      </view>
+      
+      <view wx:elif="{{reservedStudents.length === 0}}" class="empty-state">
+        <t-icon name="user-group" size="80rpx" color="#ddd" />
+        <text class="empty-text">暂无预约学生</text>
+      </view>
+      
+      <view wx:else class="reserved-students-list">
+        <view 
+          wx:for="{{displayedStudents}}" 
+          wx:key="id" 
+          class="student-row"
+        >
+          <view class="student-info-compact">
+            <view class="student-name-compact">{{item.name}}</view>
+            <view class="student-number-compact">{{item.studentNumber}}</view>
+          </view>
+          <view class="student-status-compact">
+            <view class="status-dot {{item.status === 'reserved' ? 'reserved' : 'cancelled'}}"></view>
+            <text class="status-text">{{item.status === 'reserved' ? '已预约' : '已取消'}}</text>
+          </view>
+        </view>
+        
+        <!-- 展开/收起按钮 (当学生较多时) -->
+        <view wx:if="{{reservedStudents.length > 5}}" class="expand-btn-compact" bindtap="toggleStudentList">
+          <text class="expand-text">{{showAllStudents ? '收起' : '展开全部(' + reservedStudents.length + '人)'}}</text>
+          <t-icon name="{{showAllStudents ? 'chevron-up' : 'chevron-down'}}" size="20rpx" />
+        </view>
+      </view>
+    </view>
+
+    <!-- 签到统计 -->
+    <view class="card section-card">
+      <view class="section-header no-actions">
+        <t-icon name="chart-pie" size="32rpx" color="#0052d9" />
+        <text class="section-title">签到统计</text>
+      </view>
+      <view class="stats-grid">
+        <view class="stats-item">
+          <view class="stats-value present">{{statistics.presentCount || 0}}</view>
+          <view class="stats-label">已签到</view>
+        </view>
+        <view class="stats-item">
+          <view class="stats-value late">{{statistics.lateCount || 0}}</view>
+          <view class="stats-label">迟到</view>
+        </view>
+        <view class="stats-item">
+          <view class="stats-value absent">{{statistics.absentCount || 0}}</view>
+          <view class="stats-label">缺勤</view>
+        </view>
+        <view class="stats-item">
+          <view class="stats-value leave">{{statistics.leaveCount || 0}}</view>
+          <view class="stats-label">请假</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 签到记录列表 -->
+    <view class="card section-card">
+      <view class="section-header">
+        <t-icon name="user-group" size="32rpx" color="#0052d9" />
+        <text class="section-title">签到记录</text>
+        <view class="header-actions">
+          <button class="filter-btn" bindtap="toggleFilter">
+            <t-icon name="filter" size="24rpx" />
+            筛选
+          </button>
+        </view>
+      </view>
+
+      <!-- 筛选条件 -->
+      <view wx:if="{{showFilter}}" class="filter-section">
+        <view class="filter-chips">
+          <view class="chip {{statusFilter === 'all' ? 'active' : ''}}" bindtap="setStatusFilter" data-status="all">
+            全部
+          </view>
+          <view class="chip {{statusFilter === 'present' ? 'active' : ''}}" bindtap="setStatusFilter" data-status="present">
+            已签到
+          </view>
+          <view class="chip {{statusFilter === 'late' ? 'active' : ''}}" bindtap="setStatusFilter" data-status="late">
+            迟到
+          </view>
+          <view class="chip {{statusFilter === 'absent' ? 'active' : ''}}" bindtap="setStatusFilter" data-status="absent">
+            缺勤
+          </view>
+          <view class="chip {{statusFilter === 'leave' ? 'active' : ''}}" bindtap="setStatusFilter" data-status="leave">
+            请假
+          </view>
+        </view>
+      </view>
+
+      <!-- 记录列表 -->
+      <view class="records-list">
+        <view wx:if="{{filteredRecords.length === 0}}" class="empty-records">
+          <t-icon name="inbox" size="80rpx" color="#ccc" />
+          <text class="empty-text">暂无{{getStatusFilterText()}}记录</text>
+        </view>
+        
+        <view wx:for="{{filteredRecords}}" wx:key="recordId" class="record-item">
+          <view class="record-content">
+            <!-- 标题行：学生姓名 + 状态标签 -->
+            <view class="title-row">
+              <text class="student-name">{{item.studentName || item.student_name || ('学生' + item.studentId)}}</text>
+              <view class="status-badge status-{{item.status}}">
+                {{item.statusText || getStatusLabel(item.status)}}
+              </view>
+            </view>
+          
+            <!-- 信息行 -->
+            <view class="meta-row">
+              <view class="meta-item" wx:if="{{item.signInTime}}">
+                <t-icon name="time" size="28rpx" color="#999" />
+                <text class="meta-text">{{tools.formatDateTime(item.signInTime)}}</text>
+              </view>
+              <view class="meta-item" wx:if="{{item.location}}">
+                <t-icon name="location" size="28rpx" color="#999" />
+                <text class="meta-text">{{item.location}}</text>
+              </view>
+            </view>
+            
+            <!-- 扩展信息行 -->
+            <view class="extra-row" wx:if="{{item.locationLat && item.locationLng}}">
+              <view class="meta-item">
+                <t-icon name="map" size="28rpx" color="#999" />
+                <text class="meta-text coordinates">{{item.locationLat}}, {{item.locationLng}}</text>
+              </view>
+              <view class="meta-item" wx:if="{{item.studentNumber || item.student_number}}">
+                <t-icon name="user" size="28rpx" color="#999" />
+                <text class="meta-text">{{item.studentNumber || item.student_number}}</text>
+            </view>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 加载更多状态 -->
+        <view wx:if="{{filteredRecords.length > 0}}" class="load-more-section">
+          <view wx:if="{{loadingMore}}" class="loading-more">
+            <t-icon name="loading" size="32rpx" color="#0052d9" />
+            <text class="loading-text">加载中...</text>
+          </view>
+          <view wx:elif="{{!pagination.hasMore}}" class="no-more">
+            <text class="no-more-text">已显示全部记录</text>
+          </view>
+          <view wx:else class="pull-tip">
+            <text class="pull-tip-text">上拉加载更多</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-actions">
+    <button wx:if="{{userRole === 'admin'}}" class="action-btn primary" bindtap="editBasicInfo">
+      <t-icon name="edit" size="32rpx" />
+      修改信息
+    </button>
+    <button wx:if="{{userRole === 'admin'}}" class="action-btn danger" bindtap="deleteActivity">
+      <t-icon name="delete" size="32rpx" />
+      删除考勤
+    </button>
+  </view>
+
+  <!-- 编辑信息弹窗 -->
+  <view wx:if="{{showEditForm}}" class="edit-form-overlay" bindtap="hideEditForm">
+    <view class="edit-form-modal" catchtap="preventClose">
+      <view class="edit-form-header">
+        <text class="edit-form-title">修改考勤信息</text>
+        <t-icon name="close" size="32rpx" color="#999" bindtap="hideEditForm" />
+      </view>
+      
+      <scroll-view scroll-y="true" class="edit-form-content">
+        <view class="form-item">
+          <text class="form-label">考勤名称</text>
+          <input class="form-input" placeholder="请输入考勤名称" value="{{editForm.name}}" bindinput="onNameInput" />
+        </view>
+        
+        <view class="form-item">
+          <text class="form-label">开始时间</text>
+          <picker mode="multiSelector" range="{{dateTimeRange}}" value="{{startTimeIndex}}" bindchange="onStartTimeChange" class="form-picker">
+            <view class="picker-display">{{editForm.startTimeDisplay || '请选择开始时间'}}</view>
+          </picker>
+        </view>
+        
+        <view class="form-item">
+          <text class="form-label">结束时间</text>
+          <picker mode="multiSelector" range="{{dateTimeRange}}" value="{{endTimeIndex}}" bindchange="onEndTimeChange" class="form-picker">
+            <view class="picker-display">{{editForm.endTimeDisplay || '请选择结束时间'}}</view>
+          </picker>
+        </view>
+        
+        <view class="form-item">
+          <text class="form-label">活动地点</text>
+          <picker range="{{commonLocations}}" range-key="name" value="{{editForm.locationIndex}}" bindchange="onLocationChange" class="form-picker">
+            <view class="picker-display">{{editForm.locationDisplay || '请选择活动地点'}}</view>
+          </picker>
+        </view>
+        
+        <view class="form-row">
+          <view class="form-item half">
+            <text class="form-label">纬度</text>
+            <view class="form-display">{{editForm.locationLat || '请先选择地点'}}</view>
+          </view>
+          <view class="form-item half">
+            <text class="form-label">经度</text>
+            <view class="form-display">{{editForm.locationLng || '请先选择地点'}}</view>
+          </view>
+        </view>
+        
+        <view class="form-item">
+          <text class="form-label">签到半径</text>
+          <input class="form-input" type="number" placeholder="请输入签到半径(米)" value="{{editForm.radius}}" bindinput="onRadiusInput" />
+        </view>
+        
+        <view class="form-item">
+          <text class="form-label">考勤状态</text>
+          <picker range="{{statusOptions}}" range-key="label" value="{{editForm.statusIndex}}" bindchange="onStatusChange" class="form-picker">
+            <view class="picker-display">{{statusOptions[editForm.statusIndex].label}}</view>
+          </picker>
+        </view>
+        
+        <view class="form-item">
+          <text class="form-label">备注说明</text>
+          <textarea class="form-textarea" placeholder="请输入备注说明" value="{{editForm.note}}" bindinput="onNoteInput"></textarea>
+        </view>
+      </scroll-view>
+      
+      <view class="edit-form-actions">
+        <button class="form-btn cancel" bindtap="hideEditForm">取消</button>
+        <button class="form-btn confirm" bindtap="saveChanges">保存</button>
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 工具类 WXS 模块 -->
+<wxs module="tools">
+  // 格式化日期时间
+  function formatDateTime(dateStr) {
+    if (!dateStr) return '';
+    var date = getDate(dateStr);
+    var year = date.getFullYear();
+    var month = (date.getMonth() + 1 < 10 ? '0' : '') + (date.getMonth() + 1);
+    var day = (date.getDate() < 10 ? '0' : '') + date.getDate();
+    var hour = (date.getHours() < 10 ? '0' : '') + date.getHours();
+    var minute = (date.getMinutes() < 10 ? '0' : '') + date.getMinutes();
+    return month + '/' + day + ' ' + hour + ':' + minute;
+  }
+
+  // 格式化日期
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    var date = getDate(dateStr);
+    var year = date.getFullYear();
+    var month = (date.getMonth() + 1 < 10 ? '0' : '') + (date.getMonth() + 1);
+    var day = (date.getDate() < 10 ? '0' : '') + date.getDate();
+    return year + '/' + month + '/' + day;
+  }
+
+  module.exports = {
+    formatDateTime: formatDateTime,
+    formatDate: formatDate
+  };
+</wxs> 

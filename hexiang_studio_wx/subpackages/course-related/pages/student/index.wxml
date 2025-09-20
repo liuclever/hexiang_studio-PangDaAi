@@ -1,0 +1,91 @@
+<!-- pages/course/student/index.wxml -->
+<view class="container">
+  <view class="page-header">
+    <view class="header-content">
+      <view class="header-icon">
+        <t-icon name="education" size="32rpx" color="#0052d9"></t-icon>
+      </view>
+      <view class="header-text">
+        <view class="header-title">{{isMy ? '我的课程' : userName + '的课程'}}</view>
+        <view class="header-subtitle">共{{courses.length}}门学习课程</view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 课程状态选项卡 -->
+  <view class="tab-container">
+    <view class="tab {{activeTab === 'all' ? 'tab-active' : ''}}" 
+          bindtap="switchTab" data-tab="all">
+      <text class="tab-text">全部</text>
+      <view wx:if="{{activeTab === 'all'}}" class="tab-line"></view>
+    </view>
+    <view class="tab {{activeTab === 'ongoing' ? 'tab-active' : ''}}" 
+          bindtap="switchTab" data-tab="ongoing">
+      <text class="tab-text">进行中</text>
+      <view wx:if="{{activeTab === 'ongoing'}}" class="tab-line"></view>
+    </view>
+    <view class="tab {{activeTab === 'completed' ? 'tab-active' : ''}}" 
+          bindtap="switchTab" data-tab="completed">
+      <text class="tab-text">已结束</text>
+      <view wx:if="{{activeTab === 'completed'}}" class="tab-line"></view>
+    </view>
+  </view>
+  
+  <!-- 加载状态 -->
+  <view class="loading-container" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text>加载中...</text>
+  </view>
+  
+  <!-- 课程列表 -->
+  <view class="course-list" wx:else>
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{courses.length === 0}}">
+      <image class="empty-image" src="/images/icons/empty-course.svg" mode="aspectFit"></image>
+      <text>暂无{{activeTab === 'ongoing' ? '进行中' : activeTab === 'completed' ? '已结束' : ''}}课程</text>
+    </view>
+    
+    <!-- 课程列表 -->
+    <block wx:else>
+      <view class="course-card" wx:for="{{courses}}" wx:key="id" bindtap="viewCourseDetail" data-id="{{item.id}}">
+        <!-- 课程封面 -->
+        <image class="course-cover" src="{{item.coverImage}}" mode="aspectFill"></image>
+        
+        <!-- 课程信息 -->
+        <view class="course-content">
+          <!-- 课程标题和状态 -->
+          <view class="course-header">
+            <text class="course-title">{{item.title}}</text>
+            <view class="course-badge {{item.status === 'ongoing' ? 'badge-primary' : 'badge-success'}}">
+              {{item.status === 'ongoing' ? '进行中' : '已结束'}}
+            </view>
+          </view>
+          
+          <!-- 课程详情 -->
+          <view class="course-info">
+            <view class="info-row">
+              <view class="info-item">
+                <text class="info-label">讲师:</text>
+                <text class="info-text">{{item.instructor}}</text>
+              </view>
+              <view class="info-item">
+                <text class="info-label">学时:</text>
+                <text class="info-text">{{item.courseTime}}</text>
+              </view>
+            </view>
+            <view class="info-row">
+              <view class="info-item">
+                <text class="info-label">分类:</text>
+                <text class="info-text">{{item.categoryName}}</text>
+              </view>
+              <view class="info-item">
+                <text class="info-label">地点:</text>
+                <text class="info-text">{{item.location}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </block>
+  </view>
+</view>

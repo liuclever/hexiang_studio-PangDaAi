@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.back_hexiang_studio.mapper.TaskMapper">
+
+    <resultMap id="task" type="com.back_hexiang_studio.entity.Task">
+    <id column="task_id" property="taskId"/>
+    <result column="title" property="title"/>
+    <result column="description" property="description"/>
+    <result column="status" property="status"/>
+    <result column="start_time" property="startTime"/>
+    <result column="end_time" property="endTime"/>
+    <result column="create_time" property="createTime"/>
+    <result column="update_time" property="updateTime"/>
+    <result column="create_user" property="createUser"/>
+    <result column="update_user" property="updateUser"/>
+    </resultMap>
+    
+    <!-- 任务列表查询结果映射 -->
+    <resultMap id="taskWithCreator" type="com.back_hexiang_studio.dv.vo.task.TasksVo">
+    <id column="task_id" property="taskId"/>
+    <result column="title" property="title"/>
+    <result column="description" property="description"/>
+    <result column="status" property="status"/>
+    <result column="start_time" property="startTime"/>
+    <result column="end_time" property="endTime"/>
+    <result column="completed_sub_tasks" property="completedSubTasks"/>
+    <result column="total_sub_tasks" property="totalSubTasks"/>
+    <result column="creat_user_name" property="creatUserName"/>
+    </resultMap>
+
+    <!--添加主任务-->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="taskId">
+    insert into task (title,description,create_user,update_user,status,start_time,end_time,create_time,update_time)
+    values (#{title},#{description},#{createUser},#{updateUser},#{status},#{startTime},#{endTime},#{createTime},#{updateTime})
+    </insert>
+    <!--分页查询任务-->
+    <select id="getTasks" resultMap="taskWithCreator">
+        SELECT 
+            t.task_id,
+            t.title,
+            t.description,
+            t.status,
+            DATE_FORMAT(t.start_time, '%Y-%m-%d %H:%i:%s') as start_time,
+            DATE_FORMAT(t.end_time, '%Y-%m-%d %H:%i:%s') as end_time,
+            u.name as creat_user_name,
+            (SELECT COUNT(*) 
+             FROM sub_task st 
+             WHERE st.task_id = t.task_id AND st.status = 1) as completed_sub_tasks,
+            (SELECT COUNT(*) FROM sub_task st WHERE st.task_id = t.task_id) as total_sub_tasks
+        FROM task t
+        LEFT JOIN user u ON t.create_user = u.user_id
+        <where>
+            <if test="title != null and title != ''">
+                AND (t.title LIKE CONCAT('%', #{title}, '%') OR t.description LIKE CONCAT('%', #{title}, '%'))
+            </if>
+            <if test="status != null and status != ''">
+                AND t.status = #{status}
+            </if>
+            <if test="startTime != null">
+                AND t.start_time &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND t.end_time &lt;= #{endTime}
+            </if>
+        </where>
+        ORDER BY t.create_time DESC
+    </select>
+
+    <!--分页查询任务（带角色权限过滤）-->
+    <select id="getTasksWithRole" resultMap="taskWithCreator">
+        SELECT 
+            t.task_id,
+            t.title,
+            t.description,
+            t.status,
+            DATE_FORMAT(t.start_time, '%Y-%m-%d %H:%i:%s') as start_time,
+            DATE_FORMAT(t.end_time, '%Y-%m-%d %H:%i:%s') as end_time,
+            u.name as creat_user_name,
+            (SELECT COUNT(*) 
+             FROM sub_task st 
+             WHERE st.task_id = t.task_id AND st.status = 1) as completed_sub_tasks,
+            (SELECT COUNT(*) FROM sub_task st WHERE st.task_id = t.task_id) as total_sub_tasks
+        FROM task t
+        LEFT JOIN user u ON t.create_user = u.user_id
+        <where>
+            <!-- 基本过滤条件 -->
+            <if test="taskQuery.title != null and taskQuery.title != ''">
+                AND (t.title LIKE CONCAT('%', #{taskQuery.title}, '%') OR t.description LIKE CONCAT('%', #{taskQuery.title}, '%'))
+            </if>
+            <if test="taskQuery.status != null and taskQuery.status != ''">
+                AND t.status = #{taskQuery.status}
+            </if>
+            <if test="taskQuery.startTime != null">
+                AND t.start_time &gt;= #{taskQuery.startTime}
+            </if>
+            <if test="taskQuery.endTime != null">
+                AND t.end_time &lt;= #{taskQuery.endTime}
+            </if>
+            
+            <!-- 角色权限过滤 -->
+            <choose>
+                <!-- 学生角色：只能看到参与的子任务对应的主任务 -->
+                <when test="userRole == 'student'">
+                    AND t.task_id IN (
+                        SELECT DISTINCT st.task_id 
+                        FROM sub_task st 
+                        INNER JOIN sub_member sm ON st.sub_task_id = sm.sub_task_id 
+                        WHERE sm.user_id = #{currentUserId}
+                    )
+                </when>
+                <!-- 老师角色：只能看到自己创建的任务 -->
+                <when test="userRole == 'teacher'">
+                    AND t.create_user = #{currentUserId}
+                </when>
+                <!-- 管理员和经理角色：查看所有任务，无额外过滤条件 -->
+                <when test="userRole == 'admin' or userRole == 'manager'">
+                    <!-- 管理员和经理无额外限制 -->
+                </when>
+            </choose>
+        </where>
+        ORDER BY t.create_time DESC
+    </select>
+
+    <!--根据任务id查询完成任务数-->
+    <select id="getCompletedSubTasks" resultType="java.lang.Integer">
+        SELECT COUNT(DISTINCT st.sub_task_id) 
+        FROM sub_task st
+        LEFT JOIN task_submission ts ON st.sub_task_id = ts.sub_task_id
+        WHERE st.task_id = #{taskId} 
+        AND ts.status = 1
+    </select>
+    <!--根据任务id查询任务总数-->
+    <select id="getTotalSubTasks" resultType="java.lang.Integer">
+        select count(*) from sub_task where task_id = #{taskId}
+    </select>
+    <!--根据任务id查询任务详情-->
+    <select id="getTaskDetail" resultType="com.back_hexiang_studio.entity.Task">
+       select * from task  where task_id = #{taskId}
+    </select>
+    <!--根据任务id查询相关子任务-->
+    <select id="getSubTasks" resultType="com.back_hexiang_studio.dv.vo.task.SubTaskDetailVo">
+        select sub_task_id, task_id, title, description, status from sub_task where task_id = #{taskId}
+    </select>
+    <!--根据子任务查询成员-->
+    <select id="getSubMembers" resultType="com.back_hexiang_studio.dv.vo.task.SubTaskMemberVo">
+        select sub_task_id,u.name, sm.user_id, u.avatar, role, note
+        from sub_member sm
+        left join  user u on sm.user_id = u.user_id
+        where sub_task_id = #{subTaskId}
+    </select>
+
+    <select id="getTaskStatistics" resultType="com.back_hexiang_studio.dv.vo.task.TaskStatisticsVo">
+        SELECT
+            COUNT(*) AS totalTasks,
+            SUM(IF(status = 'COMPLETED', 1, 0)) AS completedTasks,
+            SUM(IF(status = 'IN_PROGRESS', 1, 0)) AS inProgressTasks,
+            SUM(IF(status = 'NOT_STARTED', 1, 0)) AS notStartedTasks,
+            SUM(IF(status = 'OVERDUE', 1, 0)) AS overdueTasks,
+            SUM(IF(status = 'URGENT', 1, 0)) AS urgentTasks,
+            SUM(IF(status = 'URGENT' OR status = 'OVERDUE', 1, 0)) AS needAttentionTasks
+        FROM
+            task
+    </select>
+    <select id="isTaskExist" resultType="java.lang.Long">
+        select count(*) from task where task_id = #{taskId}
+    </select>
+
+    <update id="update">
+        update task
+        <set>
+            <if test="title != null">title = #{title},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="endTime != null">end_time = #{endTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="updateUser != null">update_user = #{updateUser},</if>
+        </set>
+        where task_id = #{taskId}
+    </update>
+
+    <delete id="deleteById">
+        delete from task where task_id = #{taskId}
+    </delete>
+
+    <!-- 批量更新逾期任务的状态 -->
+    <update id="updateOverdueTasksStatus">
+        UPDATE task
+        SET status = 'OVERDUE'
+        WHERE status != 'COMPLETED' AND end_time &lt; NOW()
+    </update>
+
+    <!-- 根据用户ID查找紧急的待办任务 -->
+    <select id="findUrgentTasksByUserId" resultType="com.back_hexiang_studio.dv.vo.task.MyTaskVO">
+        SELECT
+            t.task_id as taskId,
+            t.title,
+            t.end_time as endTime,
+            t.status
+        FROM
+            task t
+        WHERE
+            t.status != 'COMPLETED'
+            AND (
+                t.create_user = #{userId}
+                OR t.task_id IN (
+                    SELECT DISTINCT st.task_id
+                    FROM sub_task st
+                    JOIN sub_member sm ON st.sub_task_id = sm.sub_task_id
+                    WHERE sm.user_id = #{userId}
+                )
+            )
+            AND (
+                /* 未逾期的任务（所有） */
+                t.end_time &gt;= NOW()
+                /* 或最近30天内逾期的任务 */
+                OR t.end_time &gt;= DATE_SUB(NOW(), INTERVAL 30 DAY)
+            )
+        ORDER BY
+            /* 按紧急程度排序：即将到期的优先 */
+            CASE 
+                WHEN t.end_time &lt; NOW() THEN 1  /* 已逾期 */
+                WHEN t.end_time &lt;= DATE_ADD(NOW(), INTERVAL 3 DAY) THEN 2  /* 3天内到期 */
+                ELSE 3  /* 其他未来任务 */
+            END,
+            t.end_time ASC
+    </select>
+    
+    <!-- 根据用户ID获取个人任务统计 -->
+    <select id="getUserTaskStatistics" resultType="com.back_hexiang_studio.dv.vo.task.TaskStatisticsVo">
+        SELECT
+            COUNT(*) AS totalTasks,
+            SUM(IF(status = 'COMPLETED', 1, 0)) AS completedTasks,
+            SUM(IF(status = 'IN_PROGRESS', 1, 0)) AS inProgressTasks,
+            SUM(IF(status = 'NOT_STARTED', 1, 0)) AS notStartedTasks,
+            SUM(IF(status = 'OVERDUE', 1, 0)) AS overdueTasks,
+            SUM(IF(status = 'URGENT', 1, 0)) AS urgentTasks,
+            SUM(IF(status = 'URGENT' OR status = 'OVERDUE', 1, 0)) AS needAttentionTasks
+        FROM
+            task t
+        WHERE
+            t.create_user = #{userId}
+            OR t.task_id IN (
+                SELECT DISTINCT st.task_id
+                FROM sub_task st
+                JOIN sub_member sm ON st.sub_task_id = sm.sub_task_id
+                WHERE sm.user_id = #{userId}
+            )
+    </select>
+
+    <!-- 查询任务下所有子任务的提交状态 -->
+    <select id="getSubTaskSubmissionStatuses" resultType="java.lang.Integer">
+        SELECT COALESCE(ts.status, 0) as status
+        FROM sub_task st
+        LEFT JOIN task_submission ts ON st.sub_task_id = ts.sub_task_id
+        WHERE st.task_id = #{taskId}
+    </select>
+
+    <!-- 根据用户ID获取个人任务列表（包含所有状态） -->
+    <select id="getUserTaskList" resultType="com.back_hexiang_studio.dv.vo.task.MyTaskVO">
+        SELECT DISTINCT
+            t.task_id AS taskId,
+            t.title,
+            t.end_time AS endTime,
+            t.status
+        FROM
+            task t
+        WHERE
+            t.create_user = #{userId}
+            OR t.task_id IN (
+                SELECT DISTINCT st.task_id
+                FROM sub_task st
+                JOIN sub_member sm ON st.sub_task_id = sm.sub_task_id
+                WHERE sm.user_id = #{userId}
+            )
+        ORDER BY
+            /* 按紧急程度排序：即将到期的优先 */
+            CASE 
+                WHEN t.end_time &lt; NOW() THEN 1  /* 已逾期 */
+                WHEN t.end_time &lt;= DATE_ADD(NOW(), INTERVAL 3 DAY) THEN 2  /* 3天内到期 */
+                ELSE 3  /* 其他未来任务 */
+            END,
+            t.end_time ASC
+    </select>
+
+    <!-- 根据用户ID和状态获取个人任务列表 -->
+    <select id="getUserTaskListByStatus" resultType="com.back_hexiang_studio.dv.vo.task.MyTaskVO">
+        SELECT DISTINCT
+            t.task_id AS taskId,
+            t.title,
+            t.end_time AS endTime,
+            t.status
+        FROM
+            task t
+        WHERE
+            (t.create_user = #{userId}
+            OR t.task_id IN (
+                SELECT DISTINCT st.task_id
+                FROM sub_task st
+                JOIN sub_member sm ON st.sub_task_id = sm.sub_task_id
+                WHERE sm.user_id = #{userId}
+            ))
+            <if test="statusList != null and statusList.size() > 0">
+                AND t.status IN
+                <foreach collection="statusList" item="status" open="(" separator="," close=")">
+                    #{status}
+                </foreach>
+            </if>
+        ORDER BY
+            /* 按紧急程度排序：即将到期的优先 */
+            CASE 
+                WHEN t.end_time &lt; NOW() THEN 1  /* 已逾期 */
+                WHEN t.end_time &lt;= DATE_ADD(NOW(), INTERVAL 3 DAY) THEN 2  /* 3天内到期 */
+                ELSE 3  /* 其他未来任务 */
+            END,
+            t.end_time ASC
+    </select>
+
+</mapper>

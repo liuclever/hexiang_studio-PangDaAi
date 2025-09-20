@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.back_hexiang_studio.mapper.StudentMapper">
+    <resultMap id="StudentDetailResultMap" type="com.back_hexiang_studio.dv.vo.StudentVo">
+        <!-- 主键映射 -->
+        <id property="studentId" column="student_id" />
+
+        <!-- 基本属性映射 -->
+        <result property="userId" column="user_id" />
+        <result property="studentNumber" column="student_number" />
+        <result property="majorClass" column="majorClass" />
+        <result property="directionId" column="direction_id" />
+        <result property="joinTime" column="join_time" />
+
+        <!-- 关联属性映射 -->
+        <result property="name" column="name" />
+        <result property="directionName" column="direction_name" />
+    </resultMap>
+
+    <!-- 添加学生用户 -->
+    <insert id="addWithStudent" parameterType="com.back_hexiang_studio.dv.dto.UserDto" useGeneratedKeys="true" keyProperty="studentId" keyColumn="student_id">
+        INSERT INTO student (
+            user_id,
+            grade_year,
+            majorClass,
+            student_number,
+            direction_id,
+            counselor,
+            dormitory,
+            score,
+            department_id
+        ) VALUES (
+                     #{userId},
+                     #{gradeYear},
+                     #{major},
+                     #{studentNumber},
+                     1,
+                     #{counselor},
+                     #{dormitory},
+                     #{score},
+                     #{departmentId}
+                 )
+    </insert>
+
+    <!-- 添加学生培训方向关联 -->
+    <insert id="addStudentDirection">
+        INSERT INTO student_direction (
+            student_id,
+            direction_id,
+            create_time
+        ) VALUES (
+                     #{studentId},
+                     #{directionId},
+                     NOW()
+                 )
+    </insert>
+    <!-- 添加课程学生-->
+    <insert id="addStudent">
+            insert into student_course (student_id, course_id, join_time, create_time, create_user) values (#{studentId}, #{courseId}, #{joinTime}, now(), #{creatUser})
+    </insert>
+
+    <!-- 根据培训方向名称获取ID -->
+    <select id="getDirectionIdByName" resultType="java.lang.Long">
+        SELECT direction_id
+        FROM training_direction
+        WHERE direction_name = #{directionName}
+
+    </select>
+
+    <!-- 获取学生ID -->
+    <select id="getStudentIdByUserId" resultType="java.lang.Long">
+        SELECT student_id
+        FROM student
+        WHERE user_id = #{userId}
+    </select>
+
+    <!---根据学生id获取培训id-->
+    <select id="getDirectionId" resultType="java.lang.Long">
+        select  direction_id from student_direction where student_id=#{studenId}
+    </select>
+
+    <!---根据培训id获得培训方向列表-->
+    <select id="getdirections" resultType="java.lang.String">
+        select direction_name from  training_direction where direction_id=#{directionId }
+    </select>
+
+    <!-- 更新学生信息 -->
+    <update id="updateWithStudent" parameterType="com.back_hexiang_studio.dv.dto.UserDto">
+        UPDATE student
+        <set>
+            <if test="gradeYear != null">grade_year = #{gradeYear},</if>
+            <if test="major != null">majorClass = #{major},</if>
+            <if test="studentNumber != null">student_number = #{studentNumber},</if>
+            <if test="counselor != null">counselor = #{counselor},</if>
+            <if test="dormitory != null">dormitory = #{dormitory},</if>
+            <if test="score != null">score = #{score},</if>
+            <if test="departmentId != null">department_id = #{departmentId}</if>
+        </set>
+        WHERE user_id = #{userId}
+    </update>
+
+    <delete id="deleteStudentByUserIds" parameterType="java.util.List">
+        DELETE FROM student
+        WHERE user_id IN
+        <foreach item="userId" collection="userIds" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+    </delete>
+
+    <!-- 删除学生培训方向关联 -->
+    <delete id="deleteStudentDirections" parameterType="java.lang.Long">
+        DELETE FROM student_direction
+        WHERE student_id = #{studentId}
+    </delete>
+
+    <!-- 检查学生培训方向关联是否存在 -->
+    <select id="checkStudentDirectionExists" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM student_direction
+        WHERE student_id = #{studentId} AND direction_id = #{directionId}
+    </select>
+
+    <!-- 获取学生详细信息 -->
+    <select id="getStudentInfo" resultType="com.back_hexiang_studio.entity.Student">
+        SELECT
+            student_number,
+            grade_year,
+            majorClass,
+            counselor,
+            dormitory,
+            score,
+            department_id
+        FROM student
+        WHERE student_id = #{studentId}
+    </select>
+
+    <!-- 获取学生所有培训方向 -->
+    <select id="getStudentAllDirections" resultType="java.lang.String">
+        SELECT td.direction_name
+        FROM student_direction sd
+                 JOIN training_direction td ON sd.direction_id = td.direction_id
+        WHERE sd.student_id = #{studentId}
+    </select>
+    <!--获取课程学生列表-->
+    <select id="getStudentCurrentList" resultMap="StudentDetailResultMap">
+        SELECT s.student_id,s.user_id, u.name,s.student_number,s.majorClass,td.direction_name,
+               s.direction_id,sc.join_time
+        FROM course c
+                 left JOIN student_course sc ON c.course_id = sc.course_id
+                 left join student s on s.student_id=sc.student_id
+                 left JOIN user u ON s.user_id = u.user_id
+                 left join student_direction sd on sd.student_id=s.student_id
+                 left join training_direction td on td.direction_id=sd.direction_id
+        where c.course_id =#{courseId}
+    </select>
+    <select id="getStudentList" resultMap="StudentDetailResultMap">
+        SELECT s.student_id , u.name, s.student_number, s.majorClass,
+        s.direction_id, td.direction_name, sc.join_time  -- 移除重复的s.direction_id
+        FROM course c
+        left JOIN student_course sc ON c.course_id = sc.course_id
+        left join student s on s.student_id = sc.student_id
+        left JOIN user u ON s.user_id = u.user_id
+        left join student_direction sd on sd.student_id = s.student_id
+        left join training_direction td on td.direction_id = sd.direction_id
+        <where>
+        <if test="name != null">
+         AND c.name = #{name}
+        </if>
+        <if test="studentNumber != null">
+         AND c.student_number = #{studentNumber}
+        </if>
+        </where>
+    </select>
+
+    <!-- 删除学生记录 -->
+    <delete id="deleteStudent" parameterType="java.lang.Long">
+        DELETE FROM student
+        WHERE user_id = #{userId}
+    </delete>
+    <!-- 删除学生对应的课程-->
+    <delete id="deleteCourseWithTeacher">
+        delete from student_course where course_id=#{id}
+    </delete>
+
+    <!-- 根据学生ID获取学生信息 -->
+    <select id="getStudentById" resultType="com.back_hexiang_studio.entity.Student">
+        SELECT
+            student_id as studentId,
+            user_id as userId,
+            grade_year as gradeYear,
+            majorClass,
+            student_number as studentNumber,
+            direction_id as directionId,
+            counselor,
+            dormitory,
+            score
+        FROM student
+        WHERE student_id = #{studentId}
+    </select>
+
+    <!-- 根据课程ID查询选修该课程的学生列表 -->
+    <select id="selectStudentsByCourseId" resultType="map">
+        SELECT 
+            s.student_id,
+            u.name as student_name,
+            s.student_number,
+            s.majorClass
+        FROM student_course sc
+        JOIN student s ON sc.student_id = s.student_id
+        JOIN user u ON s.user_id = u.user_id
+        WHERE sc.course_id = #{courseId}
+        ORDER BY s.student_id
+    </select>
+
+    <insert id="insert" parameterType="com.back_hexiang_studio.entity.Student">
+        insert into hexiang_studio.student (
+            user_id, 
+            grade_year,
+            majorClass,
+            student_number,
+            counselor,
+            dormitory,
+            score,
+            direction_id,
+            department_id
+        ) values (
+            #{userId}, 
+            #{gradeYear},
+            #{majorClass},
+            #{studentNumber},
+            #{counselor},
+            #{dormitory},
+            #{score},
+            #{directionId},
+            #{departmentId}
+        )
+    </insert>
+
+    <select id="getDirectionIdsByStudentId" resultType="java.lang.Long">
+        select direction_id from student_direction where student_id = #{studentId}
+    </select>
+    
+    <!-- 获取已选课程的学生列表 -->
+    <select id="getEnrolledStudents" resultMap="StudentDetailResultMap">
+        SELECT 
+            s.student_id,
+            s.user_id, 
+            u.name,
+            s.student_number,
+            s.majorClass,
+            s.direction_id,
+            td.direction_name,
+            sc.join_time
+        FROM 
+            student_course sc
+        JOIN 
+            student s ON sc.student_id = s.student_id
+        JOIN 
+            user u ON s.user_id = u.user_id
+        LEFT JOIN 
+            training_direction td ON s.direction_id = td.direction_id
+        WHERE 
+            sc.course_id = #{courseId}
+            AND u.status = '1'
+        ORDER BY 
+            s.student_id
+    </select>
+    
+    <!-- 获取未选课但培训方向匹配的学生列表 -->
+    <select id="getEligibleStudents" resultMap="StudentDetailResultMap">
+        SELECT 
+            s.student_id,
+            s.user_id, 
+            u.name,
+            CAST(s.student_number AS CHAR) AS student_number,
+            s.majorClass,
+            s.direction_id,
+            td.direction_name
+        FROM 
+            student s
+        JOIN 
+            user u ON s.user_id = u.user_id
+        JOIN 
+            student_direction sd ON s.student_id = sd.student_id
+        JOIN 
+            training_direction td ON sd.direction_id = td.direction_id
+        WHERE 
+            sd.direction_id = #{directionId}
+            AND u.status = '1'
+            AND s.student_id NOT IN (
+                SELECT 
+                    sc.student_id 
+                FROM 
+                    student_course sc 
+                WHERE 
+                    sc.course_id = #{courseId}
+            )
+        ORDER BY 
+            s.student_id
+    </select>
+
+    <!-- 根据关键词搜索学生 -->
+    <select id="searchStudents" resultType="map">
+        SELECT 
+            s.student_id as id,
+            u.name as name,
+            s.student_number as studentNumber,
+            s.majorClass,
+            GROUP_CONCAT(DISTINCT td.direction_name ORDER BY td.direction_name ASC SEPARATOR ', ') as directionName
+        FROM 
+            student s
+        JOIN 
+            user u ON s.user_id = u.user_id
+        LEFT JOIN 
+            student_direction sd ON s.student_id = sd.student_id
+        LEFT JOIN 
+            training_direction td ON sd.direction_id = td.direction_id
+        WHERE 
+            u.status = '1'
+            <if test="query != null and query != ''">
+                AND (
+                    u.name LIKE CONCAT('%', #{query}, '%')
+                    OR s.student_number LIKE CONCAT('%', #{query}, '%')
+                    OR s.majorClass LIKE CONCAT('%', #{query}, '%')
+                    OR EXISTS (
+                        SELECT 1 FROM student_direction sd2 
+                        JOIN training_direction td2 ON sd2.direction_id = td2.direction_id 
+                        WHERE sd2.student_id = s.student_id 
+                        AND td2.direction_name LIKE CONCAT('%', #{query}, '%')
+                    )
+                )
+            </if>
+        GROUP BY 
+            s.student_id, u.name, s.student_number, s.majorClass
+        ORDER BY 
+            s.student_id
+        LIMIT 50
+    </select>
+
+</mapper>

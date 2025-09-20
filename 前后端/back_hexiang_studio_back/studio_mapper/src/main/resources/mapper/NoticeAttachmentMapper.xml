@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.back_hexiang_studio.mapper.NoticeAttachmentMapper">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="attachmentId">
+        insert into notice_attachment (notice_id, file_name, file_path, file_size, file_type, create_user, create_time)
+        values (#{noticeId}, #{fileName}, #{filePath}, #{fileSize}, #{fileType}, #{createUser}, #{createTime})
+    </insert>
+
+    <select id="getByNoticeId" resultType="com.back_hexiang_studio.dv.vo.NoticeAttachmentVo">
+        select * from notice_attachment where notice_id = #{noticeId}
+    </select>
+
+    <select id="getAttachmentById" resultType="com.back_hexiang_studio.dv.vo.NoticeAttachmentVo">
+        select * from notice_attachment where attachment_id = #{attachmentId}
+    </select>
+
+    <delete id="deleteByNoticeId">
+        delete from notice_attachment where notice_id = #{noticeId}
+    </delete>
+
+    <delete id="deleteBatch">
+        delete from notice_attachment where attachment_id in
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deleteById">
+        delete from notice_attachment where attachment_id = #{id}
+    </delete>
+</mapper>

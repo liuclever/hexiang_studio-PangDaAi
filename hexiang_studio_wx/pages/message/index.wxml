@@ -1,0 +1,182 @@
+<!-- 公告页面 -->
+<view class="announcement-container">
+  <!-- 头部搜索区域 -->
+  <view class="search-section">
+    <view class="search-bar">
+      <view class="search-input-container">
+        <t-input 
+          placeholder="搜索公告标题" 
+          value="{{searchKeyword}}"
+          bind:change="onSearchInput"
+          clearable
+        />
+      </view>
+      <view class="search-btn" bind:tap="onSearch">
+        <t-icon name="search" size="18" />
+      </view>
+    </view>
+    
+    <!-- 筛选标签 -->
+    <view class="filter-tags">
+      <view 
+        class="filter-tag {{filterType === '' ? 'active' : ''}}"
+        bind:tap="onFilterChange"
+        data-type=""
+      >
+        全部
+      </view>
+      <view 
+        class="filter-tag {{filterType === '0' ? 'active' : ''}}"
+        bind:tap="onFilterChange"
+        data-type="0"
+      >
+        通知
+      </view>
+      <view 
+        class="filter-tag {{filterType === '1' ? 'active' : ''}}"
+        bind:tap="onFilterChange"
+        data-type="1"
+      >
+        活动
+      </view>
+      <view 
+        class="filter-tag {{filterType === '2' ? 'active' : ''}}"
+        bind:tap="onFilterChange"
+        data-type="2"
+      >
+        新闻
+      </view>
+      <view 
+        class="filter-tag {{filterType === '3' ? 'active' : ''}}"
+        bind:tap="onFilterChange"
+        data-type="3"
+      >
+        其他
+      </view>
+    </view>
+  </view>
+
+  <!-- 公告列表 -->
+  <view class="announcement-list">
+    <block wx:if="{{announcements.length > 0}}">
+      <view 
+        class="announcement-item"
+        wx:for="{{announcements}}"
+        wx:key="id"
+        bind:tap="onAnnouncementTap"
+        data-item="{{item}}"
+      >
+        <!-- 公告头部 -->
+        <view class="item-header">
+          <view class="type-tag type-{{item.type}}">
+            {{item.typeText}}
+          </view>
+          <view class="publish-date">
+            <t-icon name="time" size="12" />
+            <text>{{item.publishDateFormatted}}</text>
+          </view>
+        </view>
+        
+        <!-- 公告标题 -->
+        <view class="item-title">{{item.title}}</view>
+        
+        <!-- 公告内容预览 -->
+        <view class="item-content">{{item.contentTruncated}}</view>
+        
+        <!-- 图片预览 -->
+        <view class="item-images" wx:if="{{item.images && item.images.length > 0}}">
+          <view class="images-preview">
+            <view 
+              class="preview-image"
+              wx:for="{{item.images}}"
+              wx:for-item="img"
+              wx:for-index="imgIndex"
+              wx:key="imageId"
+              wx:if="{{imgIndex < 3}}"
+              bind:tap="previewAnnouncementImages"
+              data-announcement="{{item}}"
+              data-index="{{imgIndex}}"
+              catch:tap="true"
+            >
+              <image 
+                src="{{img.fullUrl}}" 
+                mode="aspectFill"
+                lazy-load
+                class="preview-img"
+              />
+            </view>
+            <!-- 更多图片提示 -->
+            <view 
+              class="more-images"
+              wx:if="{{item.images.length > 3}}"
+              bind:tap="previewAnnouncementImages"
+              data-announcement="{{item}}"
+              data-index="0"
+              catch:tap="true" 
+            >
+              <text>+{{item.images.length - 3}}</text>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 公告底部信息 -->
+        <view class="item-footer">
+          <view class="publisher">
+            <t-icon name="user" size="12" />
+            <text>{{item.publisher}}</text>
+          </view>
+          <view class="item-stats">
+            <!-- 图片数量 -->
+            <view class="stat-item" wx:if="{{item.images && item.images.length > 0}}">
+              <t-icon name="image" size="12" />
+              <text>{{item.images.length}}</text>
+            </view>
+            <!-- 附件数量 -->
+            <view class="stat-item" wx:if="{{item.attachments && item.attachments.length > 0}}">
+              <t-icon name="attach" size="12" />
+              <text>{{item.attachments.length}}</text>
+            </view>
+            <!-- 状态控制组件 -->
+            <view class="status-toggle-container">
+              <view class="status-display {{item.status == 1 ? 'published' : 'draft'}}">
+                {{item.status == 1 ? '已发布' : '草稿'}}
+              </view>
+              <view class="status-switch" 
+                    catchtap="onStatusToggle" 
+                    data-id="{{item.id}}" 
+                    data-status="{{item.status}}">
+                <view class="switch-bg {{item.status == 1 ? 'on' : 'off'}}">
+                  <view class="switch-dot"></view>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </block>
+    
+    <!-- 空状态 -->
+    <view class="empty-state" wx:else>
+      <t-icon name="notification" size="64" color="#ccc" />
+      <view class="empty-text">暂无公告</view>
+    </view>
+  </view>
+
+  <!-- 加载更多/分页 -->
+  <view class="load-more" wx:if="{{announcements.length > 0}}">
+    <view 
+      class="load-more-btn {{hasMore ? '' : 'disabled'}}"
+      bind:tap="loadMore"
+    >
+      {{hasMore ? (loading ? '加载中...' : '加载更多') : '没有更多了'}}
+    </view>
+  </view>
+</view>
+
+<!-- 加载状态 -->
+<view class="loading-overlay" wx:if="{{loading && announcements.length === 0}}">
+  <view class="loading-content">
+    <view class="loading-spinner"></view>
+    <view class="loading-text">加载中...</view>
+  </view>
+</view>

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.back_hexiang_studio.mapper.UserCertificateMapper">
+
+    <!-- 用户证书信息的结果映射 -->
+    <resultMap id="userCertificateResultMap" type="com.back_hexiang_studio.dv.vo.UserCertificateVo">
+        <id column="certificate_id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="certificate_name" property="certificateName"/>
+        <result column="certificate_level" property="certificateLevel"/>
+        <result column="issue_org" property="issueOrg"/>
+        <result column="issue_date" property="issueDate"/>
+        <result column="expiry_date" property="expiryDate"/>
+        <result column="certificate_no" property="certificateNo"/>
+        <result column="description" property="description"/>
+        <result column="image_url" property="attachment"/>
+        <result column="verification_url" property="verificationUrl"/>
+        <result column="create_time" property="createTime"/>
+        <result column="create_user" property="createUser"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="update_user" property="updateUser"/>
+    </resultMap>
+    
+    <!-- 用户证书实体结果映射 -->
+    <resultMap id="userCertificateEntityResultMap" type="com.back_hexiang_studio.entity.UserCertificate">
+        <id column="certificate_id" property="certificateId"/>
+        <result column="user_id" property="userId"/>
+        <result column="certificate_name" property="certificateName"/>
+        <result column="certificate_level" property="certificateLevel"/>
+        <result column="issue_org" property="issueOrg"/>
+        <result column="issue_date" property="issueDate"/>
+        <result column="expiry_date" property="expiryDate"/>
+        <result column="certificate_no" property="certificateNo"/>
+        <result column="description" property="description"/>
+        <result column="image_url" property="imageUrl"/>
+        <result column="verification_url" property="verificationUrl"/>
+        <result column="create_time" property="createTime"/>
+        <result column="create_user" property="createUser"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="update_user" property="updateUser"/>
+    </resultMap>
+    
+    <!-- 根据用户ID查询用户证书列表 -->
+    <select id="findByUserId" resultMap="userCertificateResultMap">
+        SELECT * FROM user_certificate WHERE user_id = #{userId}
+    </select>
+    
+    <!-- 根据证书ID查询证书信息 -->
+    <select id="findById" resultMap="userCertificateResultMap">
+        SELECT * FROM user_certificate WHERE certificate_id = #{certificateId}
+    </select>
+    
+    <!-- 添加用户证书信息 -->
+    <insert id="insert" parameterType="com.back_hexiang_studio.entity.UserCertificate" useGeneratedKeys="true" keyProperty="certificateId">
+        INSERT INTO user_certificate (
+            user_id, 
+            certificate_name, 
+            certificate_level, 
+            issue_org, 
+            issue_date, 
+            expiry_date, 
+            certificate_no, 
+            description, 
+            image_url, 
+            verification_url, 
+            create_time, 
+            update_time
+        ) VALUES (
+            #{userId}, 
+            #{certificateName}, 
+            #{certificateLevel}, 
+            #{issueOrg}, 
+            #{issueDate}, 
+            #{expiryDate}, 
+            #{certificateNo}, 
+            #{description}, 
+            #{imageUrl}, 
+            #{verificationUrl},
+            NOW(),
+            NOW()
+        )
+    </insert>
+    
+    <!-- 更新用户证书信息 -->
+    <update id="update" parameterType="com.back_hexiang_studio.entity.UserCertificate">
+        UPDATE user_certificate
+        <set>
+            <if test="certificateName != null">certificate_name = #{certificateName},</if>
+            <if test="certificateLevel != null">certificate_level = #{certificateLevel},</if>
+            <if test="issueOrg != null">issue_org = #{issueOrg},</if>
+            <if test="issueDate != null">issue_date = #{issueDate},</if>
+            <if test="expiryDate != null">expiry_date = #{expiryDate},</if>
+            <if test="certificateNo != null">certificate_no = #{certificateNo},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="imageUrl != null">image_url = #{imageUrl},</if>
+            <if test="verificationUrl != null">verification_url = #{verificationUrl},</if>
+            update_time = NOW()
+        </set>
+        WHERE certificate_id = #{certificateId}
+    </update>
+    
+    <!-- 删除用户证书信息 -->
+    <delete id="delete">
+        DELETE FROM user_certificate WHERE certificate_id = #{certificateId}
+    </delete>
+
+    <delete id="deleteByUserIds" parameterType="java.util.List">
+        DELETE FROM user_certificate
+        WHERE user_id IN
+        <foreach item="userId" collection="userIds" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+    </delete>
+
+</mapper> 

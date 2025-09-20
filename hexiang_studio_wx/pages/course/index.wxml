@@ -1,0 +1,136 @@
+<!--pages/course/index.wxml-->
+<view class="container">
+  <view class="page-header">
+    <view class="header-content">
+      <view class="header-icon">
+        <t-icon name="education" size="32rpx" color="#0052d9"></t-icon>
+      </view>
+      <view class="header-text">
+        <view class="header-title">课程管理</view>
+        <view class="header-subtitle">共{{totalCount}}门课程</view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 课程状态选项卡 -->
+  <view class="tab-container">
+    <view class="tab {{activeTab === 'all' ? 'tab-active' : ''}}" 
+          bindtap="switchTab" data-tab="all">
+      <text class="tab-text">全部</text>
+      <view wx:if="{{activeTab === 'all'}}" class="tab-line"></view>
+    </view>
+    <view class="tab {{activeTab === 'published' ? 'tab-active' : ''}}" 
+          bindtap="switchTab" data-tab="published">
+      <text class="tab-text">已发布</text>
+      <view wx:if="{{activeTab === 'published'}}" class="tab-line"></view>
+    </view>
+    <view class="tab {{activeTab === 'draft' ? 'tab-active' : ''}}" 
+          bindtap="switchTab" data-tab="draft">
+      <text class="tab-text">草稿</text>
+      <view wx:if="{{activeTab === 'draft'}}" class="tab-line"></view>
+    </view>
+    <view class="tab {{activeTab === 'offline' ? 'tab-active' : ''}}" 
+          bindtap="switchTab" data-tab="offline">
+      <text class="tab-text">已下架</text>
+      <view wx:if="{{activeTab === 'offline'}}" class="tab-line"></view>
+    </view>
+  </view>
+  
+  <!-- 加载状态 -->
+  <view class="loading-container" wx:if="{{loading && courses.length === 0}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+  
+  <!-- 课程列表 -->
+  <view class="course-list" wx:else>
+    <!-- 空状态 -->
+    <view wx:if="{{courses.length === 0 && !loading}}" class="empty-state">
+      <view class="empty-icon">
+        <t-icon name="folder" size="120rpx" color="#d0d0d0"></t-icon>
+      </view>
+      <text class="empty-text">暂无课程</text>
+      <text class="empty-desc">当前筛选条件下没有找到课程</text>
+    </view>
+    
+    <!-- 课程列表项 -->
+    <view 
+      wx:for="{{courses}}" 
+      wx:key="courseId" 
+      class="course-item"
+    >
+      <view class="course-content" bindtap="viewCourseDetail" data-id="{{item.courseId}}">
+        <!-- 课程封面 -->
+        <view class="course-cover">
+          <image 
+            src="{{item.coverImage}}" 
+            mode="aspectFill"
+            class="cover-image"
+            lazy-load="{{true}}"
+          ></image>
+        </view>
+        
+        <!-- 课程信息 -->
+        <view class="course-info">
+          <view class="course-title">{{item.title}}</view>
+          <view class="course-meta">
+            <view class="meta-row">
+              <text class="meta-label">主讲:</text>
+              <text class="meta-value">{{item.instructor}}</text>
+            </view>
+            <view class="meta-row">
+              <text class="meta-label">时长:</text>
+              <text class="meta-value">{{item.courseTime}}</text>
+            </view>
+            <view class="meta-row">
+              <text class="meta-label">分类:</text>
+              <text class="meta-value">{{item.categoryName}}</text>
+            </view>
+            <view class="meta-row">
+              <text class="meta-label">地点:</text>
+              <text class="meta-value">{{item.location}}</text>
+            </view>
+          </view>
+          
+          <!-- 课程描述 -->
+          <view class="course-desc">{{item.description}}</view>
+        </view>
+      </view>
+      
+      <!-- 课程状态和操作 -->
+      <view class="course-actions">
+        <view class="status-info">
+          <view class="status-badge status-{{item.status}}">
+            <text class="status-text">{{item.statusText}}</text>
+          </view>
+          <text class="student-count">{{item.studentCount}}人学习</text>
+        </view>
+        
+        <!-- 状态修改按钮 -->
+        <view class="action-buttons">
+          <t-button 
+            size="small" 
+            variant="outline" 
+            theme="primary"
+            bindtap="changeStatus"
+            data-id="{{item.courseId}}"
+            data-status="{{item.status}}"
+          >
+            修改状态
+          </t-button>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 底部加载状态 -->
+    <view wx:if="{{loading && courses.length > 0}}" class="bottom-loading">
+      <view class="loading-spinner small"></view>
+      <text class="loading-text">加载中...</text>
+    </view>
+    
+    <!-- 没有更多了 -->
+    <view wx:if="{{!hasMore && courses.length > 0 && !loading}}" class="no-more">
+      <text class="no-more-text">没有更多课程了</text>
+    </view>
+  </view>
+</view> 

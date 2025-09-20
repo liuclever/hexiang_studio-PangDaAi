@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.back_hexiang_studio.mapper.CourseMapper">
+
+    <resultMap id="courseResultMap" type="com.back_hexiang_studio.dv.vo.CourseVo">
+        <id column="course_id" property="courseId"/>
+        <result column="name" property="name"/>
+        <result column="description" property="description"/>
+        <result column="teacher_id" property="teacherId"/>
+        <result column="create_time" property="createTime"/>
+        <result column="status" property="status"/>
+        <result column="duration" property="duration"/>
+        <result column="cover_image" property="coverImage"/>
+        <result column="material_url" property="materialUrl"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="location" property="location"/>
+        <result column="schedule" property="schedule"/>
+        <!-- 其他关联字段 -->
+        <result column="teacherName" property="teacherName"/>
+        <result column="categoryName" property="categoryName"/>
+        <result column="studentCount" property="studentCount"/>
+    </resultMap>
+    <!--添加课程-->
+    <insert id="add" parameterType="com.back_hexiang_studio.entity.Course" useGeneratedKeys="true" keyProperty="courseId">
+        insert into course (name, description, teacher_id, status, duration, cover_image, category_id, location, schedule, create_user, update_user, update_time)
+        values (#{name}, #{description}, #{teacherId}, #{status}, #{duration}, #{coverImage}, #{categoryId}, #{location}, #{schedule}, #{createUser}, #{updateUser}, #{updateTime})
+    </insert>
+
+    <!--更新课程-->
+    <update id="update">
+        update course set name=#{name},description=#{description},teacher_id=#{teacherId},status=#{status},duration=#{duration},cover_image=#{coverImage},category_id=#{categoryId},location=#{location},schedule=#{schedule},update_time=#{updateTime},update_user=#{updateUser} where course_id=#{courseId}
+    </update>
+    <update id="changeStatus">
+        update course set status=#{status} where course_id=#{id}
+    </update>
+    <!--删除课程-->
+    <delete id="deleteCourse">
+        delete from course where course_id=#{courseId}
+    </delete>
+
+    <!--查找课程所需信息-->
+    <select id="list" resultMap="courseResultMap">
+
+        select c.* ,u.name  AS teacherName,t.teacher_id, td.direction_name as  categoryName,(select count(*) from student_course sc where sc.course_id=c.course_id) AS studentCount
+        from course c
+        left join teacher t  on  t.teacher_id=c.teacher_id
+        left  join user u on u.user_id=t.user_id
+        left join  training_direction td on td.direction_id=c.category_id
+        <where>
+            <if test="name!=null and name!=''">
+                    and c.name like concat('%',#{name},'%')
+            </if>
+             <if test="teacher!=null and teacher!=''">
+                    and u.name like concat('%',#{teacher},'%')
+             </if>
+            <if test="status !=null and status !=''">
+                and c.status like #{status}
+            </if>
+            <if test="directionId !=null " >
+                and  c.category_id like #{categoryId}
+            </if>
+        </where>
+        order by course_id desc
+    </select>
+    <!--满足条件的课程数-->
+    <select id="countCourse" resultType="java.lang.Long">
+        select count(*) from course c
+        left join teacher t  on  t.teacher_id=c.teacher_id
+        left join user u on u.user_id=t.user_id
+        <where>
+            <if test="name!=null and name!=''">
+                and c.name = concat('%',#{name},'%')
+            </if>
+            <if test="teacher!=null and teacher!=''">
+                and u.name = concat('%',#{teacher},'%')
+            </if>
+            <if test="status!=null and status!=''">
+                and c.status = #{status}
+            </if>
+            <if test="directionId!=null " >
+                and  c.category_id = #{categoryId}
+            </if>
+        </where>
+    </select>
+    <!--获取课程详情-->
+    <select id="detail" resultMap="courseResultMap">
+        select c.* ,u.name  AS teacherName,t.teacher_id, td.direction_name as  categoryName,(select count(*) from student_course sc where sc.course_id=c.course_id) AS studentCount
+        from course c
+        left join teacher t  on  t.teacher_id=c.teacher_id
+        left  join user u on u.user_id=t.user_id
+        left join  training_direction td on td.direction_id=c.category_id
+        where c.course_id=#{courseId}
+        order by course_id desc
+    </select>
+    <!--该学生是否报名了课程-->
+    <select id="isSrudentEnrolled" resultType="java.lang.Boolean">
+        select count(*) > 0 from student_course sc 
+        where sc.student_id = #{studentId} and sc.course_id = #{courseId}
+    </select>
+    <!--判断课程是否存在-->
+    <select id="selectByIdNoNull" resultType="java.lang.Boolean">
+       select *  from course where course_id=#{courseId}
+    </select>
+
+    <!-- 根据ID查询课程 -->
+    <select id="selectById" resultType="com.back_hexiang_studio.entity.Course">
+        select * from course where course_id=#{courseId}
+    </select>
+
+    <!--搜索课程（用于下拉选择）-->
+    <select id="searchCourses" resultMap="courseResultMap">
+        select c.* ,u.name AS teacherName,t.teacher_id, td.direction_name as categoryName,
+               (select count(*) from student_course sc where sc.course_id=c.course_id) AS studentCount
+        from course c
+        left join teacher t on t.teacher_id=c.teacher_id
+        left join user u on u.user_id=t.user_id
+        left join training_direction td on td.direction_id=c.category_id
+        <where>
+            <if test="query != null and query != ''">
+                and (c.name like concat('%',#{query},'%') 
+                     or c.course_id like concat('%',#{query},'%'))
+            </if>
+            and c.status = 1
+        </where>
+        order by c.course_id desc
+        limit 50
+    </select>
+    
+    <select id="getById" resultType="com.back_hexiang_studio.entity.Course">
+        select * from course where course_id = #{id}
+    </select>
+
+    <!-- 根据教师ID查询课程列表 -->
+    <select id="getCoursesByTeacherId" resultMap="courseResultMap">
+        select c.*, u.name AS teacherName, t.teacher_id, td.direction_name as categoryName,
+               (select count(*) from student_course sc where sc.course_id=c.course_id) AS studentCount
+        from course c
+        inner join teacher t on t.teacher_id=c.teacher_id
+        left join user u on u.user_id=t.user_id
+        left join training_direction td on td.direction_id=c.category_id
+        where c.teacher_id = #{teacherId}
+        order by c.create_time desc
+    </select>
+
+    <!-- 根据学生ID查询课程列表 -->
+    <select id="getCoursesByStudentId" resultMap="courseResultMap">
+        select c.*, u.name AS teacherName, t.teacher_id, td.direction_name as categoryName,
+               (select count(*) from student_course sc2 where sc2.course_id=c.course_id) AS studentCount
+        from course c
+        inner join student_course sc on sc.course_id = c.course_id
+        left join teacher t on t.teacher_id=c.teacher_id
+        left join user u on u.user_id=t.user_id
+        left join training_direction td on td.direction_id=c.category_id
+        where sc.student_id = #{studentId}
+        order by c.create_time desc
+    </select>
+
+</mapper>
+

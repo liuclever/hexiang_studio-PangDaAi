@@ -1,0 +1,50 @@
+// cards.scss
+
+// Card hover effect
+.hover-card {
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--el-box-shadow);
+  }
+}
+
+// Card headers
+.el-card__header {
+  padding: 15px 20px;
+  font-weight: 500;
+  font-size: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--el-border-color-light);
+}
+
+// Custom card styles
+.stat-card {
+  color: #fff;
+  height: 100%;
+  
+  .el-card__body {
+    padding: 20px;
+  }
+}
+
+// Dialog card (for popups)
+.dialog-card {
+  .el-card__header {
+    background-color: var(--el-color-primary-light-9);
+  }
+  
+  .el-card__body {
+    padding: 20px;
+  }
+}
+
+// Notice card
+.notice-card {
+  margin-bottom: 12px;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+} 

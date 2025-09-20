@@ -1,0 +1,503 @@
+/* components/duty-schedule-table/duty-schedule-table.wxss */
+
+.duty-schedule-container {
+  background: #f5f5f7;
+  min-height: 100vh;
+  padding-bottom: 120rpx;
+}
+
+/* 周选择器 */
+.week-selector {
+  background: #ffffff;
+  padding: 16rpx 24rpx;
+  margin-bottom: 12rpx;
+  border-radius: 0 0 12rpx 12rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+}
+
+.week-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.nav-btn {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  background: #f8f9fa;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-btn:active {
+  background: #e9ecef;
+  transform: scale(0.95);
+}
+
+.week-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.week-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4rpx;
+}
+
+.week-date {
+  font-size: 22rpx;
+  color: #666;
+}
+
+.current-week-btn {
+  background: #007aff;
+  color: #ffffff;
+  border: none;
+  border-radius: 32rpx;
+  height: 56rpx;
+  line-height: 56rpx;
+  padding: 0 24rpx;
+  font-size: 24rpx;
+  margin: 0;
+}
+
+/* 星期标题行 - 压缩高度 */
+.weekdays-header {
+  display: flex;
+  background: #ffffff;
+  border-radius: 12rpx 12rpx 0 0;
+  margin: 0 16rpx;
+  overflow: hidden;
+}
+
+.time-slot-header {
+  width: 120rpx;
+  min-width: 120rpx;
+  max-width: 120rpx;
+  height: 55rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border-right: 1rpx solid #e9ecef;
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #333;
+  flex-shrink: 0;
+}
+
+.weekday-header {
+  flex: 1;
+  height: 55rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-right: 1rpx solid #e9ecef;
+  background: #ffffff;
+}
+
+.weekday-header:last-child {
+  border-right: none;
+}
+
+.weekday-header.today {
+  background: linear-gradient(135deg, #007aff 0%, #5ac8fa 100%);
+  color: #ffffff;
+}
+
+.weekday-name {
+  font-size: 18rpx;
+  font-weight: 500;
+  margin-bottom: 1rpx;
+}
+
+.weekday-date {
+  font-size: 16rpx;
+  opacity: 0.8;
+}
+
+/* 值班表主体 */
+.duty-table {
+  background: #ffffff;
+  margin: 0 16rpx;
+  border-radius: 0 0 12rpx 12rpx;
+  max-height: 1000rpx;
+}
+
+.time-row {
+  display: flex;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.time-row:last-child {
+  border-bottom: none;
+}
+
+/* 时间段单元格 */
+.time-slot-cell {
+  width: 110rpx;
+  min-width: 108rpx;
+  max-width: 108rpx;
+  min-height: 160rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border-right: 1rpx solid #e9ecef;
+  padding: 16rpx 8rpx;
+  flex-shrink: 0;
+}
+
+.time-text {
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4rpx;
+}
+
+.time-period {
+  font-size: 18rpx;
+  color: #666;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.duty-cell {
+  flex: 1;
+  min-height: 160rpx;
+  border-right: 1rpx solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  padding: 14rpx 8rpx;
+  position: relative;
+  background: #ffffff;
+  transition: background-color 0.2s;
+}
+
+.duty-cell:last-child {
+  border-right: none;
+}
+
+.duty-cell.today {
+  background: #f0f8ff;
+  border-color: #007aff;
+}
+
+.duty-cell:active {
+  background: #f5f5f5;
+}
+
+/* 值班内容 */
+.duty-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+/* 学生容器 - 新增 */
+.students-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6rpx;
+  align-items: flex-start;
+  justify-content: flex-start;
+  min-height: 60rpx;
+}
+
+/* 学生标签 - 重新设计 */
+.student-tag {
+  display: flex;
+  align-items: center;
+  gap: 3rpx;
+  padding: 4rpx 6rpx;
+  border-radius: 6rpx;
+  font-size: 16rpx;
+  white-space: nowrap;
+  transition: all 0.2s;
+  border: 1rpx solid transparent;
+  min-height: 24rpx;
+}
+
+.student-tag.current-user {
+  border-width: 2rpx;
+  border-style: solid;
+  font-weight: 600;
+}
+
+.student-name {
+  color: inherit;
+  max-width: 100rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 状态样式 - 与管理前端保持一致 */
+.status-present {
+  background-color: #f0f9ff;
+  color: #059669;
+  border-color: #a7f3d0;
+}
+
+.status-present.current-user {
+  border-color: #059669;
+}
+
+.status-pending {
+  background-color: #eff6ff;
+  color: #2563eb;
+  border-color: #bfdbfe;
+}
+
+.status-pending.current-user {
+  border-color: #2563eb;
+}
+
+.status-late {
+  background-color: #fefce8;
+  color: #d97706;
+  border-color: #fde68a;
+}
+
+.status-late.current-user {
+  border-color: #d97706;
+}
+
+.status-absent {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.status-absent.current-user {
+  border-color: #dc2626;
+}
+
+.status-leave {
+  background-color: #f0fdfa;
+  color: #0d9488;
+  border-color: #a7f3d0;
+}
+
+.status-leave.current-user {
+  border-color: #0d9488;
+}
+
+.status-normal {
+  background-color: #f9fafb;
+  color: #6b7280;
+  border-color: #e5e7eb;
+}
+
+.status-normal.current-user {
+  border-color: #6b7280;
+}
+
+/* 值班状态图例 */
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 12rpx 16rpx;
+  background: rgba(0, 122, 255, 0.05);
+  border-top: 1rpx solid #e9ecef;
+  font-size: 20rpx;
+}
+
+.legend-title {
+  font-weight: 600;
+  color: #333;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+}
+
+.legend-marker {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 3rpx;
+  border: 1rpx solid;
+}
+
+.legend-marker.status-present {
+  background-color: #f0f9ff;
+  border-color: #a7f3d0;
+}
+
+.legend-marker.status-pending {
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.legend-marker.status-late {
+  background-color: #fefce8;
+  border-color: #fde68a;
+}
+
+.legend-marker.status-absent {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+}
+
+.legend-marker.status-leave {
+  background-color: #f0fdfa;
+  border-color: #a7f3d0;
+}
+
+/* 值班状态 */
+.duty-status {
+  margin-top: 8rpx;
+}
+
+.status-indicator {
+  padding: 3rpx 10rpx;
+  border-radius: 16rpx;
+  font-size: 18rpx;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.status-indicator.active {
+  background: #34c759;
+  color: #ffffff;
+}
+
+.status-indicator.upcoming {
+  background: #ff9500;
+  color: #ffffff;
+}
+
+.status-indicator.completed {
+  background: #8e8e93;
+  color: #ffffff;
+}
+
+/* 空值班时段 */
+.empty-duty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-text {
+  font-size: 20rpx;
+  color: #c7c7cc;
+}
+
+/* 底部操作栏 */
+.bottom-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120rpx;
+  background: #ffffff;
+  border-top: 1rpx solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 32rpx;
+  box-shadow: 0 -2rpx 8rpx rgba(0, 0, 0, 0.08);
+}
+
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  gap: 6rpx;
+}
+
+.action-btn.primary {
+  background: #007aff;
+  color: #ffffff;
+  border-radius: 40rpx;
+  padding: 12rpx 24rpx;
+  flex-direction: row;
+  gap: 8rpx;
+}
+
+.action-btn.secondary {
+  color: #007aff;
+}
+
+.action-btn text {
+  font-size: 22rpx;
+}
+
+/* 响应式适配 */
+@media (max-width: 375px) {
+  .student-name {
+    font-size: 14rpx;
+    max-width: 80rpx;
+  }
+  
+  .time-text {
+    font-size: 18rpx;
+  }
+  
+  .time-period {
+    font-size: 16rpx;
+  }
+  
+  .student-tag {
+    font-size: 14rpx;
+    padding: 3rpx 5rpx;
+    min-height: 20rpx;
+  }
+  
+  .students-container {
+    gap: 4rpx;
+    min-height: 50rpx;
+  }
+}
+
+/* 动画效果 */
+.duty-cell {
+  transition: all 0.3s ease;
+}
+
+.nav-btn {
+  transition: all 0.2s ease;
+}
+
+.action-btn {
+  transition: all 0.2s ease;
+}
+
+.action-btn:active {
+  transform: scale(0.95);
+}
+
+.student-tag {
+  transition: all 0.2s ease;
+}
+
+.student-tag:active {
+  transform: scale(0.95);
+} 

@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.back_hexiang_studio.mapper.AttendancePlanMapper">
+    
+    <!-- 结果映射 -->
+    <resultMap id="planResultMap" type="com.back_hexiang_studio.entity.AttendancePlan">
+        <id column="plan_id" property="planId"/>
+        <result column="type" property="type"/>
+        <result column="name" property="name"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="location" property="location"/>
+        <result column="location_lat" property="locationLat"/>
+        <result column="location_lng" property="locationLng"/>
+        <result column="radius" property="radius"/>
+        <result column="course_id" property="courseId"/>
+        <result column="note" property="note"/>
+        <result column="status" property="status"/>
+        <result column="create_user" property="createUser"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="schedule_id" property="scheduleId"/>
+    </resultMap>
+    
+    <!-- 插入考勤计划 -->
+    <insert id="insert" parameterType="com.back_hexiang_studio.entity.AttendancePlan" useGeneratedKeys="true" keyProperty="planId">
+        INSERT INTO attendance_plan (
+            type, name, start_time, end_time, location, location_lat, location_lng,
+            radius, course_id, note, status, create_user, create_time, update_time, schedule_id
+        ) VALUES (
+            #{type}, #{name}, #{startTime}, #{endTime}, #{location}, #{locationLat}, #{locationLng},
+            #{radius}, #{courseId}, #{note}, #{status}, #{createUser}, #{createTime}, #{updateTime}, #{scheduleId}
+        )
+    </insert>
+    
+    <!-- 根据ID查询考勤计划 -->
+    <select id="selectById" parameterType="long" resultMap="planResultMap">
+        SELECT * FROM attendance_plan WHERE plan_id = #{planId}
+    </select>
+    
+    <!-- 更新考勤计划 -->
+    <update id="update" parameterType="com.back_hexiang_studio.entity.AttendancePlan">
+        UPDATE attendance_plan
+        SET 
+            type = #{type},
+            name = #{name},
+            start_time = #{startTime},
+            end_time = #{endTime},
+            location = #{location},
+            location_lat = #{locationLat},
+            location_lng = #{locationLng},
+            radius = #{radius},
+            course_id = #{courseId},
+            note = #{note},
+            status = #{status},
+            update_time = #{updateTime},
+            schedule_id = #{scheduleId}
+        WHERE plan_id = #{planId}
+    </update>
+    
+    <!-- 删除考勤计划 -->
+    <delete id="deleteById" parameterType="long">
+        DELETE FROM attendance_plan WHERE plan_id = #{planId}
+    </delete>
+    
+    <!-- 根据分页条件查询考勤计划 -->
+    <select id="selectByPage" parameterType="map" resultType="map">
+        SELECT
+            p.plan_id as planId,
+            p.type as type,
+            p.name as name,
+            p.start_time as startTime,
+            p.end_time as endTime,
+            p.location as location,
+            p.location_lat as locationLat,
+            p.location_lng as locationLng,
+            p.radius as radius,
+            p.course_id as courseId,
+            p.schedule_id as scheduleId,
+            p.note as note,
+            p.status as status,
+            p.create_user as createUser,
+            p.create_time as createTime,
+            p.update_time as updateTime,
+            u.name as createUserName,
+            c.name as courseName,
+            COUNT(r.record_id) as totalStudents,
+            SUM(CASE WHEN r.status = 'present' THEN 1 ELSE 0 END) as presentCount,
+            SUM(CASE WHEN r.status = 'late' THEN 1 ELSE 0 END) as lateCount,
+            SUM(CASE WHEN r.status = 'absent' THEN 1 ELSE 0 END) as absentCount,
+            SUM(CASE WHEN r.status = 'leave' THEN 1 ELSE 0 END) as leaveCount,
+            SUM(CASE WHEN r.status = 'pending' THEN 1 ELSE 0 END) as pendingCount
+        FROM
+            attendance_plan p
+        LEFT JOIN
+            user u ON p.create_user = u.user_id
+        LEFT JOIN
+            attendance_record r ON p.plan_id = r.plan_id
+        LEFT JOIN
+            course c ON p.course_id = c.course_id
+        <where>
+            <if test="params.type != null and params.type != ''">
+                AND p.type = #{params.type}
+            </if>
+            <if test="params.keyword != null and params.keyword != ''">
+                AND p.name LIKE CONCAT('%', #{params.keyword}, '%')
+            </if>
+            <if test="params.courseName != null and params.courseName != ''">
+                AND c.name LIKE CONCAT('%', #{params.courseName}, '%')
+            </if>
+            <if test="params.status != null">
+                AND p.status = #{params.status}
+            </if>
+            <if test="params.startDate != null">
+                AND p.start_time &gt;= #{params.startDate}
+            </if>
+            <if test="params.endDate != null">
+                AND p.end_time &lt;= #{params.endDate}
+            </if>
+        </where>
+        GROUP BY p.plan_id
+        ORDER BY p.start_time DESC
+    </select>
+    
+    <!-- 查询考勤计划总数 -->
+    <select id="selectCount" parameterType="map" resultType="int">
+        SELECT COUNT(*) FROM attendance_plan p
+        <where>
+            <if test="type != null and type != ''">
+                AND p.type = #{type}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (p.name LIKE CONCAT('%', #{keyword}, '%') OR p.location LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="startDate != null">
+                AND p.start_time >= #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND p.end_time &lt;= #{endDate}
+            </if>
+            <if test="status != null">
+                AND p.status = #{status}
+            </if>
+        </where>
+    </select>
+    
+    <!-- 查询已结束但未处理的课程考勤计划 -->
+    <select id="findExpiredUnprocessedCoursePlans" resultMap="planResultMap">
+        SELECT * FROM attendance_plan
+        WHERE type = 'course' 
+        AND end_time &lt; NOW()
+        AND status = 1
+    </select>
+    
+    <!-- 查询指定日期的考勤计划 -->
+    <select id="selectByDate" resultMap="planResultMap">
+        SELECT * FROM attendance_plan
+        WHERE DATE(start_time) = #{date}
+    </select>
+    <!--查询指定时间段的考勤计划-->
+    <select id="findDutyPlanByTimeRange" resultType="com.back_hexiang_studio.entity.AttendancePlan">
+        select * from attendance_plan where start_time = #{startTime} and end_time= #{endTime}and type = 'duty'
+    </select>
+    <!-- 查询即将开始的考勤计划 (30分钟·)-->
+    <select id="findUpcomingAttendancePlans" resultType="com.back_hexiang_studio.entity.AttendancePlan">
+        select * from attendance_plan     WHERE start_time <![CDATA[ >= ]]> #{startTime}
+                                            AND start_time <![CDATA[ < ]]> #{endTime} and type = 'duty'
+    </select>
+    <!-- 查询指定日期的值班计划 -->
+    <select id="findDutyPlanByDate" resultType="com.back_hexiang_studio.entity.AttendancePlan">
+        select * from attendance_plan where start_time = #{date} and type = 'duty'
+    </select>
+    <!-- 根据scheduleId查询考勤计划 -->
+    <select id="findByScheduleId" resultMap="planResultMap">
+        SELECT * FROM attendance_plan 
+        WHERE schedule_id = #{scheduleId} 
+        AND status = 1
+        LIMIT 1
+    </select>
+    <!-- 查询指定时间段和值班安排ID的值班考勤计划 -->
+    <select id="findDutyPlansByTimeRange" resultMap="planResultMap">
+        SELECT * FROM attendance_plan 
+        WHERE type = 'duty'
+        AND start_time = #{startTime} 
+        AND end_time = #{endTime}
+        AND schedule_id = #{scheduleId}
+        AND status = 1
+    </select>
+    
+    <!-- 根据scheduleId查询考勤计划及关联的学生信息 -->
+    <select id="findByScheduleIdWithStudents" resultType="map">
+        SELECT 
+            ap.plan_id, ap.type, ap.name, ap.start_time, ap.end_time, ap.location,
+            ap.schedule_id, ap.status,
+            (
+                SELECT JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'studentId', s.student_id,
+                        'studentName', u.name,
+                        'attendanceStatus', 
+                        IFNULL(
+                            (SELECT ar.status 
+                             FROM attendance_record ar 
+                             WHERE ar.plan_id = ap.plan_id AND ar.student_id = s.student_id
+                             LIMIT 1), 
+                            'normal'
+                        )
+                    )
+                )
+                FROM duty_schedule_student dss
+                JOIN student s ON dss.student_id = s.student_id
+                JOIN user u ON s.user_id = u.user_id
+                WHERE dss.schedule_id = ap.schedule_id
+            ) as students
+        FROM attendance_plan ap
+        WHERE ap.schedule_id = #{scheduleId}
+        AND ap.status = 1
+        LIMIT 1
+    </select>
+    
+    <!-- 根据值班安排ID查找考勤计划ID -->
+    <select id="findPlanIdByScheduleId" resultType="long">
+        SELECT plan_id 
+        FROM attendance_plan 
+        WHERE schedule_id = #{scheduleId} 
+        AND status = 1
+        LIMIT 1
+    </select>
+</mapper>

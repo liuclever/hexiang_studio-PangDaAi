@@ -1,0 +1,197 @@
+<!--pages/attendance/duty/index.wxml-->
+<view class="container">
+  <!-- 页面头部 -->
+  <view class="page-header">
+    <view class="nav-section-centered">
+      <text class="page-title-centered">值班考勤</text>
+    </view>
+    
+    <!-- 筛选栏 -->
+    <view class="filter-bar">
+      <view class="filter-chips">
+        <view class="chip {{filter === 'all' ? 'active' : ''}}" bindtap="setFilter" data-filter="all">
+          全部值班
+        </view>
+        <view class="chip {{filter === 'ongoing' ? 'active' : ''}}" bindtap="setFilter" data-filter="ongoing">
+          进行中
+        </view>
+        <view class="chip {{filter === 'upcoming' ? 'active' : ''}}" bindtap="setFilter" data-filter="upcoming">
+          即将开始
+        </view>
+        <view class="chip {{filter === 'ended' ? 'active' : ''}}" bindtap="setFilter" data-filter="ended">
+          已结束
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 当前值班提醒 -->
+  <view wx:if="{{currentDuty}}" class="current-duty-card">
+    <view class="current-duty-header">
+      <view class="duty-indicator ongoing"></view>
+      <text class="current-text">当前值班</text>
+      <text class="remaining-time">剩余 {{currentDuty.remainingTime}}</text>
+    </view>
+    <view class="current-duty-body">
+      <view class="duty-title">{{currentDuty.name}}</view>
+      <view class="duty-time">{{tools.formatTime(currentDuty.startTime)}} - {{tools.formatTime(currentDuty.endTime)}}</view>
+      <view class="duty-location">{{currentDuty.location}}</view>
+    </view>
+    <view class="current-duty-footer">
+      <button wx:if="{{!currentDuty.signedIn}}" class="quick-sign-btn" bindtap="quickSignIn" data-plan="{{currentDuty}}">
+        立即签到
+      </button>
+      <view wx:else class="signed-status">
+        <t-icon name="check-circle-filled" size="32rpx" color="#ffffff"></t-icon>
+        <text>已签到</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 值班列表 -->
+  <view class="duty-list">
+    <view wx:if="{{filteredDuties.length === 0}}" class="empty-state">
+      <t-icon name="inbox" size="120rpx" color="#cccccc" class="empty-icon"></t-icon>
+      <text class="empty-text">暂无{{filterHelper.getFilterText(filter)}}值班安排</text>
+    </view>
+    
+    <view wx:for="{{filteredDuties}}" wx:key="planId" class="duty-card" bindtap="viewRecords" data-plan="{{item}}">
+      <view class="duty-card-content">
+        <view class="duty-header">
+          <view class="duty-title-row">
+            <text class="duty-title">{{item.name}}</text>
+            <view class="status-indicator {{item.status}}">
+              {{item.statusText}}
+            </view>
+          </view>
+          
+          <view class="duty-meta">
+            <view class="time-info">
+              <text class="time-label">时间:</text>
+              <text class="time-value">{{tools.formatDateTime(item.startTime)}} - {{tools.formatDateTime(item.endTime)}}</text>
+            </view>
+            <view class="location-info">
+              <text class="location-label">地点:</text>
+              <text class="location-value">{{item.location}}</text>
+            </view>
+          </view>
+        </view>
+        
+        <view class="duty-body">
+          <view wx:if="{{item.note}}" class="duty-desc">
+            {{tools.truncateText(item.note, 80)}}
+          </view>
+          
+          <view class="duty-stats">
+            <view class="stat-item">
+              <text class="stat-value">{{item.attendanceCount || 0}}/{{item.totalStudents || 0}}</text>
+              <text class="stat-label">已签到</text>
+            </view>
+            <view class="stat-divider"></view>
+            <view class="stat-item">
+              <text class="stat-value">{{tools.formatLocation(item.location, item.locationLat, item.locationLng)}}</text>
+              <text class="stat-label">签到区域</text>
+            </view>
+            <view class="stat-divider"></view>
+            <view class="stat-item">
+              <text class="stat-value">{{item.statusText}}</text>
+              <text class="stat-label">值班状态</text>
+            </view>
+          </view>
+        </view>
+        
+        <view class="duty-footer">
+          <view class="footer-left">
+            <text class="creator">创建者: {{item.createUserName || '系统'}}</text>
+          </view>
+          <view class="footer-right">
+            <button class="sign-btn" catchtap="viewRecords" data-plan="{{item}}">
+              查看详情
+            </button>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 工具类 WXS 模块 -->
+<wxs module="tools">
+  // 格式化日期
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    var date = getDate(dateStr);
+    return (date.getMonth() + 1) + '月' + date.getDate() + '日';
+  }
+  
+  // 格式化时间
+  function formatTime(timeStr) {
+    if (!timeStr) return '';
+    var time = getDate(timeStr);
+    return padZero(time.getHours()) + ':' + padZero(time.getMinutes());
+  }
+  
+  // 格式化日期时间
+  function formatDateTime(dateStr) {
+    if (!dateStr) return '';
+    var date = getDate(dateStr);
+    return (date.getMonth() + 1) + '/' + date.getDate() + ' ' + 
+           padZero(date.getHours()) + ':' + padZero(date.getMinutes());
+  }
+  
+  // 获取星期几
+  function getWeekday(dateStr) {
+    if (!dateStr) return '';
+    var date = getDate(dateStr);
+    var weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+    return weekdays[date.getDay()];
+  }
+  
+  // 截断文本
+  function truncateText(text, maxLength) {
+    if (!text) return '';
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  }
+  
+  // 补零
+  function padZero(num) {
+    return num < 10 ? '0' + num : num;
+  }
+  
+  // 格式化位置显示
+  function formatLocation(location, lat, lng) {
+    if (location && location.trim()) {
+      return location;
+    }
+    if (lat && lng) {
+      return lat.toFixed(6) + ',' + lng.toFixed(6);
+    }
+    return '未设置';
+  }
+  
+  module.exports = {
+    formatDate: formatDate,
+    formatTime: formatTime,
+    formatDateTime: formatDateTime,
+    getWeekday: getWeekday,
+    truncateText: truncateText,
+    padZero: padZero,
+    formatLocation: formatLocation
+  };
+</wxs>
+
+<wxs module="filterHelper">
+  function getFilterText(filterType) {
+    switch(filterType) {
+      case 'ongoing': return '进行中的';
+      case 'upcoming': return '即将开始的';
+      case 'ended': return '已结束的';
+      default: return '';
+    }
+  }
+  
+  module.exports = {
+    getFilterText: getFilterText
+  };
+</wxs> 

@@ -1,0 +1,143 @@
+<!--pages/attendance/check-in.wxml-->
+<view class="container">
+  <!-- 考勤卡片滑动区域 -->
+  <view class="attendance-cards-wrapper" wx:if="{{availablePlans && availablePlans.length > 0}}">
+    <swiper 
+      class="attendance-cards" 
+      autoplay="{{false}}" 
+      circular="{{false}}" 
+      bindchange="onPlanChange"
+      current="{{currentPlanIndex}}"
+      indicator-dots="{{availablePlans.length > 1}}"
+      indicator-color="rgba(0,0,0,0.2)"
+      indicator-active-color="#1890ff"
+    >
+      <swiper-item wx:for="{{availablePlans}}" wx:key="planId" class="card-item">
+        <view class="attendance-card">
+          <view class="card-content">
+            <view class="card-header">
+              <view class="title-row">
+                <text class="plan-title">{{item.name}}</text>
+                <view class="right-badges">
+                  <view class="status-badge status-{{item.timeStatus}}">
+                    {{item.timeStatus === 'upcoming' ? '即将开始' : 
+                      item.timeStatus === 'active' ? '进行中' : '已结束'}}
+                  </view>
+                  <!-- 考勤类型移到右边 -->
+                  <view class="type-badge type-{{item.type}}">
+                    {{item.type === 'activity' ? '活动考勤' : 
+                      item.type === 'course' ? '课程考勤' : 
+                      item.type === 'duty' ? '值班考勤' : '未知类型'}}
+                  </view>
+                </view>
+              </view>
+              
+              <view class="meta-row">
+                <view class="meta-item">
+                  <t-icon name="location" size="28rpx" color="#999" />
+                  <text class="meta-text">{{item.location || '未指定地点'}}</text>
+                </view>
+                <view class="meta-item">
+                  <t-icon name="time" size="28rpx" color="#999" />
+                  <text class="meta-text">{{item.timeRange}}</text>
+                </view>
+              </view>
+            </view>
+            
+            <view class="card-footer" wx:if="{{item.recordStats}}">
+              <view class="stats-item">
+                <t-icon name="usergroup" size="28rpx" color="#1890ff" />
+                <text class="stats-text">已签到 {{item.recordStats.presentCount || 0}}/{{item.recordStats.total || 0}}人</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </swiper-item>
+    </swiper>
+  </view>
+  
+  <!-- 无可用考勤时的提示 -->
+  <view class="no-attendance-card" wx:if="{{!availablePlans || availablePlans.length === 0}}">
+    <view class="no-attendance-content">
+      <t-icon name="calendar" size="96rpx" color="#ddd" class="empty-icon" />
+      <text class="message">暂无考勤安排</text>
+    </view>
+  </view>
+  
+  <!-- 地图区域 -->
+  <view class="map-container">
+    <!-- 位置加载中 -->
+    <view wx:if="{{pageStatus.gettingLocation}}" class="loading-overlay">
+      <view class="loading-content">
+        <image src="/images/icons/loading.png" class="loading-icon" mode="aspectFit"></image>
+        <text>获取位置中...</text>
+      </view>
+    </view>
+    
+    <!-- 位置错误提示 -->
+    <view wx:elif="{{pageStatus.locationError}}" class="error-overlay">
+      <view class="error-content">
+        <image src="/images/icons/location-error.png" class="error-icon" mode="aspectFit"></image>
+        <text>{{pageStatus.locationError}}</text>
+        <button class="retry-btn" bindtap="refreshLocation">重试</button>
+      </view>
+    </view>
+    
+    <!-- 地图 -->
+    <map
+      id="checkInMap"
+      class="map"
+      latitude="{{targetLocation.latitude || location.latitude}}"
+      longitude="{{targetLocation.longitude || location.longitude}}"
+      scale="{{mapSetting.scale}}"
+      markers="{{markers}}"
+      circles="{{circles}}"
+      show-location="{{mapSetting.showLocation}}"
+      show-scale="{{mapSetting.showScale}}"
+      enable-zoom="{{mapSetting.enableZoom}}"
+      enable-scroll="{{mapSetting.enableScroll}}"
+    >
+    </map>
+  </view>
+  
+  <!-- 签到信息卡片 -->
+  <view class="checkin-card">
+    <!-- 功能按钮区域 -->
+    <view class="action-buttons">
+      <view class="refresh-btn" bindtap="refreshLocation">
+        <text>刷新位置</text>
+      </view>
+      <!-- 查看记录按钮 -->
+      <view class="records-btn-inline" bindtap="viewCheckInRecords">
+        查看签到记录
+      </view>
+    </view>
+
+    <!-- 签到信息显示区域 -->
+    <view wx:if="{{!checkInStatus.checked}}" class="distance-info">
+      <!-- 未签到：显示距离信息 -->
+      <view class="distance-label">距离签到点</view>
+      <view class="distance-value">
+        {{checkInStatus.distance || '--'}} <text class="distance-unit">米</text>
+      </view>
+      <view class="distance-status {{checkInStatus.inRange ? 'in-range' : 'out-range'}}">
+        {{checkInStatus.inRange ? '在签到范围内' : '不在签到范围内'}}
+      </view>
+    </view>
+    
+    <!-- 签到按钮区域（始终显示） -->
+    <view class="checkin-btn-area">
+      <button 
+        class="checkin-btn {{checkInStatus.checked ? 'checked' : (checkInStatus.inRange ? '' : 'disabled')}}" 
+        disabled="{{checkInStatus.checked || !checkInStatus.inRange || pageStatus.submitting}}"
+        loading="{{pageStatus.submitting}}"
+        bindtap="submitCheckIn"
+      >
+        {{checkInStatus.checked ? '已完成签到' : '立即签到'}}
+      </button>
+      <view class="tips-text">
+        {{checkInStatus.checked ? '您已成功完成签到' : (checkInStatus.inRange ? '您已在签到范围内，请点击签到' : '请移动到签到范围内再签到')}}
+      </view>
+    </view>
+  </view>
+</view>

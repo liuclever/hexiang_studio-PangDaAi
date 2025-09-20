@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "课程详情",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark",
+  "usingComponents": {
+    "t-icon": "tdesign-miniprogram/icon/icon"
+  }
+} 

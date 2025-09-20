@@ -1,0 +1,44 @@
+// variables.scss
+
+// Colors
+:root {
+  // Element Plus Overrides
+  --el-color-primary: #4A90E2; // A nice light blue
+  --el-color-primary-light-3: #77A9E9;
+  --el-color-primary-light-5: #95C2F0;
+  --el-color-primary-light-7: #B3DBF7;
+  --el-color-primary-light-8: #C9E5FA;
+  --el-color-primary-light-9: #E1F0FD;
+  --el-color-primary-rgb: 74, 144, 226; // For rgba usage
+
+  --el-color-success: #52c41a; // Green for publish/enable
+  --el-color-warning: #faad14;
+  --el-color-danger: #ff4d4f;  // Red for delete
+  --el-color-info: #909399;
+
+  // Custom Theme Colors
+  --app-bg-color: #f0f2f5; // Main background for content area
+  --sidebar-bg-color: rgba(220, 235, 255, 0.8); // Light blue, semi-transparent
+  --sidebar-text-color: #303133;
+  --sidebar-active-text-color: var(--el-color-primary);
+  --header-bg-color: rgba(255, 255, 255, 0.85); // White semi-transparent
+
+  // Borders & Radius
+  --el-border-radius-base: 8px;
+  --el-border-radius-small: 6px;
+  --el-border-radius-round: 20px; // For rounder buttons
+  --el-border-radius-large: 12px; // For cards/dialogs
+
+  // Shadows
+  --el-box-shadow-light: 0 2px 12px 0 rgba(0, 0, 0, 0.06);
+  --el-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); // Hover shadow
+  --el-box-shadow-dark: 0 6px 16px 0 rgba(0, 0, 0, 0.08);
+
+  // Fonts
+  --el-font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
+}
+
+// SCSS Variables (can be used alongside CSS vars or for things CSS vars can't do easily)
+$sidebar-width: 220px;
+$sidebar-collapsed-width: 64px;
+$header-height: 60px; 

@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.back_hexiang_studio.mapper.TaskSubmissionMapper">
+
+    <!-- 基础ResultMap -->
+    <resultMap id="TaskSubmissionResultMap" type="com.back_hexiang_studio.entity.TaskSubmission">
+        <id property="submissionId" column="submission_id"/>
+        <result property="subTaskId" column="sub_task_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="submissionNotice" column="submission_notice"/>
+        <result property="status" column="status"/>
+        <result property="submissionTime" column="submission_time"/>
+        <result property="reviewComment" column="review_comment"/>
+        <result property="reviewTime" column="review_time"/>
+    </resultMap>
+
+    <!-- 审批列表ResultMap，包含JOIN查询的字段 -->
+    <resultMap id="TaskSubmissionVoResultMap" type="com.back_hexiang_studio.dv.vo.task.TaskSubmissionVo">
+        <id property="submissionId" column="submission_id"/>
+        <result property="subTaskId" column="sub_task_id"/>
+        <result property="subTaskTitle" column="sub_task_title"/>
+        <result property="taskName" column="task_name"/>
+        <result property="userId" column="user_id"/>
+        <result property="userName" column="user_name"/>
+        <result property="userAvatar" column="user_avatar"/>
+        <result property="submissionNotice" column="submission_notice"/>
+        <result property="status" column="status"/>
+        <result property="submissionTime" column="submission_time"/>
+        <result property="reviewComment" column="review_comment"/>
+        <result property="reviewTime" column="review_time"/>
+    </resultMap>
+
+    <!-- 根据子任务ID和用户ID查询提交记录 -->
+    <select id="findBySubTaskIdAndUserId" resultMap="TaskSubmissionResultMap">
+        SELECT * FROM task_submission
+        WHERE sub_task_id = #{subTaskId} AND user_id = #{userId}
+    </select>
+
+    <!-- 根据提交ID查询提交记录 -->
+    <select id="findById" resultMap="TaskSubmissionResultMap">
+        SELECT * FROM task_submission
+        WHERE submission_id = #{submissionId}
+    </select>
+
+    <!-- 插入提交记录 -->
+    <insert id="insert" parameterType="com.back_hexiang_studio.entity.TaskSubmission" useGeneratedKeys="true" keyProperty="submissionId">
+        INSERT INTO task_submission (sub_task_id, user_id, submission_notice, status, submission_time)
+        VALUES (#{subTaskId}, #{userId}, #{submissionNotice}, #{status}, #{submissionTime})
+    </insert>
+
+    <!-- 更新提交记录 -->
+    <update id="update">
+        UPDATE task_submission
+        <set>
+            <if test="submissionNotice != null">
+                submission_notice = #{submissionNotice},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="submissionTime != null">
+                submission_time = #{submissionTime},
+            </if>
+            <if test="reviewComment != null">
+                review_comment = #{reviewComment},
+            </if>
+            <if test="reviewTime != null">
+                review_time = #{reviewTime}
+            </if>
+        </set>
+        WHERE submission_id = #{submissionId}
+    </update>
+
+    <!-- 获取待审核提交数量（带角色过滤） -->
+    <select id="countPendingSubmissions" resultType="int">
+        <choose>
+            <when test="userRole == 'admin'">
+                <!-- 管理员看到所有待审核 -->
+        SELECT COUNT(*)
+        FROM task_submission
+        WHERE status = 2
+            </when>
+            <when test="userRole == 'teacher'">
+                <!-- 老师只看到自己创建任务的待审核提交 -->
+                SELECT COUNT(*)
+                FROM task_submission ts
+                LEFT JOIN sub_task st ON ts.sub_task_id = st.sub_task_id
+                LEFT JOIN task t ON st.task_id = t.task_id
+                WHERE ts.status = 2 AND t.create_user = #{currentUserId}
+            </when>
+            <otherwise>
+                <!-- 学生角色返回0 -->
+                SELECT 0
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 获取今日已处理的任务提交数量（带角色过滤） -->
+    <select id="countTodayProcessedSubmissions" resultType="int">
+        <choose>
+            <when test="userRole == 'admin'">
+                <!-- 管理员看到所有今日已处理 -->
+        SELECT COUNT(*)
+        FROM task_submission
+        WHERE DATE(review_time) = CURDATE() 
+          AND status IN (1, 3)
+            </when>
+            <when test="userRole == 'teacher'">
+                <!-- 老师只看到自己创建任务的今日已处理提交 -->
+                SELECT COUNT(*)
+                FROM task_submission ts
+                LEFT JOIN sub_task st ON ts.sub_task_id = st.sub_task_id
+                LEFT JOIN task t ON st.task_id = t.task_id
+                WHERE DATE(ts.review_time) = CURDATE() 
+                  AND ts.status IN (1, 3)
+                  AND t.create_user = #{currentUserId}
+            </when>
+            <otherwise>
+                <!-- 学生角色返回0 -->
+                SELECT 0
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 分页查询任务提交列表 -->
+    <select id="findSubmissionsByPage" resultMap="TaskSubmissionVoResultMap">
+        SELECT 
+            ts.*,
+            st.title as sub_task_title,
+            t.title as task_name,
+            u.name as user_name,
+            u.avatar as user_avatar
+        FROM task_submission ts
+        LEFT JOIN sub_task st ON ts.sub_task_id = st.sub_task_id
+        LEFT JOIN task t ON st.task_id = t.task_id
+        LEFT JOIN user u ON ts.user_id = u.user_id
+        <where>
+            <if test="status != null">
+                AND ts.status = #{status}
+            </if>
+        </where>
+        ORDER BY ts.submission_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- 查询任务提交总数 -->
+    <select id="countSubmissions" resultType="int">
+        SELECT COUNT(*)
+        FROM task_submission ts
+        <where>
+            <if test="status != null">
+                AND ts.status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <!-- 查询已审批的任务提交记录（带角色过滤） -->
+    <select id="findProcessedSubmissions" resultMap="TaskSubmissionVoResultMap">
+        <choose>
+            <when test="userRole == 'admin'">
+                <!-- 管理员看到所有已审批记录 -->
+        SELECT 
+            ts.*,
+            st.title as sub_task_title,
+            t.title as task_name,
+            u.name as user_name,
+            u.avatar as user_avatar
+        FROM task_submission ts
+        LEFT JOIN sub_task st ON ts.sub_task_id = st.sub_task_id
+        LEFT JOIN task t ON st.task_id = t.task_id
+        LEFT JOIN user u ON ts.user_id = u.user_id
+        WHERE ts.status IN (1, 3)  -- 1:通过, 3:拒绝
+          AND ts.review_time >= DATE_SUB(NOW(), INTERVAL #{days} DAY)
+        ORDER BY ts.review_time DESC
+            </when>
+            <when test="userRole == 'teacher'">
+                <!-- 老师只看到自己创建任务的已审批记录 -->
+                SELECT 
+                    ts.*,
+                    st.title as sub_task_title,
+                    t.title as task_name,
+                    u.name as user_name,
+                    u.avatar as user_avatar
+                FROM task_submission ts
+                LEFT JOIN sub_task st ON ts.sub_task_id = st.sub_task_id
+                LEFT JOIN task t ON st.task_id = t.task_id
+                LEFT JOIN user u ON ts.user_id = u.user_id
+                WHERE ts.status IN (1, 3)  -- 1:通过, 3:拒绝
+                  AND ts.review_time >= DATE_SUB(NOW(), INTERVAL #{days} DAY)
+                  AND t.create_user = #{currentUserId}
+                ORDER BY ts.review_time DESC
+            </when>
+            <otherwise>
+                <!-- 学生角色返回空结果 -->
+                SELECT 
+                    ts.*,
+                    st.title as sub_task_title,
+                    t.title as task_name,
+                    u.name as user_name,
+                    u.avatar as user_avatar
+                FROM task_submission ts
+                LEFT JOIN sub_task st ON ts.sub_task_id = st.sub_task_id
+                LEFT JOIN task t ON st.task_id = t.task_id
+                LEFT JOIN user u ON ts.user_id = u.user_id
+                WHERE 1 = 0  -- 永远不返回结果
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 根据子任务ID获取所有提交状态 -->
+    <select id="getSubmissionStatusesBySubTaskId" resultType="java.lang.Integer">
+        SELECT status 
+        FROM task_submission 
+        WHERE sub_task_id = #{subTaskId}
+        ORDER BY submission_id
+    </select>
+
+    <!-- 按任务创建人分页查询任务提交列表（老师看自己创建的任务提交） -->
+    <select id="findSubmissionsByCreator" resultMap="TaskSubmissionVoResultMap">
+        SELECT 
+            ts.submission_id,
+            ts.submission_notice,
+            ts.status,
+            ts.submission_time,
+            ts.review_comment,
+            ts.review_time,
+            st.sub_task_id,
+            st.title as sub_task_title,
+            t.task_id,
+            t.title as task_title,
+            u.user_id,
+            u.name as user_name,
+            u.avatar as user_avatar
+        FROM task_submission ts
+        LEFT JOIN sub_task st ON ts.sub_task_id = st.sub_task_id
+        LEFT JOIN task t ON st.task_id = t.task_id
+        LEFT JOIN user u ON ts.user_id = u.user_id
+        WHERE t.create_user = #{creatorId}
+        <if test="status != null">
+            AND ts.status = #{status}
+        </if>
+        ORDER BY ts.submission_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- 按任务创建人统计任务提交数量 -->
+    <select id="countSubmissionsByCreator" resultType="int">
+        SELECT COUNT(*)
+        FROM task_submission ts
+        LEFT JOIN sub_task st ON ts.sub_task_id = st.sub_task_id
+        LEFT JOIN task t ON st.task_id = t.task_id
+        WHERE t.create_user = #{creatorId}
+        <if test="status != null">
+            AND ts.status = #{status}
+        </if>
+    </select>
+
+    <!-- 按学生分页查询任务提交列表（学生看自己参与的任务提交） -->
+    <select id="findSubmissionsByStudent" resultMap="TaskSubmissionVoResultMap">
+        SELECT 
+            ts.submission_id,
+            ts.submission_notice,
+            ts.status,
+            ts.submission_time,
+            ts.review_comment,
+            ts.review_time,
+            st.sub_task_id,
+            st.title as sub_task_title,
+            t.task_id,
+            t.title as task_title,
+            u.user_id,
+            u.name as user_name,
+            u.avatar as user_avatar
+        FROM task_submission ts
+        LEFT JOIN sub_task st ON ts.sub_task_id = st.sub_task_id
+        LEFT JOIN task t ON st.task_id = t.task_id
+        LEFT JOIN user u ON ts.user_id = u.user_id
+        LEFT JOIN sub_member sm ON st.sub_task_id = sm.sub_task_id
+        LEFT JOIN student s ON sm.user_id = s.user_id
+        WHERE s.student_id = #{studentId}
+        <if test="status != null">
+            AND ts.status = #{status}
+        </if>
+        ORDER BY ts.submission_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- 按学生统计任务提交数量 -->
+    <select id="countSubmissionsByStudent" resultType="int">
+        SELECT COUNT(*)
+        FROM task_submission ts
+        LEFT JOIN sub_task st ON ts.sub_task_id = st.sub_task_id
+        LEFT JOIN sub_member sm ON st.sub_task_id = sm.sub_task_id
+        LEFT JOIN student s ON sm.user_id = s.user_id
+        WHERE s.student_id = #{studentId}
+        <if test="status != null">
+            AND ts.status = #{status}
+        </if>
+    </select>
+
+</mapper> 

@@ -1,0 +1,641 @@
+<!--pages/attendance/leave-approval.wxml-->
+<view class="container">
+  <!-- 页面头部 -->
+  <view class="page-header">
+    <view class="nav-section-centered">
+      <text class="page-title-centered">审批中心</text>
+    </view>
+  </view>
+
+  <!-- 统计概览卡片 - 参考成员页面风格 -->
+  <view class="stats-container">
+    <view class="stats-card">
+      <view class="stats-item">
+        <view class="stats-icon">
+          <t-icon name="task" size="32rpx" color="#646a73" />
+        </view>
+        <view class="stats-content">
+          <view class="stats-value">{{pendingTaskSubmissions}}</view>
+          <view class="stats-label">任务审批</view>
+        </view>
+      </view>
+      <view class="stats-item">
+        <view class="stats-icon">
+          <t-icon name="calendar" size="32rpx" color="#0052d9" />
+        </view>
+        <view class="stats-content">
+          <view class="stats-value">{{pendingLeaveRequests}}</view>
+          <view class="stats-label">请假审批</view>
+        </view>
+      </view>
+      <view class="stats-item">
+        <view class="stats-icon">
+          <t-icon name="check-circle" size="32rpx" color="#00a870" />
+        </view>
+        <view class="stats-content">
+          <view class="stats-value">{{todayProcessed}}</view>
+          <view class="stats-label">今日处理</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 筛选区域 - 参考任务页面风格 -->
+  <view class="filter-section">
+    <view class="filter-chips">
+      <view 
+        class="chip {{activeTab === 'task' ? 'active' : ''}}"
+        bind:tap="switchTab"
+        data-tab="task">
+        <t-icon name="task" size="28rpx" style="margin-right: 12rpx;" />
+        任务审批
+      </view>
+      <view 
+        class="chip {{activeTab === 'leave' ? 'active' : ''}}"
+        bind:tap="switchTab"
+        data-tab="leave">
+        <t-icon name="calendar" size="28rpx" style="margin-right: 12rpx;" />
+        请假审批
+      </view>
+      <view 
+        class="chip {{activeTab === 'records' ? 'active' : ''}}"
+        bind:tap="switchTab"
+        data-tab="records">
+        <t-icon name="history" size="28rpx" style="margin-right: 12rpx;" />
+        已审批记录
+      </view>
+    </view>
+  </view>
+
+  <!-- 内容区域 -->
+  <view class="content-section">
+    <!-- 任务提交审批 -->
+    <view wx:if="{{activeTab === 'task'}}" class="approval-section">
+      <t-pull-down-refresh bind:refresh="onRefresh" loading="{{refreshing}}">
+        <!-- 空状态 -->
+        <view wx:if="{{taskSubmissions.length === 0}}" class="empty-state">
+          <t-icon name="task" size="96rpx" color="#ddd" class="empty-icon" />
+          <text class="empty-text">暂无待审批的任务提交</text>
+        </view>
+        
+        <!-- 任务审批列表 -->
+        <view wx:for="{{taskSubmissions}}" wx:key="submissionId" class="approval-card task-card" bind:tap="viewTaskSubmissionDetail" data-id="{{item.submissionId}}">
+          <!-- 重新设计的卡片头部 -->
+          <view class="card-header-modern">
+            <view class="task-info-modern">
+              <view class="task-title-modern">{{item.taskName}}</view>
+              <view class="subtask-title-modern">{{item.subTaskTitle}}</view>
+            </view>
+            <view class="status-badge status-{{item.status === 2 ? 'pending' : item.status === 1 ? 'completed' : 'rejected'}}">
+              {{item.statusText}}
+            </view>
+          </view>
+          
+          <!-- 用户信息区域 -->
+          <view class="card-user-section">
+            <view class="user-info-modern">
+              <t-avatar size="56rpx" image="{{item.userAvatar || '/images/icons/default-avatar.png'}}" />
+              <view class="user-detail-modern">
+                <view class="user-name-modern">{{item.userName}}</view>
+                <view class="submit-time-modern">{{item.submissionTime}}</view>
+              </view>
+            </view>
+          </view>
+          
+          <!-- 任务说明 -->
+          <view wx:if="{{item.submissionNotice}}" class="card-content-modern">
+            <view class="content-text-modern">{{item.submissionNotice}}</view>
+          </view>
+          
+          <!-- 现代化的操作按钮 -->
+          <view wx:if="{{item.status === 2}}" class="card-actions-modern" catchtap="stopPropagation">
+            <view class="actions-wrapper">
+              <button 
+                class="action-btn-modern reject-btn-modern"
+                bind:tap="rejectTaskSubmission"
+                data-id="{{item.submissionId}}">
+                退回
+              </button>
+              <button 
+                class="action-btn-modern approve-btn-modern"
+                bind:tap="approveTaskSubmission"
+                data-id="{{item.submissionId}}">
+                通过
+              </button>
+            </view>
+          </view>
+        </view>
+      </t-pull-down-refresh>
+    </view>
+
+    <!-- 请假申请审批 -->
+    <view wx:if="{{activeTab === 'leave'}}" class="approval-section">
+      <t-pull-down-refresh bind:refresh="onRefresh" loading="{{refreshing}}">
+        <!-- 空状态 -->
+        <view wx:if="{{leaveRequests.length === 0}}" class="empty-state">
+          <t-icon name="calendar" size="96rpx" color="#ddd" class="empty-icon" />
+          <text class="empty-text">暂无待审批的请假申请</text>
+        </view>
+        
+        <!-- 请假审批列表 -->
+        <view wx:for="{{leaveRequests}}" wx:key="requestId" class="approval-card leave-card" bind:tap="viewLeaveRequestDetail" data-id="{{item.requestId}}">
+          <!-- 重新设计的卡片头部 -->
+          <view class="card-header-modern">
+            <view class="leave-info-modern">
+              <view class="leave-type-modern">{{item.leaveType}}</view>
+              <view class="leave-duration-modern">{{item.dateTimeRange}}</view>
+            </view>
+            <view class="status-badge status-pending">
+              待审批
+            </view>
+          </view>
+          
+          <!-- 用户信息区域 -->
+          <view class="card-user-section">
+            <view class="user-info-modern">
+              <t-avatar size="56rpx" image="{{item.userAvatar}}" wx:if="{{item.userAvatar}}" />
+              <t-avatar size="56rpx" wx:else>{{item.userInitial}}</t-avatar>
+              <view class="user-detail-modern">
+                <view class="user-name-modern">{{item.userName}}</view>
+                <view class="submit-time-modern">{{item.applyTime}}</view>
+              </view>
+            </view>
+          </view>
+          
+          <!-- 考勤计划信息 -->
+          <view class="card-content-modern" wx:if="{{item.attendancePlanName}}">
+            <view class="content-label-modern">考勤计划</view>
+            <view class="content-text-modern plan-name">{{item.attendancePlanName}}</view>
+          </view>
+          
+          <!-- 请假原因 -->
+          <view class="card-content-modern">
+            <view class="content-label-modern">请假原因</view>
+            <view class="content-text-modern">{{item.reason}}</view>
+          </view>
+          
+          <!-- 现代化的操作按钮 -->
+          <view class="card-actions-modern" catchtap="stopPropagation">
+            <view class="actions-wrapper">
+              <button 
+                class="action-btn-modern reject-btn-modern"
+                bind:tap="rejectLeaveRequest"
+                data-id="{{item.requestId}}">
+                驳回
+              </button>
+              <button 
+                class="action-btn-modern approve-btn-modern"
+                bind:tap="approveLeaveRequest"
+                data-id="{{item.requestId}}">
+                批准
+              </button>
+            </view>
+          </view>
+        </view>
+      </t-pull-down-refresh>
+    </view>
+
+    <!-- 已审批记录内容区域 -->
+    <view wx:if="{{activeTab === 'records'}}" class="records-content">
+      <!-- 时间筛选区域 -->
+      <view class="time-filter-section">
+        <view class="filter-label">时间范围：</view>
+        <view class="time-filter-chips">
+          <view 
+            class="time-chip {{timeFilter === 1 ? 'active' : ''}}"
+            bind:tap="switchTimeFilter"
+            data-days="1">
+            今天
+          </view>
+          <view 
+            class="time-chip {{timeFilter === 3 ? 'active' : ''}}"
+            bind:tap="switchTimeFilter"
+            data-days="3">
+            3天内
+          </view>
+          <view 
+            class="time-chip {{timeFilter === 30 ? 'active' : ''}}"
+            bind:tap="switchTimeFilter"
+            data-days="30">
+            一个月
+          </view>
+        </view>
+      </view>
+
+      <!-- 已审批记录列表 -->
+      <t-pull-down-refresh 
+        value="{{refreshing}}" 
+        bind:refresh="onRefresh"
+        loading-texts="{{['下拉刷新', '释放刷新', '正在刷新', '刷新完成']}}">
+        
+        <view wx:if="{{approvalRecords.length === 0 && !recordsLoading}}" class="empty-state">
+          <t-icon name="history" size="96rpx" color="#ddd" class="empty-icon" />
+          <text class="empty-text">暂无已审批记录</text>
+        </view>
+
+        <view wx:else class="records-list">
+          <view wx:for="{{approvalRecords}}" wx:key="recordId" class="record-card">
+            <!-- 记录头部 -->
+            <view class="record-header">
+              <view class="record-type-badge {{item.approvalType === 'task' ? 'task-type' : 'leave-type'}}">
+                {{item.approvalType === 'task' ? '任务' : '请假'}}
+              </view>
+              <view class="record-status {{item.status === 'approved' ? 'approved' : 'rejected'}}">
+                {{item.statusText}}
+              </view>
+            </view>
+
+            <!-- 记录内容 -->
+            <view class="record-content">
+              <view class="record-title">{{item.title}}</view>
+              <view class="record-applicant">
+                <t-avatar size="40rpx" image="{{item.applicantAvatar || '/images/icons/default-avatar.png'}}" />
+                <text class="applicant-name">{{item.applicantName}}</text>
+              </view>
+            </view>
+
+            <!-- 记录时间 -->
+            <view class="record-time">
+              <view class="time-label">审批时间：</view>
+              <view class="time-value">{{item.reviewTime}}</view>
+            </view>
+
+            <!-- 审批意见 -->
+            <view wx:if="{{item.reviewComment}}" class="record-comment">
+              <view class="comment-label">审批意见：</view>
+              <view class="comment-content">{{item.reviewComment}}</view>
+            </view>
+          </view>
+        </view>
+
+        <!-- 加载状态 -->
+        <view wx:if="{{recordsLoading}}" class="loading-container">
+          <t-icon name="loading" size="40rpx" color="#0052d9" class="loading-icon rotating"></t-icon>
+          <text class="loading-text">加载中...</text>
+        </view>
+      </t-pull-down-refresh>
+    </view>
+  </view>
+</view>
+
+<!-- 任务提交详情弹窗 - 参考成员页面的弹窗设计 -->
+<view class="detail-modal {{showTaskSubmissionDetail ? 'show' : ''}}" catchtouchmove="preventTouchMove">
+  <view class="modal-mask" bindtap="closeTaskSubmissionDetail"></view>
+  <view class="modal-content">
+    <!-- 弹窗头部 -->
+    <view class="modal-header">
+      <view class="modal-title">
+        <t-icon name="task" size="32rpx" color="#0052d9" style="margin-right: 8rpx;" />
+        任务提交详情
+      </view>
+      <view class="close-btn" bindtap="closeTaskSubmissionDetail">
+        <t-icon name="close" size="32rpx" color="#999" />
+      </view>
+    </view>
+    
+    <!-- 弹窗内容 -->
+    <scroll-view class="modal-body" scroll-y="true" wx:if="{{currentTaskSubmission}}">
+      <!-- 任务信息卡片 -->
+      <view class="detail-card">
+        <view class="detail-section-title">
+          <t-icon name="task" size="28rpx" color="#0052d9" style="margin-right: 8rpx;" />
+          任务信息
+        </view>
+        <view class="detail-item">
+          <view class="detail-label">主任务</view>
+          <view class="detail-value">{{currentTaskSubmission.taskName}}</view>
+        </view>
+        <view class="detail-item">
+          <view class="detail-label">子任务</view>
+          <view class="detail-value">{{currentTaskSubmission.subTaskTitle}}</view>
+        </view>
+      </view>
+
+      <!-- 提交者信息卡片 -->
+      <view class="detail-card">
+        <view class="detail-section-title">
+          <t-icon name="user" size="28rpx" color="#0052d9" style="margin-right: 8rpx;" />
+          提交者信息
+        </view>
+        <view class="submitter-card">
+          <t-avatar size="96rpx" image="{{currentTaskSubmission.userAvatar || '/images/icons/default-avatar.png'}}" />
+          <view class="submitter-info">
+            <view class="submitter-name">{{currentTaskSubmission.userName}}</view>
+            <view class="submit-time">
+              <t-icon name="time" size="20rpx" color="#999" style="margin-right: 4rpx;" />
+              {{currentTaskSubmission.submissionTime}}
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 提交内容卡片 -->
+      <view class="detail-card">
+        <view class="detail-section-title">
+          <t-icon name="edit" size="28rpx" color="#0052d9" style="margin-right: 8rpx;" />
+          提交内容
+        </view>
+        <view class="content-card">
+          {{currentTaskSubmission.submissionNotice || '无说明'}}
+        </view>
+      </view>
+
+      <!-- 提交附件卡片 -->
+      <view class="detail-card" wx:if="{{currentTaskSubmission.attachments && currentTaskSubmission.attachments.length > 0}}">
+        <view class="detail-section-title">
+          <t-icon name="attachment" size="28rpx" color="#0052d9" style="margin-right: 8rpx;" />
+          提交附件
+        </view>
+        <view class="file-list">
+          <view class="file-item" wx:for="{{currentTaskSubmission.attachments}}" wx:key="id">
+            <view class="file-info">
+              <view class="file-icon">
+                <t-icon 
+                  wx:if="{{tools.getFileIconName(item.fileName) === 'file-word'}}"
+                  name="file-word" 
+                  size="40rpx" 
+                  class="file-type-icon doc-icon" />
+                <t-icon 
+                  wx:elif="{{tools.getFileIconName(item.fileName) === 'file-excel'}}"
+                  name="file-excel" 
+                  size="40rpx" 
+                  class="file-type-icon excel-icon" />
+                <t-icon 
+                  wx:elif="{{tools.getFileIconName(item.fileName) === 'file-powerpoint'}}"
+                  name="file-powerpoint" 
+                  size="40rpx" 
+                  class="file-type-icon ppt-icon" />
+                <t-icon 
+                  wx:elif="{{tools.getFileIconName(item.fileName) === 'file-pdf'}}"
+                  name="file-pdf" 
+                  size="40rpx" 
+                  class="file-type-icon pdf-icon" />
+                <t-icon 
+                  wx:elif="{{tools.getFileIconName(item.fileName) === 'image'}}"
+                  name="image" 
+                  size="40rpx" 
+                  class="file-type-icon image-icon" />
+                <t-icon 
+                  wx:elif="{{tools.getFileIconName(item.fileName) === 'file-1'}}"
+                  name="file-1" 
+                  size="40rpx" 
+                  class="file-type-icon text-icon" />
+                <t-icon 
+                  wx:elif="{{tools.getFileIconName(item.fileName) === 'file-zip'}}"
+                  name="file-zip" 
+                  size="40rpx" 
+                  class="file-type-icon zip-icon" />
+                <t-icon 
+                  wx:elif="{{tools.getFileIconName(item.fileName) === 'file-music'}}"
+                  name="file-music" 
+                  size="40rpx" 
+                  class="file-type-icon music-icon" />
+                <t-icon 
+                  wx:else
+                  name="file" 
+                  size="40rpx" 
+                  class="file-type-icon file-icon" />
+              </view>
+              <text class="file-name">{{item.fileName}}</text>
+            </view>
+            <view class="file-actions">
+              <button class="action-button preview-button" bindtap="handlePreviewFile" data-url="{{item.filePath}}" data-name="{{item.fileName}}">
+                <t-icon name="browse" size="44rpx" class="action-icon preview-icon" />
+                <text class="action-text">预览</text>
+              </button>
+              <button class="action-button download-button" bindtap="downloadFile" data-url="{{item.filePath}}" data-name="{{item.fileName}}">
+                <t-icon name="download" size="44rpx" class="action-icon download-icon" />
+                <text class="action-text">下载</text>
+              </button>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 审批操作 -->
+      <view class="approval-actions" wx:if="{{currentTaskSubmission.status === 2}}">
+        <button 
+          bind:tap="rejectTaskSubmission"
+          data-id="{{currentTaskSubmission.submissionId}}"
+          class="approval-btn-modern reject-approval-btn">
+          退回修改
+        </button>
+        <button 
+          bind:tap="approveTaskSubmission"
+          data-id="{{currentTaskSubmission.submissionId}}"
+          class="approval-btn-modern approve-approval-btn">
+          通过审核
+        </button>
+      </view>
+
+      <!-- 已处理状态 -->
+      <view class="processed-status" wx:if="{{currentTaskSubmission.status !== 2}}">
+        <view class="status-icon">
+          <t-icon name="{{currentTaskSubmission.status === 1 ? 'check-circle' : 'close-circle'}}" 
+                  size="48rpx" 
+                  color="{{currentTaskSubmission.status === 1 ? '#00a870' : '#e34d59'}}" />
+        </view>
+        <view class="status-text">
+          {{currentTaskSubmission.status === 1 ? '已通过审核' : '已退回修改'}}
+        </view>
+        <view class="review-comment" wx:if="{{currentTaskSubmission.reviewComment}}">
+          <view class="comment-label">审核意见：</view>
+          <view class="comment-content">{{currentTaskSubmission.reviewComment}}</view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+</view>
+
+<!-- 请假申请详情弹窗 -->
+<view class="detail-modal {{showLeaveRequestDetail ? 'show' : ''}}" catchtouchmove="preventTouchMove">
+  <view class="modal-mask" bindtap="closeLeaveRequestDetail"></view>
+  <view class="modal-content">
+    <!-- 弹窗头部 -->
+    <view class="modal-header">
+      <view class="modal-title">
+        <t-icon name="calendar" size="32rpx" color="#0052d9" style="margin-right: 8rpx;" />
+        请假申请详情
+      </view>
+      <view class="close-btn" bindtap="closeLeaveRequestDetail">
+        <t-icon name="close" size="32rpx" color="#999" />
+      </view>
+    </view>
+    
+    <!-- 弹窗内容 -->
+    <scroll-view class="modal-body" scroll-y="true" wx:if="{{currentLeaveRequest}}">
+      <!-- 请假信息卡片 -->
+      <view class="detail-card">
+        <view class="detail-section-title">
+          <t-icon name="calendar" size="28rpx" color="#0052d9" style="margin-right: 8rpx;" />
+          请假信息
+        </view>
+        <view class="detail-item">
+          <view class="detail-label">请假类型</view>
+          <view class="detail-value">{{currentLeaveRequest.leaveType}}</view>
+        </view>
+        <view class="detail-item" wx:if="{{currentLeaveRequest.attendancePlanName}}">
+          <view class="detail-label">考勤计划</view>
+          <view class="detail-value plan-name">{{currentLeaveRequest.attendancePlanName}}</view>
+        </view>
+        <view class="detail-item">
+          <view class="detail-label">请假时间</view>
+          <view class="detail-value">{{currentLeaveRequest.dateTimeRange}}</view>
+        </view>
+      </view>
+
+      <!-- 申请人信息卡片 -->
+      <view class="detail-card">
+        <view class="detail-section-title">
+          <t-icon name="user" size="28rpx" color="#0052d9" style="margin-right: 8rpx;" />
+          申请人信息
+        </view>
+        <view class="submitter-card">
+          <t-avatar size="64rpx" image="{{currentLeaveRequest.userAvatar}}" wx:if="{{currentLeaveRequest.userAvatar}}" />
+          <t-avatar size="64rpx" wx:else>{{currentLeaveRequest.userInitial}}</t-avatar>
+          <view class="submitter-info">
+            <view class="submitter-name">{{currentLeaveRequest.userName}}</view>
+            <view class="submit-time">申请时间：{{currentLeaveRequest.applyTime}}</view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 请假原因卡片 -->
+      <view class="detail-card">
+        <view class="detail-section-title">
+          <t-icon name="edit" size="28rpx" color="#0052d9" style="margin-right: 8rpx;" />
+          请假原因
+        </view>
+        <view class="submission-notice">{{currentLeaveRequest.reason || '无'}}</view>
+      </view>
+
+      <!-- 附件卡片 -->
+      <view class="detail-card" wx:if="{{currentLeaveRequest.attachmentFiles && currentLeaveRequest.attachmentFiles.length > 0}}">
+        <view class="detail-section-title">
+          <t-icon name="attach" size="28rpx" color="#0052d9" style="margin-right: 8rpx;" />
+          相关附件
+        </view>
+        <view class="attachments-list">
+          <view class="file-item" wx:for="{{currentLeaveRequest.attachmentFiles}}" wx:key="index">
+            <view class="file-info">
+              <view class="file-icon">
+                <t-icon name="file-image" size="32rpx" color="#52c41a" />
+              </view>
+              <view class="file-details">
+                <view class="file-name">{{item.fileName || ('证明文件' + (index + 1))}}</view>
+                <view class="file-type">附件文件</view>
+              </view>
+            </view>
+            <view class="file-actions">
+              <button class="action-button preview-button" bindtap="handlePreviewFile" 
+                      data-url="{{item.url || item}}" 
+                      data-name="{{item.fileName || ('证明文件' + (index + 1))}}">
+                <t-icon name="browse" size="32rpx" class="action-icon preview-icon" />
+                <text class="action-text">预览</text>
+              </button>
+              <button class="action-button download-button" bindtap="downloadFile" 
+                      data-url="{{item.url || item}}" 
+                      data-name="{{item.fileName || ('证明文件' + (index + 1))}}">
+                <t-icon name="download" size="32rpx" class="action-icon download-icon" />
+                <text class="action-text">下载</text>
+              </button>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 审批信息卡片 -->
+      <view class="detail-card" wx:if="{{currentLeaveRequest.status !== 'pending'}}">
+        <view class="detail-section-title">
+          <t-icon name="check-circle" size="28rpx" color="{{currentLeaveRequest.status === 'approved' ? '#52c41a' : '#ff4d4f'}}" style="margin-right: 8rpx;" />
+          审批信息
+        </view>
+        <view class="detail-item">
+          <view class="detail-label">审批状态</view>
+          <view class="detail-value status-{{currentLeaveRequest.status}}">
+            {{currentLeaveRequest.status === 'approved' ? '已批准' : currentLeaveRequest.status === 'rejected' ? '已驳回' : '待审批'}}
+          </view>
+        </view>
+        <view class="detail-item" wx:if="{{currentLeaveRequest.approverName}}">
+          <view class="detail-label">审批人</view>
+          <view class="detail-value">{{currentLeaveRequest.approverName}}</view>
+        </view>
+        <view class="detail-item" wx:if="{{currentLeaveRequest.approvedAt}}">
+          <view class="detail-label">审批时间</view>
+          <view class="detail-value">{{currentLeaveRequest.approvedAt}}</view>
+        </view>
+        <view class="detail-item" wx:if="{{currentLeaveRequest.remark}}">
+          <view class="detail-label">审批备注</view>
+          <view class="detail-value">{{currentLeaveRequest.remark}}</view>
+        </view>
+      </view>
+
+      <!-- 审批操作 -->
+      <view class="approval-actions" wx:if="{{currentLeaveRequest.status === 'pending'}}">
+        <button 
+          bind:tap="rejectLeaveRequest"
+          data-id="{{currentLeaveRequest.requestId}}"
+          class="approval-btn-modern reject-approval-btn">
+          驳回申请
+        </button>
+        <button 
+          bind:tap="approveLeaveRequest"
+          data-id="{{currentLeaveRequest.requestId}}"
+          class="approval-btn-modern approve-approval-btn">
+          批准申请
+        </button>
+      </view>
+
+      <!-- 已处理状态 -->
+      <view class="processed-status" wx:if="{{currentLeaveRequest.status !== 'pending'}}">
+        <view class="status-icon">
+          <t-icon name="{{currentLeaveRequest.status === 'approved' ? 'check-circle' : 'close-circle'}}" 
+                  size="48rpx" 
+                  color="{{currentLeaveRequest.status === 'approved' ? '#00a870' : '#e34d59'}}" />
+        </view>
+        <view class="status-text">
+          {{currentLeaveRequest.status === 'approved' ? '已批准申请' : '已驳回申请'}}
+        </view>
+        <view class="review-comment" wx:if="{{currentLeaveRequest.remark}}">
+          <view class="comment-label">审批意见：</view>
+          <view class="comment-content">{{currentLeaveRequest.remark}}</view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+</view>
+
+<!-- 退回/驳回原因弹窗 -->
+<t-popup 
+  visible="{{showRejectDialog}}" 
+  placement="center" 
+  bind:visible-change="onRejectDialogVisibleChange">
+  <view class="reject-popup">
+    <view class="popup-header">
+      <view class="popup-title">{{rejectType === 'task' ? '退回任务提交' : '驳回请假申请'}}</view>
+    </view>
+    
+    <view class="popup-body">
+      <view class="form-section">
+        <view class="form-label">{{rejectType === 'task' ? '退回原因' : '驳回原因'}}：</view>
+        <t-textarea
+          placeholder="请输入{{rejectType === 'task' ? '退回' : '驳回'}}原因..."
+          value="{{rejectReason}}"
+          bind:change="onRejectReasonChange"
+          bind:input="onRejectReasonInput"
+          bind:blur="onRejectReasonBlur"
+          bind:focus="onRejectReasonFocus"
+          bordered="{{true}}"
+          maxcharacter="200"
+          indicator="{{true}}"
+          class="reason-textarea"
+        />
+      </view>
+    </view>
+
+    <view class="popup-footer">
+      <button bind:tap="cancelReject" class="footer-btn-modern cancel-btn-modern">取消</button>
+      <button bind:tap="confirmReject" class="footer-btn-modern confirm-btn-modern">确认{{rejectType === 'task' ? '退回' : '驳回'}}</button>
+    </view>
+  </view>
+</t-popup>

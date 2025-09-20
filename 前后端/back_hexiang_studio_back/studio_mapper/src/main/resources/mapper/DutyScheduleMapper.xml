@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.back_hexiang_studio.mapper.DutyScheduleMapper">
+
+
+    
+    <!-- 结果映射 -->
+    <resultMap id="scheduleResultMap" type="com.back_hexiang_studio.entity.DutySchedule">
+        <id column="schedule_id" property="scheduleId"/>
+        <result column="duty_name" property="title"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="location" property="location"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+    
+    <!-- 插入值班安排 -->
+    <insert id="insert" parameterType="com.back_hexiang_studio.entity.DutySchedule" useGeneratedKeys="true" keyProperty="scheduleId">
+        INSERT INTO duty_schedule (
+            duty_name, location, time_slot, start_time, end_time, status, create_time
+        ) VALUES (
+            #{title}, #{location}, #{timeSlot}, #{startTime}, #{endTime}, #{status}, #{createTime}
+        )
+    </insert>
+    
+    <!-- 根据ID查询值班安排 -->
+    <select id="selectById" parameterType="long" resultMap="scheduleResultMap">
+        SELECT * FROM duty_schedule WHERE schedule_id = #{scheduleId}
+    </select>
+    
+    <!-- 更新值班安排 -->
+    <update id="update" parameterType="com.back_hexiang_studio.entity.DutySchedule">
+        UPDATE duty_schedule
+        <set>
+            <if test="title != null">duty_name = #{title},</if>
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="endTime != null">end_time = #{endTime},</if>
+            <if test="timeSlot != null">time_slot = #{timeSlot},</if>
+            <if test="location != null">location = #{location},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime}</if>
+        </set>
+        WHERE schedule_id = #{scheduleId}
+    </update>
+    
+    <!-- 删除值班安排 -->
+    <delete id="deleteById" parameterType="long">
+        DELETE FROM duty_schedule WHERE schedule_id = #{scheduleId}
+    </delete>
+    
+    <!-- 分页查询值班安排 -->
+    <select id="selectByPage" parameterType="map" resultType="map">
+        SELECT 
+            ds.schedule_id, ds.duty_name, DATE(ds.start_time) as duty_date, ds.start_time, ds.end_time, ds.location,
+            ds.status, ds.create_time, ds.create_user,
+            u.name as create_user_name,
+            (SELECT COUNT(*) FROM duty_schedule_student dss WHERE dss.schedule_id = ds.schedule_id) as student_count
+        FROM duty_schedule ds
+        LEFT JOIN user u ON ds.create_user = u.user_id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (ds.duty_name LIKE CONCAT('%', #{keyword}, '%') OR ds.location LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="startDate != null">
+                AND DATE(ds.start_time) >= #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND DATE(ds.start_time) &lt;= #{endDate}
+            </if>
+            <if test="status != null">
+                AND ds.status = #{status}
+            </if>
+        </where>
+        ORDER BY DATE(ds.start_time) DESC, ds.start_time ASC
+        LIMIT #{offset}, #{limit}
+    </select>
+    
+    <!-- 查询值班安排总数 -->
+    <select id="selectCount" parameterType="map" resultType="int">
+        SELECT COUNT(*) FROM duty_schedule ds
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (ds.duty_name LIKE CONCAT('%', #{keyword}, '%') OR ds.location LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="startDate != null">
+                AND DATE(ds.start_time) >= #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND DATE(ds.start_time) &lt;= #{endDate}
+            </if>
+            <if test="status != null">
+                AND ds.status = #{status}
+            </if>
+        </where>
+    </select>
+    
+    <!-- 获取指定日期范围内的所有值班记录，并关联学生和考勤状态 -->
+    <select id="selectByDateRange" resultType="map">
+        SELECT
+            ds.schedule_id,
+            ds.time_slot,
+            DATE_FORMAT(ds.start_time, '%H:%i') as start_time_str,
+            DATE_FORMAT(ds.end_time, '%H:%i') as end_time_str,
+            CAST(DAYOFWEEK(ds.start_time) AS SIGNED) as day_of_week,
+            DATE_FORMAT(ds.start_time, '%Y-%m-%d') as duty_date,
+            ds.location,
+            dss.student_id,
+            u.name as student_name,
+            ap.plan_id,
+            ar.status as attendance_status,
+            ar.sign_in_time,
+            ar.remark
+        FROM duty_schedule ds
+        LEFT JOIN duty_schedule_student dss ON ds.schedule_id = dss.schedule_id
+        LEFT JOIN student s ON dss.student_id = s.student_id
+        LEFT JOIN user u ON s.user_id = u.user_id
+        LEFT JOIN attendance_plan ap ON ds.schedule_id = ap.schedule_id
+        LEFT JOIN attendance_record ar ON ap.plan_id = ar.plan_id AND dss.student_id = ar.student_id
+        WHERE ds.status = 1
+          AND ds.start_time >= #{startDate} AND ds.start_time &lt; #{endDate}
+        ORDER BY ds.start_time, ds.schedule_id, u.name
+    </select>
+    
+    <!-- 查询学生的值班安排 -->
+    <select id="selectByStudentId" resultType="map">
+        SELECT 
+            ds.schedule_id, ds.duty_name as title, DATE(ds.start_time) as duty_date, ds.start_time, ds.end_time, ds.location,
+            ds.status
+        FROM duty_schedule ds
+        JOIN duty_schedule_student dss ON ds.schedule_id = dss.schedule_id
+        WHERE dss.student_id = #{studentId}
+        AND ds.status = 1
+        ORDER BY ds.start_time, ds.end_time
+    </select>
+    
+    <!-- 检查特定日期和时间段是否已存在排班 -->
+    <select id="existsByDateAndTime" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM duty_schedule
+        WHERE start_time = #{startTime} AND end_time = #{endTime}
+          AND status = 1
+    </select>
+
+    <!-- 统计指定日期范围内的值班安排数量 -->
+    <select id="countByDateRange" resultType="long">
+        SELECT COUNT(*)
+        FROM duty_schedule
+        WHERE start_time >= #{startDate} AND start_time &lt; #{endDate}
+          AND status = 1
+    </select>
+    
+    <!-- 获取所有值班安排（不限制日期） -->
+    <select id="getAllDutySchedules" resultType="java.util.Map">
+        SELECT 
+            ds.schedule_id as id, 
+            DAYNAME(ds.start_time) as weekday, 
+            ds.time_slot,
+            ds.location,
+            ds.duty_name as description,
+            ds.create_time
+        FROM 
+            duty_schedule ds
+        ORDER BY 
+            CASE DAYNAME(ds.start_time) 
+                WHEN 'Monday' THEN 1
+                WHEN 'Tuesday' THEN 2
+                WHEN 'Wednesday' THEN 3
+                WHEN 'Thursday' THEN 4
+                WHEN 'Friday' THEN 5
+                WHEN 'Saturday' THEN 6
+                WHEN 'Sunday' THEN 7
+            END ASC,
+            ds.time_slot ASC
+    </select>
+
+    <!-- 获取指定日期范围内的值班考勤状态 -->
+    <select id="getDutyAttendanceStatus" resultType="java.util.Map">
+        SELECT
+            ar.record_id,
+            ar.student_id,
+            u.name as student_name,
+            s.student_number,
+            ap.plan_id as attendance_plan_id,
+            ap.schedule_id as duty_schedule_id,
+            ds.time_slot,
+            DATE_FORMAT(ap.start_time, '%Y-%m-%d') as duty_date,
+            ar.status as attendance_status,
+            ar.sign_in_time as check_in_time
+        FROM
+            attendance_record ar
+        JOIN
+            attendance_plan ap ON ar.plan_id = ap.plan_id
+        JOIN
+            duty_schedule ds ON ap.schedule_id = ds.schedule_id
+        JOIN
+            student s ON ar.student_id = s.student_id
+        JOIN
+            user u ON s.user_id = u.user_id
+        WHERE
+            DATE(ap.start_time) BETWEEN #{startDate} AND #{endDate}
+        ORDER BY
+            DATE(ap.start_time) ASC,
+            ds.time_slot ASC,
+            u.name ASC
+    </select>
+
+    <!-- 查询日期范围内值班表和学生（完整数据） -->
+    <select id="selectByDateRangeWithStudents" resultType="map">
+        SELECT
+            ds.schedule_id,
+            ds.duty_name,
+            ds.time_slot,
+            DATE_FORMAT(ds.start_time, '%H:%i') as start_time_str,
+            DATE_FORMAT(ds.end_time, '%H:%i') as end_time_str,
+            CAST(DAYOFWEEK(ds.start_time) AS SIGNED) as day_of_week,
+            DATE_FORMAT(ds.start_time, '%Y-%m-%d') as duty_date,
+            ds.location,
+            dss.student_id,
+            u.name as student_name,
+            s.student_number,
+            ap.plan_id,
+            COALESCE(ar.status, 'pending') as attendance_status,
+            ar.sign_in_time,
+            ar.remark
+        FROM duty_schedule ds
+        LEFT JOIN duty_schedule_student dss ON ds.schedule_id = dss.schedule_id
+        LEFT JOIN student s ON dss.student_id = s.student_id
+        LEFT JOIN user u ON s.user_id = u.user_id
+        LEFT JOIN attendance_plan ap ON ds.schedule_id = ap.schedule_id
+        LEFT JOIN attendance_record ar ON (ap.plan_id = ar.plan_id AND dss.student_id = ar.student_id)
+        WHERE ds.start_time >= #{startDate} AND ds.start_time &lt;= #{endDate}
+        AND ds.status = 1
+        ORDER BY ds.start_time, ds.schedule_id, u.name
+    </select>
+    
+    <!-- 查询指定日期范围内的值班表（不包含学生信息） -->
+    <select id="getDutyScheduleByDateRange" resultType="map">
+        SELECT
+            ds.schedule_id,
+            ds.duty_name,
+            ds.time_slot,
+            DATE_FORMAT(ds.start_time, '%H:%i') as start_time_str,
+            DATE_FORMAT(ds.end_time, '%H:%i') as end_time_str,
+            CAST(DAYOFWEEK(ds.start_time) AS SIGNED) as day_of_week,
+            DATE_FORMAT(ds.start_time, '%Y-%m-%d') as duty_date,
+            ds.location
+        FROM duty_schedule ds
+        WHERE ds.start_time >= #{startDate} AND ds.start_time &lt;= #{endDate}
+        AND ds.status = 1
+        ORDER BY ds.start_time, ds.schedule_id
+    </select>
+    
+    <!-- 查询指定日期范围内的值班表考勤状态 -->
+    <select id="findAttendanceStatusByDateRange" resultType="map">
+        SELECT
+            ar.record_id,
+            ar.student_id,
+            u.name as student_name,
+            s.student_number,
+            ap.plan_id,
+            ap.schedule_id,
+            ds.time_slot,
+            DATE_FORMAT(ds.start_time, '%Y-%m-%d') as duty_date,
+            DAYOFWEEK(ds.start_time) as day_of_week,
+            ar.status as attendance_status,
+            ar.sign_in_time as check_in_time,
+            ar.location,
+            ar.remark
+        FROM
+            attendance_record ar
+        JOIN
+            attendance_plan ap ON ar.plan_id = ap.plan_id
+        JOIN
+            duty_schedule ds ON ap.schedule_id = ds.schedule_id
+        JOIN
+            student s ON ar.student_id = s.student_id
+        JOIN
+            user u ON s.user_id = u.user_id
+        WHERE
+            DATE(ds.start_time) BETWEEN #{startDate} AND #{endDate}
+        ORDER BY
+            DATE(ds.start_time) ASC,
+            ds.time_slot ASC,
+            u.name ASC
+    </select>
+    
+    <!-- 专门用于获取日期范围内的考勤状态 -->
+    <select id="getDutyAttendanceStatusInRange" resultType="map">
+        SELECT
+            ds.schedule_id,
+            dss.student_id,
+            u.name as student_name,
+            s.student_number,
+            ap.plan_id,
+            ds.time_slot,
+            DATE_FORMAT(ds.start_time, '%Y-%m-%d') as duty_date,
+            COALESCE(ar.status, 'pending') as attendance_status,
+            ar.sign_in_time as check_in_time,
+            ar.record_id
+        FROM
+            duty_schedule ds
+        JOIN
+            duty_schedule_student dss ON ds.schedule_id = dss.schedule_id
+        JOIN
+            student s ON dss.student_id = s.student_id
+        JOIN
+            user u ON s.user_id = u.user_id
+        LEFT JOIN
+            attendance_plan ap ON ds.schedule_id = ap.schedule_id
+        LEFT JOIN
+            attendance_record ar ON (ap.plan_id = ar.plan_id AND dss.student_id = ar.student_id)
+        WHERE
+            DATE(ds.start_time) BETWEEN #{startDate} AND #{endDate}
+            AND ds.status = 1
+        ORDER BY
+            DATE(ds.start_time) ASC,
+            ds.time_slot ASC,
+            u.name ASC
+    </select>
+    
+    <!-- 根据日期和时间段查询值班安排 -->
+    <select id="findByDutyDateAndTimeSlot" resultMap="scheduleResultMap">
+        SELECT * FROM duty_schedule
+        WHERE start_time &gt;= #{startOfDay} AND start_time &lt;= #{endOfDay}
+          AND time_slot = #{timeSlot}
+          AND status = 1
+    </select>
+
+    <select id="findSchedulesWithoutPlans" resultType="com.back_hexiang_studio.entity.DutySchedule">
+        SELECT
+            ds.*
+        FROM
+            duty_schedule ds
+                LEFT JOIN
+            attendance_plan ap ON ds.schedule_id = ap.schedule_id
+        WHERE
+            ds.start_time &gt;= #{startTime} AND ds.start_time &lt;= #{endTime}
+          AND ap.plan_id IS NULL
+    </select>
+
+</mapper> 

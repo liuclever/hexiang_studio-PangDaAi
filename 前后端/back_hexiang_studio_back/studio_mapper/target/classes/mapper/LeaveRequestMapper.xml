@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.back_hexiang_studio.mapper.LeaveRequestMapper">
+
+    <!-- 分页查询请假申请 -->
+    <select id="pageQuery" resultType="com.back_hexiang_studio.dv.vo.LeaveRequestVO">
+        SELECT
+            lr.request_id,
+            lr.student_id,
+            s_user.name AS student_name,
+            s_user.avatar AS student_avatar,
+            lr.attendance_plan_id,
+            ap.name AS attendance_plan_name,
+            lr.type,
+            lr.reason,
+            lr.start_time,
+            lr.end_time,
+            lr.attachments,
+            lr.status,
+            lr.approver_id,
+            a_user.name AS approver_name,
+            lr.remark,
+            lr.approved_at,
+            lr.create_time,
+            lr.update_time
+        FROM
+            leave_request lr
+        JOIN
+            student s ON lr.student_id = s.student_id
+        JOIN
+            user s_user ON s.user_id = s_user.user_id
+        LEFT JOIN
+            user a_user ON lr.approver_id = a_user.user_id
+        LEFT JOIN
+            attendance_plan ap ON lr.attendance_plan_id = ap.plan_id
+        <where>
+            <if test="applicantId != null">
+                AND lr.student_id = (SELECT student_id FROM student WHERE user_id = #{applicantId})
+            </if>
+            <if test="studentName != null and studentName != ''">
+                AND s_user.name LIKE CONCAT('%', #{studentName}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND lr.status = #{status}
+            </if>
+            <if test="startDate != null">
+                AND lr.create_time >= #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND lr.create_time &lt;= #{endDate}
+            </if>
+            <if test="creatorId != null">
+                AND ap.create_user = #{creatorId}
+            </if>
+        </where>
+        ORDER BY lr.create_time DESC
+    </select>
+
+    <!-- 更新请假申请 -->
+    <update id="update" parameterType="com.back_hexiang_studio.entity.LeaveRequest">
+        UPDATE leave_request
+        <set>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="approverId != null">
+                approver_id = #{approverId},
+            </if>
+            <if test="remark != null">
+                remark = #{remark},
+            </if>
+            <if test="approvedAt != null">
+                approved_at = #{approvedAt},
+            </if>
+        </set>
+        WHERE request_id = #{requestId}
+    </update>
+
+    <!-- 根据ID获取请假申请详情 -->
+    <select id="getDetailById" resultType="com.back_hexiang_studio.dv.vo.LeaveRequestVO">
+        SELECT
+            lr.request_id,
+            lr.student_id,
+            s_user.name AS student_name,
+            s_user.avatar AS student_avatar,
+            lr.attendance_plan_id,
+            ap.name AS attendance_plan_name,
+            lr.type,
+            lr.reason,
+            lr.start_time,
+            lr.end_time,
+            lr.attachments,
+            lr.status,
+            lr.approver_id,
+            a_user.name AS approver_name,
+            lr.remark,
+            lr.approved_at,
+            lr.create_time,
+            lr.update_time
+        FROM
+            leave_request lr
+        JOIN
+            student s ON lr.student_id = s.student_id
+        JOIN
+            user s_user ON s.user_id = s_user.user_id
+        LEFT JOIN
+            user a_user ON lr.approver_id = a_user.user_id
+        LEFT JOIN
+            attendance_plan ap ON lr.attendance_plan_id = ap.plan_id
+        WHERE
+            lr.request_id = #{requestId}
+    </select>
+
+    <!-- 获取待审批的请假申请数量（过滤已签到学生） -->
+    <select id="countPendingRequests" resultType="int">
+        SELECT COUNT(*)
+        FROM leave_request lr
+        WHERE lr.status = 'pending'
+          AND (lr.attendance_plan_id IS NULL 
+               OR NOT EXISTS (
+                   SELECT 1 FROM attendance_record ar 
+                   WHERE ar.plan_id = lr.attendance_plan_id 
+                     AND ar.student_id = lr.student_id 
+                     AND ar.status IN ('present', 'late')
+               ))
+    </select>
+
+    <!-- 获取今日已处理的请假申请数量 -->
+    <select id="countTodayProcessedRequests" resultType="int">
+        SELECT COUNT(*)
+        FROM leave_request
+        WHERE DATE(approved_at) = CURDATE()
+          AND status IN ('approved', 'rejected')
+    </select>
+
+    <!-- 获取指定创建者的待审批请假申请数量（过滤已签到学生） -->
+    <select id="countPendingRequestsByCreator" resultType="int">
+        SELECT COUNT(*)
+        FROM leave_request lr
+        LEFT JOIN attendance_plan ap ON lr.attendance_plan_id = ap.plan_id
+        WHERE lr.status = 'pending'
+          AND ap.create_user = #{creatorId}
+          AND (lr.attendance_plan_id IS NULL 
+               OR NOT EXISTS (
+                   SELECT 1 FROM attendance_record ar 
+                   WHERE ar.plan_id = lr.attendance_plan_id 
+                     AND ar.student_id = lr.student_id 
+                     AND ar.status IN ('present', 'late')
+               ))
+    </select>
+
+    <!-- 获取指定创建者的今日已处理请假申请数量 -->
+    <select id="countTodayProcessedRequestsByCreator" resultType="int">
+        SELECT COUNT(*)
+        FROM leave_request lr
+        LEFT JOIN attendance_plan ap ON lr.attendance_plan_id = ap.plan_id
+        WHERE DATE(lr.approved_at) = CURDATE()
+          AND lr.status IN ('approved', 'rejected')
+          AND ap.create_user = #{creatorId}
+    </select>
+
+    <!-- 查询已审批的请假申请记录 -->
+    <select id="findProcessedRequests" resultType="com.back_hexiang_studio.dv.vo.LeaveRequestVO">
+        SELECT
+            lr.request_id,
+            lr.student_id,
+            s_user.name AS student_name,
+            s_user.avatar AS student_avatar,
+            lr.type,
+            lr.reason,
+            lr.start_time,
+            lr.end_time,
+            lr.status,
+            lr.approver_id,
+            a_user.name AS approver_name,
+            lr.remark,
+            lr.approved_at,
+            lr.create_time,
+            lr.update_time
+        FROM
+            leave_request lr
+        JOIN
+            student s ON lr.student_id = s.student_id
+        JOIN
+            user s_user ON s.user_id = s_user.user_id
+        LEFT JOIN
+            user a_user ON lr.approver_id = a_user.user_id
+        WHERE lr.status IN ('approved', 'rejected')
+          AND lr.approved_at >= DATE_SUB(NOW(), INTERVAL #{days} DAY)
+        ORDER BY lr.approved_at DESC
+        LIMIT 100
+    </select>
+
+    <!-- 查询指定创建者的已审批请假申请记录 -->
+    <select id="findProcessedRequestsByCreator" resultType="com.back_hexiang_studio.dv.vo.LeaveRequestVO">
+        SELECT
+            lr.request_id,
+            lr.student_id,
+            s_user.name AS student_name,
+            s_user.avatar AS student_avatar,
+            lr.type,
+            lr.reason,
+            lr.start_time,
+            lr.end_time,
+            lr.status,
+            lr.approver_id,
+            a_user.name AS approver_name,
+            lr.remark,
+            lr.approved_at,
+            lr.create_time,
+            lr.update_time
+        FROM
+            leave_request lr
+        JOIN
+            student s ON lr.student_id = s.student_id
+        JOIN
+            user s_user ON s.user_id = s_user.user_id
+        LEFT JOIN
+            user a_user ON lr.approver_id = a_user.user_id
+        LEFT JOIN
+            attendance_plan ap ON lr.attendance_plan_id = ap.plan_id
+        WHERE lr.status IN ('approved', 'rejected')
+          AND lr.approved_at >= DATE_SUB(NOW(), INTERVAL #{days} DAY)
+          AND ap.create_user = #{creatorId}
+        ORDER BY lr.approved_at DESC
+        LIMIT 100
+    </select>
+
+    <!-- 新增请假申请 -->
+    <insert id="insert" parameterType="com.back_hexiang_studio.entity.LeaveRequest" useGeneratedKeys="true" keyProperty="requestId">
+        INSERT INTO leave_request (
+            student_id,
+            attendance_plan_id,
+            type,
+            reason,
+            start_time,
+            end_time,
+            attachments,
+            status,
+            create_time,
+            update_time
+        ) VALUES (
+            #{studentId},
+            #{attendancePlanId},
+            #{type},
+            #{reason},
+            #{startTime},
+            #{endTime},
+            #{attachments},
+            #{status},
+            #{createTime},
+            #{updateTime}
+        )
+    </insert>
+
+    <!-- 根据ID删除请假申请 -->
+    <delete id="deleteById" parameterType="java.lang.Long">
+        DELETE FROM leave_request WHERE request_id = #{requestId}
+    </delete>
+
+</mapper> 

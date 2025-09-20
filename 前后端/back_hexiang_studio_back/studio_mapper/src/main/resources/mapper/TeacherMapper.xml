@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.back_hexiang_studio.mapper.TeacherMapper">
+
+    <resultMap id="teacherMap" type="com.back_hexiang_studio.entity.Teacher">
+        <id column="teacher_id" property="teacherId"/>
+        <result column="user_id" property="userId"/>
+        <result column="direction_id" property="directionId"/>
+        <result column="office_location" property="officeLocation"/>
+        <result column="title" property="title"/>
+    </resultMap>
+
+
+
+    <!-- 添加教师信息 -->
+    <insert id="addWithTeacher" parameterType="com.back_hexiang_studio.dv.dto.UserDto" useGeneratedKeys="true" keyProperty="teacherId">
+        INSERT INTO teacher (
+            user_id,
+            direction_id,
+            office_location,
+            title
+        ) VALUES (
+                     #{userId},
+                     1,
+                     #{officeLocation},
+                     #{title}
+                 )
+    </insert>
+
+    <!-- 添加教师培训方向关联 -->
+    <insert id="addTeacherDirection">
+        INSERT INTO teacher_direction (
+            teacher_id,
+            direction_id,
+            create_time
+        ) VALUES (
+                     #{teacherId},
+                     #{directionId},
+                     NOW()
+                 )
+    </insert>
+
+    <delete id="deleteTeacherDirectionsByTeacherId">
+        delete from hexiang_studio.teacher_direction where teacher_id = #{teacherId}
+    </delete>
+
+    <select id="getTeacherByUserId" resultType="com.back_hexiang_studio.entity.Teacher">
+        SELECT 
+            teacher_id as teacherId,
+            user_id as userId,
+            direction_id as directionId,
+            office_location as officeLocation,
+            title
+        FROM hexiang_studio.teacher 
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 根据培训方向名称获取ID -->
+    <select id="getDirectionIdByName" resultType="java.lang.Long">
+        SELECT direction_id
+        FROM training_direction
+        WHERE direction_name = #{directionName}
+    </select>
+
+    <!-- 获取老师ID -->
+    <select id="getTeacherIdByUserId" resultType="java.lang.Long">
+        SELECT teacher_id
+        FROM teacher
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 根据老师id获取培训id -->
+    <select id="getDirectionId" resultType="java.lang.Long">
+        SELECT direction_id
+        FROM teacher_direction
+        WHERE teacher_id = #{teacherId}
+    </select>
+
+    <!-- 根据培训id获得培训方向列表 -->
+    <select id="getdirections" resultType="java.lang.String">
+        SELECT direction_name
+        FROM training_direction
+        WHERE direction_id = #{directionId}
+    </select>
+
+    <!-- 更新教师信息 -->
+    <update id="updateWithTeacher" parameterType="com.back_hexiang_studio.dv.dto.UserDto">
+        UPDATE teacher
+        <set>
+            <if test="officeLocation != null">
+                office_location = #{officeLocation, jdbcType=VARCHAR},
+            </if>
+            <if test="title != null">
+                title = #{title, jdbcType=VARCHAR},
+            </if>
+            <if test="directionId != null">
+                direction_id = #{directionId, jdbcType=BIGINT}
+            </if>
+        </set>
+        WHERE user_id = #{userId}
+    </update>
+
+    <!-- 删除教师培训方向关联 -->
+    <delete id="deleteTeacherDirections" parameterType="java.lang.Long">
+        DELETE FROM teacher_direction
+        WHERE teacher_id = #{teacherId}
+    </delete>
+
+    <!-- 检查教师培训方向关联是否存在 -->
+    <select id="checkTeacherDirectionExists" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM teacher_direction
+        WHERE teacher_id = #{teacherId} AND direction_id = #{directionId}
+    </select>
+
+    <!-- 获取教师详细信息 -->
+    <select id="getTeacherInfo" resultMap="teacherMap">
+        SELECT
+            t.teacher_id,
+            t.user_id,
+            t.direction_id,
+            t.office_location,
+            t.title
+        FROM teacher t
+        WHERE t.teacher_id = #{teacherId}
+    </select>
+
+    <!-- 获取教师所有培训方向 -->
+    <select id="getTeacherAllDirections" resultType="java.lang.String">
+        SELECT td.direction_name
+        FROM teacher_direction tdir
+                 JOIN training_direction td ON tdir.direction_id = td.direction_id
+        WHERE tdir.teacher_id = #{teacherId}
+    </select>
+    <!--通过老师名字找id-->
+    <select id="getTeacherIdByName" resultType="java.lang.Long">
+        select teacher_id from teacher t
+                left join user u on t.user_id=u.user_id
+                where name=#{teacherName}
+    </select>
+    <!--获取老师列表-->
+    <select id="getTeacherList" resultType="java.lang.String">
+        select u.name from teacher t
+        left join user u on t.user_id=u.user_id
+    </select>
+
+    <!-- 删除教师记录 -->
+    <delete id="deleteTeacher" parameterType="java.lang.Long">
+        DELETE FROM teacher
+        WHERE user_id = #{userId}
+    </delete>
+
+    <!-- keyProperty="teacherId" 会将自增的主键ID回填到传入的Teacher对象的teacherId属性中 -->
+    <insert id="insert" parameterType="com.back_hexiang_studio.entity.Teacher">
+        insert into hexiang_studio.teacher (
+            user_id,
+            title,
+            office_location,
+            direction_id
+        ) values (
+            #{userId},
+            #{title},
+            #{officeLocation},
+            #{directionId}
+        )
+    </insert>
+
+    <delete id="deleteTeacherByUserIds" parameterType="java.util.List">
+        DELETE FROM teacher
+        WHERE user_id IN
+        <foreach item="userId" collection="userIds" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+    </delete>
+
+</mapper>

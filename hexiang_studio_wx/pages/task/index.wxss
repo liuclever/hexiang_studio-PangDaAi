@@ -1,0 +1,313 @@
+/* pages/task/index.wxss */
+page {
+  background-color: #f5f5f7;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.container {
+  padding: 0 0 30rpx 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 顶部导航区域 */
+.header {
+  background-color: #ffffff;
+  padding: 30rpx 30rpx 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08), 0 2rpx 4rpx rgba(0, 0, 0, 0.04);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-radius: 0 0 20rpx 20rpx;
+}
+
+.title-area {
+  margin-bottom: 28rpx;
+}
+
+.page-title {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #1a1a1a;
+  letter-spacing: 0.5rpx;
+}
+
+/* 筛选区域 */
+.filter-bar {
+  margin: 10rpx 0;
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+  padding-bottom: 10rpx;
+}
+
+.filter-chips::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 14rpx 32rpx;
+  margin-right: 20rpx;
+  border-radius: 32rpx;
+  font-size: 28rpx;
+  background-color: #f5f5f7;
+  color: #666;
+  white-space: nowrap;
+  border: 2rpx solid transparent;
+  font-weight: 500;
+}
+
+.chip:active {
+  opacity: 0.7;
+}
+
+.chip.active {
+  background-color: #0052d9;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 2rpx 8rpx rgba(0, 82, 217, 0.3);
+}
+
+/* 警告提示 */
+.task-warning {
+  margin: 24rpx 16rpx 10rpx;
+  padding: 20rpx 24rpx;
+  background: linear-gradient(135deg, #fff3e0, #fff8e1);
+  border-radius: 16rpx;
+  border-left: 6rpx solid #ff9500;
+  box-shadow: 0 2rpx 8rpx rgba(255, 149, 0, 0.15);
+}
+
+.warning-content {
+  display: flex;
+  align-items: center;
+}
+
+.warning-icon {
+  width: 44rpx;
+  height: 44rpx;
+  line-height: 40rpx;
+  text-align: center;
+  border-radius: 50%;
+  background-color: #ff9500;
+  color: #ffffff;
+  font-weight: bold;
+  margin-right: 20rpx;
+  font-size: 28rpx;
+  box-shadow: 0 2rpx 4rpx rgba(255, 149, 0, 0.3);
+}
+
+.warning-text {
+  color: #b8860b;
+  font-size: 28rpx;
+}
+
+.warning-text .highlight {
+  color: #ff6b00;
+  font-weight: 500;
+}
+
+/* 任务列表 */
+.task-list {
+  padding: 20rpx 16rpx;
+}
+
+.task-card {
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08), 0 2rpx 4rpx rgba(0, 0, 0, 0.04);
+  border: 1rpx solid rgba(0, 0, 0, 0.05);
+}
+
+.task-card:active {
+  opacity: 0.95;
+}
+
+.task-card-content {
+  padding: 24rpx;
+}
+
+.task-header {
+  margin-bottom: 20rpx;
+}
+
+.task-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12rpx;
+}
+
+.task-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  flex: 1;
+  margin-right: 20rpx;
+  line-height: 1.4;
+}
+
+.status-indicator {
+  font-size: 22rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+  white-space: nowrap;
+  font-weight: 600;
+  box-shadow: 0 1rpx 3rpx rgba(0, 0, 0, 0.1);
+}
+
+.status-indicator.urgent, .status-indicator.overdue {
+  background: linear-gradient(135deg, #ff6b6b, #ff5252);
+  color: #ffffff;
+}
+
+.status-indicator.completed {
+  background: linear-gradient(135deg, #4caf50, #2e7d32) !important;
+  color: #ffffff !important;
+}
+
+.status-indicator.rejected {
+  background: linear-gradient(135deg, #9e9e9e, #757575);
+  color: #ffffff;
+}
+
+.status-indicator.pending_review {
+  background: linear-gradient(135deg, #ff9800, #f57c00);
+  color: #ffffff;
+}
+
+.status-indicator.in_progress, .status-indicator.not_started {
+  background: linear-gradient(135deg, #2196f3, #0052d9);
+  color: #ffffff;
+}
+
+.task-meta {
+  display: flex;
+  justify-content: space-between;
+  color: #666666;
+  font-size: 26rpx;
+  margin-top: 8rpx;
+}
+
+.creator {
+  color: #555555;
+  font-weight: 500;
+}
+
+.deadline {
+  color: #888888;
+}
+
+.task-body {
+  border-top: 1rpx solid #f0f0f0;
+  padding-top: 20rpx;
+}
+
+.progress-area {
+  margin-bottom: 16rpx;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+  font-size: 26rpx;
+}
+
+.progress-text {
+  color: #333333;
+  font-weight: 600;
+}
+
+.subtask-count {
+  color: #666666;
+  font-weight: 500;
+}
+
+.progress-bar-bg {
+  height: 12rpx;
+  background-color: #e8e8e8;
+  border-radius: 6rpx;
+  overflow: hidden;
+  box-shadow: inset 0 1rpx 2rpx rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #4caf50, #2e7d32);
+  border-radius: 6rpx;
+  min-width: 12rpx;
+  box-shadow: 0 1rpx 3rpx rgba(76, 175, 80, 0.3);
+  position: relative;
+}
+
+/* 当进度为0时显示占位进度条 */
+.progress-bar[style*="width: 0%"], .progress-bar[style=""], .progress-bar:not([style]) {
+  width: 12rpx !important;
+  background: linear-gradient(90deg, #e0e0e0, #bdbdbd) !important;
+  box-shadow: 0 1rpx 3rpx rgba(189, 189, 189, 0.3) !important;
+}
+
+/* 不同进度阶段的颜色 */
+.progress-bar[style*="width: 100%"] {
+  background: linear-gradient(90deg, #4caf50, #2e7d32) !important;
+}
+
+.progress-bar[style*="width: 1"], .progress-bar[style*="width: 2"], .progress-bar[style*="width: 3"] {
+  background: linear-gradient(90deg, #ff9800, #f57c00) !important;
+  box-shadow: 0 1rpx 3rpx rgba(255, 152, 0, 0.3) !important;
+}
+
+.progress-bar[style*="width: 4"], .progress-bar[style*="width: 5"], .progress-bar[style*="width: 6"], .progress-bar[style*="width: 7"] {
+  background: linear-gradient(90deg, #2196f3, #0052d9) !important;
+  box-shadow: 0 1rpx 3rpx rgba(33, 150, 243, 0.3) !important;
+}
+
+.progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  border-radius: 6rpx;
+}
+
+.task-desc {
+  margin-top: 16rpx;
+  font-size: 28rpx;
+  color: #555555;
+  line-height: 1.5;
+}
+
+/* 空状态 */
+.empty-state {
+  padding: 120rpx 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-icon {
+  width: 200rpx;
+  height: 200rpx;
+  margin-bottom: 24rpx;
+  opacity: 0.4;
+}
+
+.empty-text {
+  color: #888888;
+  font-size: 30rpx;
+  font-weight: 500;
+} 

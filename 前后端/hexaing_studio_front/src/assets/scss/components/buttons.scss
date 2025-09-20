@@ -1,0 +1,62 @@
+// _buttons.scss
+
+// Custom button styles that apply globally
+
+.el-button {
+  // Common styles for all buttons
+  border-radius: var(--el-border-radius-round); // Rounded buttons
+  transition: all 0.2s ease-in-out;
+
+  &:hover:not(.is-disabled):not(.is-text):not(.is-link) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  // Primary button styles (blue)
+  &.el-button--primary {
+    background: linear-gradient(135deg, var(--el-color-primary-light-3), var(--el-color-primary));
+    border: none;
+    &:hover {
+      background: linear-gradient(135deg, var(--el-color-primary-light-5), var(--el-color-primary-light-3));
+    }
+  }
+
+  // Success button styles (green)
+  &.el-button--success {
+    background: linear-gradient(135deg, #52c41a, #43af12);
+    border: none;
+    &:hover {
+      background: linear-gradient(135deg, #63d52c, #52c41a);
+    }
+  }
+
+  // Danger button styles (red)
+  &.el-button--danger {
+    background: linear-gradient(135deg, #ff7875, #ff4d4f);
+    border: none;
+    &:hover {
+      background: linear-gradient(135deg, #ff9c9c, #ff7875);
+    }
+  }
+
+  // Warning button styles
+  &.el-button--warning {
+    background: linear-gradient(135deg, #ffcb48, #faad14);
+    border: none;
+    &:hover {
+      background: linear-gradient(135deg, #ffd970, #ffcb48);
+    }
+  }
+
+  // Circle button specific styles
+  &.is-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  // Full-width button
+  &.is-full-width {
+    width: 100%;
+  }
+} 

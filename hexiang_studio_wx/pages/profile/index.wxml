@@ -1,0 +1,168 @@
+<!--pages/profile/index.wxml-->
+<view class="container">
+  <!-- 用户基本信息卡片 -->
+  <view class="user-card">
+    <view class="user-avatar-section">
+      <view class="avatar-container">
+        <image 
+          wx:if="{{userDetail.avatar}}" 
+          src="{{userDetail.avatar}}" 
+          class="user-avatar"
+          mode="aspectFill"
+        />
+        <view wx:else class="default-avatar">
+          <text class="avatar-text">{{userDetail.name ? userDetail.name.charAt(0) : '用'}}</text>
+        </view>
+      </view>
+      <view class="user-basic-info">
+        <text class="user-name">{{userDetail.name || '加载中...'}}</text>
+        <text class="user-position">{{userDetail.position || userDetail.positionName || '成员'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 基本信息区域 -->
+  <view class="info-section">
+    <view class="section-title">
+      <t-icon name="info-circle" size="28rpx" color="#0052d9" style="margin-right: 8rpx;"></t-icon>
+      基本信息
+    </view>
+    
+    <!-- 用户ID -->
+    <view class="info-item">
+      <view class="info-label">
+        <t-icon name="user" size="32rpx" color="#666"></t-icon>
+        <text>用户ID</text>
+      </view>
+      <text class="info-value">{{userDetail.userId || '-'}}</text>
+    </view>
+    
+    <!-- 部门信息（仅学生显示） -->
+    <view class="info-item" wx:if="{{userDetail.roleId === 1}}">
+      <view class="info-label">
+        <t-icon name="building" size="32rpx" color="#666"></t-icon>
+        <text>部门</text>
+      </view>
+      <text class="info-value">{{userDetail.department || '未设置'}}</text>
+    </view>
+    
+    <view class="info-item">
+      <view class="info-label">
+        <t-icon name="user-setting" size="32rpx" color="#666"></t-icon>
+        <text>职位</text>
+      </view>
+      <text class="info-value">{{userDetail.position || userDetail.positionName || '未设置'}}</text>
+    </view>
+    
+    <view class="info-item">
+      <view class="info-label">
+        <t-icon name="mobile" size="32rpx" color="#666"></t-icon>
+        <text>手机号</text>
+      </view>
+      <text class="info-value">{{userDetail.phone || '未设置'}}</text>
+    </view>
+    
+    <view class="info-item">
+      <view class="info-label">
+        <t-icon name="mail" size="32rpx" color="#666"></t-icon>
+        <text>邮箱</text>
+      </view>
+      <text class="info-value">{{userDetail.email || '未设置'}}</text>
+    </view>
+  </view>
+
+  <!-- 学生特有信息 -->
+  <view class="info-section" wx:if="{{userDetail.roleId === 1}}">
+    <view class="section-title">
+      <t-icon name="user" size="28rpx" color="#0052d9" style="margin-right: 8rpx;"></t-icon>
+      学生信息
+    </view>
+    
+    <view class="info-item">
+      <view class="info-label">
+        <t-icon name="user" size="32rpx" color="#666"></t-icon>
+        <text>学号</text>
+      </view>
+      <text class="info-value">{{userDetail.studentNumber || '未设置'}}</text>
+    </view>
+    
+    <view class="info-item">
+      <view class="info-label">
+        <t-icon name="education" size="32rpx" color="#666"></t-icon>
+        <text>专业班级</text>
+      </view>
+      <text class="info-value">{{userDetail.major || '未设置'}}</text>
+    </view>
+    
+    <view class="info-item">
+      <view class="info-label">
+        <t-icon name="calendar" size="32rpx" color="#666"></t-icon>
+        <text>年级</text>
+      </view>
+      <text class="info-value">{{userDetail.gradeYear || '未设置'}}</text>
+    </view>
+    
+    <view class="info-item">
+      <view class="info-label">
+        <t-icon name="home" size="32rpx" color="#666"></t-icon>
+        <text>宿舍</text>
+      </view>
+      <text class="info-value">{{userDetail.dormitory || '未设置'}}</text>
+    </view>
+  </view>
+
+  <!-- 教师特有信息 -->
+  <view class="info-section" wx:if="{{userDetail.roleId === 2}}">
+    <view class="section-title">
+      <t-icon name="education" size="28rpx" color="#0052d9" style="margin-right: 8rpx;"></t-icon>
+      教师信息
+    </view>
+    
+    <view class="info-item">
+      <view class="info-label">
+        <t-icon name="star" size="32rpx" color="#666"></t-icon>
+        <text>职称</text>
+      </view>
+      <text class="info-value">{{userDetail.title || '未设置'}}</text>
+    </view>
+    
+    <view class="info-item">
+      <view class="info-label">
+        <t-icon name="location" size="32rpx" color="#666"></t-icon>
+        <text>办公室</text>
+      </view>
+      <text class="info-value">{{userDetail.officeLocation || '未设置'}}</text>
+    </view>
+  </view>
+
+  <!-- 培训方向（学生和教师） -->
+  <view class="info-section" wx:if="{{userDetail.roleId === 1 || userDetail.roleId === 2}}">
+    <view class="section-title">
+      <t-icon name="bookmark" size="28rpx" color="#0052d9" style="margin-right: 8rpx;"></t-icon>
+      培训方向
+    </view>
+    
+    <view class="training-directions">
+      <view wx:for="{{userDetail.directionIdNames || []}}" wx:key="index" class="direction-tag">
+        <t-icon name="tag" size="20rpx" style="margin-right: 4rpx;"></t-icon>
+        {{item}}
+      </view>
+      <text wx:if="{{!userDetail.directionIdNames || userDetail.directionIdNames.length === 0}}" class="no-directions">暂无培训方向</text>
+    </view>
+  </view>
+
+
+
+  <!-- 操作区域 -->
+  <view class="action-section">
+    <button class="action-btn logout-btn" bindtap="logout">
+      <t-icon name="logout" size="32rpx" color="#ff4757"></t-icon>
+      <text>退出登录</text>
+    </button>
+  </view>
+
+  <!-- 加载提示 -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <text class="loading-text">加载中...</text>
+  </view>
+</view>

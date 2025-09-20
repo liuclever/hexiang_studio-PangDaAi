@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.back_hexiang_studio.mapper.NotificationMapper">
+    
+    <resultMap id="notificationMap" type="com.back_hexiang_studio.entity.SystemNotification">
+        <id property="id" column="id"/>
+        <result property="type" column="type"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="sourceId" column="source_id"/>
+        <result property="senderId" column="sender_id"/>
+        <result property="targetUserId" column="target_user_id"/>
+        <result property="isRead" column="is_read"/>
+        <result property="readTime" column="read_time"/>
+        <result property="importance" column="importance"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+    
+    <select id="selectUserNotifications" resultType="com.back_hexiang_studio.entity.SystemNotification">
+        SELECT *
+        FROM system_notification
+        WHERE (target_user_id = #{userId} OR target_user_id IS NULL)
+          AND status = 1
+        <if test="type != null and type != ''">
+            AND type = #{type}
+        </if>
+        <if test="isRead != null">
+            AND is_read = #{isRead}
+        </if>
+        ORDER BY create_time DESC
+    </select>
+    
+    <select id="countUserNotifications" resultType="int">
+        SELECT COUNT(*) FROM system_notification
+        WHERE (target_user_id = #{userId} OR target_user_id IS NULL)
+        AND status = 1
+        <if test="type != null and type != ''">
+            AND type = #{type}
+        </if>
+        <if test="isRead != null">
+            AND is_read = #{isRead}
+        </if>
+    </select>
+    
+    <select id="countUnreadNotifications" resultType="int">
+        SELECT COUNT(*) FROM system_notification
+        WHERE (target_user_id = #{userId} OR target_user_id IS NULL)
+        AND is_read = 0
+        AND status = 1
+    </select>
+    
+    <update id="markAsRead">
+        UPDATE system_notification
+        SET is_read = 1, read_time = NOW()
+        WHERE id = #{notificationId}
+        AND (target_user_id = #{userId} OR target_user_id IS NULL)
+    </update>
+    
+    <update id="markAllAsRead">
+        UPDATE system_notification
+        SET is_read = 1, read_time = NOW()
+        WHERE (target_user_id = #{userId} OR target_user_id IS NULL)
+        AND is_read = 0
+        AND status = 1
+        <if test="type != null and type != ''">
+            AND type = #{type}
+        </if>
+    </update>
+    
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO system_notification (
+            type, title, content, source_id, sender_id, target_user_id,
+            is_read, importance, status, create_time
+        )
+        VALUES (
+            #{type}, #{title}, #{content}, #{sourceId}, #{senderId}, #{targetUserId},
+            #{isRead}, #{importance}, #{status}, #{createTime}
+        )
+    </insert>
+    
+    <select id="selectById" resultMap="notificationMap">
+        SELECT * FROM system_notification
+        WHERE id = #{id}
+    </select>
+    
+</mapper> 

@@ -1,0 +1,325 @@
+<!--pages/attendance/index.wxml-->
+<view class="container">
+  <!-- 顶部导航区域 -->
+  <view class="header">
+    <view class="title-area">
+      <text class="page-title">{{pageTitle}}</text>
+      <text class="page-subtitle">{{pageSubtitle}}</text>
+    </view>
+  </view>
+
+  <!-- 考勤统计卡片 -->
+  <view class="stats-card">
+    <view class="stats-item">
+      <view class="stats-value">{{statistics.todayAttendance}}</view>
+      <view class="stats-label">今日签到</view>
+    </view>
+    <view class="stats-divider"></view>
+    <view class="stats-item">
+      <view class="stats-value">{{statistics.monthAttendance}}</view>
+      <view class="stats-label">本月考勤</view>
+    </view>
+    <view class="stats-divider"></view>
+    <view class="stats-item">
+      <view class="stats-value">{{statistics.pendingPlans}}</view>
+      <view class="stats-label">待签到</view>
+    </view>
+  </view>
+
+  <!-- 快速签到区域 -->
+  <view wx:if="{{quickSignPlan}}" class="quick-sign-card">
+    <view class="quick-sign-header">
+      <view class="quick-sign-title">
+        <text class="title-text">快速签到</text>
+        <view class="type-tag {{quickSignPlan.type}}">
+          {{quickSignPlan.type === 'duty' ? '值班' : quickSignPlan.type === 'activity' ? '活动' : '课程'}}
+        </view>
+      </view>
+      <view class="quick-sign-time">{{tools.formatTime(quickSignPlan.startTime)}} - {{tools.formatTime(quickSignPlan.endTime)}}</view>
+    </view>
+    <view class="quick-sign-body">
+      <view class="plan-name">{{quickSignPlan.name}}</view>
+      <view class="plan-location">{{quickSignPlan.location}}</view>
+    </view>
+    <view class="quick-sign-footer">
+      <button class="quick-sign-btn" bindtap="quickSignIn" data-plan="{{quickSignPlan}}">
+        立即签到
+      </button>
+    </view>
+  </view>
+
+  <!-- 考勤类型模块 -->
+  <view class="section-title">考勤类型</view>
+  <view class="attendance-modules">
+    <!-- 值班考勤 -->
+    <view class="module-card" hover-class="card-hover" bindtap="navigateToModule" data-type="duty">
+      <view class="module-icon duty">
+        <t-icon name="user-time" size="48rpx"></t-icon>
+      </view>
+      <view class="module-info">
+        <view class="module-name">值班考勤</view>
+        <view class="module-desc">查看值班安排和签到</view>
+        <view class="module-count">{{moduleStats.duty}}个活动</view>
+      </view>
+      <view class="module-arrow">
+        <t-icon name="chevron-right" size="32rpx" color="#999"></t-icon>
+      </view>
+    </view>
+
+    <!-- 活动考勤 -->
+    <view class="module-card" hover-class="card-hover" bindtap="navigateToModule" data-type="activity">
+      <view class="module-icon activity">
+        <t-icon name="calendar" size="48rpx"></t-icon>
+      </view>
+      <view class="module-info">
+        <view class="module-name">活动考勤</view>
+        <view class="module-desc">工作室活动签到管理</view>
+        <view class="module-count">{{moduleStats.activity}}个活动</view>
+      </view>
+      <view class="module-arrow">
+        <t-icon name="chevron-right" size="32rpx" color="#999"></t-icon>
+      </view>
+    </view>
+
+    <!-- 课程考勤 -->
+    <view class="module-card" hover-class="card-hover" bindtap="navigateToModule" data-type="course">
+      <view class="module-icon course">
+        <t-icon name="education" size="48rpx"></t-icon>
+      </view>
+      <view class="module-info">
+        <view class="module-name">课程考勤</view>
+        <view class="module-desc">课程教学签到管理</view>
+        <view class="module-count">{{moduleStats.course}}个课程</view>
+      </view>
+      <view class="module-arrow">
+        <t-icon name="chevron-right" size="32rpx" color="#999"></t-icon>
+      </view>
+    </view>
+  </view>
+
+  <!-- 功能菜单 -->
+  <view class="section-title">功能菜单</view>
+  <view class="function-grid">
+    <!-- 考勤记录：仅非管理员可见 -->
+    <view wx:if="{{userRole !== 'admin'}}" class="function-item" hover-class="item-hover" bindtap="navigateToPage" data-page="records">
+      <view class="function-icon">
+        <t-icon name="view-list" size="40rpx"></t-icon>
+      </view>
+      <text class="function-name">考勤记录</text>
+    </view>
+    
+    <view class="function-item" hover-class="item-hover" bindtap="navigateToPage" data-page="leave-approval">
+      <view class="function-icon">
+        <t-icon name="check-circle" size="40rpx"></t-icon>
+      </view>
+      <text class="function-name">{{userRole === 'admin' ? '审批中心' : '考勤请假'}}</text>
+    </view>
+    
+    <!-- 请假记录：仅非管理员可见 -->
+    <view wx:if="{{userRole !== 'admin'}}" class="function-item" hover-class="item-hover" bindtap="toggleLeaveRecords">
+      <view class="function-icon">
+        <t-icon name="{{showLeaveRecords ? 'chevron-up' : 'chevron-down'}}" size="40rpx"></t-icon>
+      </view>
+      <text class="function-name">请假记录</text>
+    </view>
+  </view>
+  </view>
+
+  <!-- 请假记录列表：仅非管理员可见 -->
+  <view class="leave-records-section" wx:if="{{showLeaveRecords && userRole !== 'admin'}}">
+    <view class="section-title">我的请假记录</view>
+    <view class="leave-records-list" wx:if="{{leaveRecords.length > 0}}">
+      <view class="leave-record-item" 
+            wx:for="{{leaveRecords}}" 
+            wx:key="requestId"
+            hover-class="item-hover"
+            bindtap="viewLeaveDetail"
+            data-record="{{item}}">
+        <view class="record-header">
+          <view class="record-type type-{{item.type}}">
+            {{item.type === 'personal_leave' ? '事假' : item.type === 'sick_leave' ? '病假' : item.type === 'public_leave' ? '公假' : item.type}}
+          </view>
+          <view class="record-status status-{{item.status}}">
+            {{item.status === 'pending' ? '待审批' : item.status === 'approved' ? '已批准' : '已拒绝'}}
+          </view>
+        </view>
+        <view class="record-plan" wx:if="{{item.attendancePlanName}}">
+          <text class="plan-label">考勤计划：</text>
+          <text class="plan-name">{{item.attendancePlanName}}</text>
+        </view>
+        <view class="record-time">
+          {{tools.formatDateTime(item.startTime)}} - {{tools.formatDateTime(item.endTime)}}
+        </view>
+        <view class="record-reason">{{item.reason}}</view>
+        <view class="record-footer">
+          <text class="record-date">申请时间：{{tools.formatDateTime(item.createTime)}}</text>
+          <t-icon name="chevron-right" size="24rpx" color="#999"></t-icon>
+        </view>
+      </view>
+    </view>
+    
+    <view class="empty-state" wx:if="{{!loadingLeaveRecords && leaveRecords.length === 0}}">
+      <t-icon name="info-circle" size="60rpx" color="#ccc"></t-icon>
+      <text class="empty-text">暂无请假记录</text>
+    </view>
+    
+    <view class="loading-state" wx:if="{{loadingLeaveRecords}}">
+      <t-loading size="40rpx"></t-loading>
+      <text class="loading-text">加载中...</text>
+    </view>
+  </view>
+
+  <!-- 请假申请弹窗 -->
+<view class="leave-modal-overlay" wx:if="{{showLeaveForm}}" bindtap="hideLeaveForm">
+  <view class="leave-modal" catchtap>
+    <view class="modal-header">
+      <text class="modal-title">申请请假</text>
+      <view class="modal-close" bindtap="hideLeaveForm">
+        <t-icon name="close" size="32rpx"></t-icon>
+      </view>
+    </view>
+    
+    <view class="modal-content">
+      <!-- 请假类型 -->
+      <view class="form-item">
+        <text class="form-label">请假类型</text>
+        <picker range="{{leaveTypes}}" range-key="label" bindchange="onLeaveTypeChange">
+          <view class="picker-display">
+            <text class="picker-text">{{leaveTypeIndex >= 0 ? leaveTypes[leaveTypeIndex].label : '请选择请假类型'}}</text>
+            <t-icon name="chevron-down" size="24rpx"></t-icon>
+          </view>
+        </picker>
+      </view>
+      
+      <!-- 考勤计划 -->
+      <view class="form-item">
+        <text class="form-label">考勤计划 <text class="required">*</text></text>
+        <picker range="{{attendancePlans}}" range-key="displayText" bindchange="onAttendancePlanChange" disabled="{{loadingPlans}}">
+          <view class="picker-display">
+            <text class="picker-text {{attendancePlanIndex >= 0 ? '' : 'placeholder'}}">
+              {{loadingPlans ? '加载中...' : (attendancePlanIndex >= 0 ? attendancePlans[attendancePlanIndex].displayText : '请选择影响的考勤计划')}}
+            </text>
+            <t-icon name="chevron-down" size="24rpx"></t-icon>
+          </view>
+        </picker>
+        <view class="form-tip">选择考勤计划后将自动填充该计划的时间范围</view>
+      </view>
+      
+      <!-- 开始时间 -->
+      <view class="form-item">
+        <text class="form-label">请假开始时间</text>
+        <picker mode="multiSelector" 
+                range="{{dateTimeRange}}" 
+                value="{{startTimeIndex}}" 
+                bindchange="onStartTimeChange"
+                disabled="true">
+          <view class="picker-display" style="opacity: 0.6;">
+            <text class="picker-text">{{leaveForm.startTime || '将自动填充考勤计划开始时间'}}</text>
+            <t-icon name="lock" size="24rpx" color="#999"></t-icon>
+          </view>
+        </picker>
+        <view class="form-tip">时间已根据考勤计划自动填充，无需修改</view>
+      </view>
+      
+      <!-- 结束时间 -->
+      <view class="form-item">
+        <text class="form-label">请假结束时间</text>
+        <picker mode="multiSelector" 
+                range="{{dateTimeRange}}" 
+                value="{{endTimeIndex}}" 
+                bindchange="onEndTimeChange"
+                disabled="true">
+          <view class="picker-display" style="opacity: 0.6;">
+            <text class="picker-text">{{leaveForm.endTime || '将自动填充考勤计划结束时间'}}</text>
+            <t-icon name="lock" size="24rpx" color="#999"></t-icon>
+          </view>
+        </picker>
+        <view class="form-tip">时间已根据考勤计划自动填充，无需修改</view>
+      </view>
+      
+      <!-- 请假原因 -->
+      <view class="form-item">
+        <text class="form-label">请假原因</text>
+        <textarea class="reason-input" 
+                  placeholder="请详细说明请假原因（包括具体情况、时间安排等）"
+                  value="{{leaveForm.reason}}"
+                  bindinput="onReasonInput"
+                  maxlength="500"
+                  auto-height></textarea>
+        <view class="char-count">{{leaveForm.reason.length}}/500</view>
+      </view>
+      
+      <!-- 附件上传 -->
+      <view class="form-item">
+        <text class="form-label">相关证明 <text class="optional">(可选)</text></text>
+        <view class="upload-area">
+          <!-- 已上传的文件 -->
+          <view class="uploaded-files" wx:if="{{leaveForm.attachments.length > 0}}">
+            <view class="file-item" wx:for="{{leaveForm.attachments}}" wx:key="index">
+              <view class="file-info">
+                <view class="file-icon file-{{item.fileType}}">
+                  <t-icon name="{{item.fileType === 'image' ? 'image' : item.fileType === 'pdf' ? 'file-pdf' : item.fileType === 'word' ? 'file-word' : item.fileType === 'excel' ? 'file-excel' : 'file'}}" size="32rpx"></t-icon>
+                </view>
+                <view class="file-details">
+                  <text class="file-name">{{item.name}}</text>
+                  <text class="file-size">{{item.sizeText}}</text>
+                </view>
+              </view>
+              <view class="file-remove" bindtap="removeFile" data-index="{{index}}">
+                <t-icon name="close" size="24rpx" color="#999"></t-icon>
+              </view>
+            </view>
+          </view>
+          
+          <!-- 上传按钮 -->
+          <view class="upload-btn" bindtap="chooseFiles" wx:if="{{leaveForm.attachments.length < 3}}">
+            <t-icon name="add" size="32rpx" color="#0052d9"></t-icon>
+            <text class="upload-text">添加证明文件</text>
+            <text class="upload-tip">支持图片、PDF等，最多3个文件</text>
+          </view>
+        </view>
+      </view>
+    </view>
+    
+    <view class="modal-footer">
+      <button class="cancel-btn" bindtap="hideLeaveForm">取消</button>
+      <button class="submit-btn" 
+              bindtap="submitLeaveRequest"
+              disabled="{{submitting}}">
+        {{submitting ? '提交中...' : '提交申请'}}
+      </button>
+    </view>
+  </view>
+</view>
+
+<!-- 工具类 WXS 模块 -->
+<wxs module="tools">
+  // 格式化时间
+  function formatTime(timeStr) {
+    if (!timeStr) return '';
+    var time = getDate(timeStr);
+    return padZero(time.getHours()) + ':' + padZero(time.getMinutes());
+  }
+  
+  // 格式化日期时间
+  function formatDateTime(timeStr) {
+    if (!timeStr) return '';
+    var time = getDate(timeStr);
+    var year = time.getFullYear();
+    var month = padZero(time.getMonth() + 1);
+    var day = padZero(time.getDate());
+    var hours = padZero(time.getHours());
+    var minutes = padZero(time.getMinutes());
+    return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes;
+  }
+  
+  // 补零
+  function padZero(num) {
+    return num < 10 ? '0' + num : num;
+  }
+  
+  module.exports = {
+    formatTime: formatTime,
+    formatDateTime: formatDateTime
+  };
+</wxs> 

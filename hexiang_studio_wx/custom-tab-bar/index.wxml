@@ -1,0 +1,31 @@
+<view class="tab-bar">
+  <view 
+    class="tab-bar-item {{selected === index ? 'tab-bar-item--active' : ''}}"
+    wx:for="{{list}}" 
+    wx:key="index"
+    data-path="{{item.pagePath}}"
+    data-index="{{index}}"
+    bindtap="switchTab"
+    animation="{{index === 0 ? animationData0 : index === 1 ? animationData1 : index === 2 ? animationData2 : index === 3 ? animationData3 : animationData4}}"
+  >
+    <view class="tab-bar-item__icon-wrapper">
+      <t-icon 
+        name="{{selected === index ? item.selectedIconName : item.iconName}}" 
+        size="48rpx"
+        color="{{selected === index ? selectedColor : color}}"
+        class="tab-bar-item__icon {{selected === index ? 'tab-bar-item__icon--active' : ''}}"
+      />
+      <!-- 选中时的圆点指示器 -->
+      <view 
+        class="tab-bar-item__dot {{selected === index ? 'tab-bar-item__dot--show' : ''}}"
+      ></view>
+    </view>
+    
+    <view 
+      class="tab-bar-item__text {{selected === index ? 'tab-bar-item__text--active' : ''}}"
+      style="color: {{selected === index ? selectedColor : color}}"
+    >
+      {{item.text}}
+    </view>
+  </view>
+</view> 

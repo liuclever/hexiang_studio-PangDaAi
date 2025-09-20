@@ -1,0 +1,16 @@
+{
+  "name": "hexaing_studio_wx",
+  "version": "1.0.0",
+  "description": "基于现有的何湘技能大师工作室Web管理系统，开发的微信小程序版本，提供学生端和管理端功能，满足移动场景下的日常使用需求。",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "tdesign-miniprogram": "^1.9.7"
+  }
+}

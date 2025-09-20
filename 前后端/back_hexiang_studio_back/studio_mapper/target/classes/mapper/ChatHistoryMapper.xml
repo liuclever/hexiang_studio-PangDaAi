@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.back_hexiang_studio.mapper.ChatHistoryMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="ChatHistoryResultMap" type="com.back_hexiang_studio.entity.ChatHistory">
+        <id property="chatId" column="chat_id" />
+        <result property="userId" column="user_id" />
+        <result property="sessionId" column="session_id" />
+        <result property="messageType" column="message_type" />
+        <result property="content" column="content" />
+        <result property="messageOrder" column="message_order" />
+        <result property="createTime" column="create_time" />
+        <result property="userName" column="user_name" />
+        <result property="realName" column="name" />
+    </resultMap>
+
+    <!-- 插入聊天记录 -->
+    <insert id="insert" parameterType="com.back_hexiang_studio.entity.ChatHistory" useGeneratedKeys="true" keyProperty="chatId">
+        INSERT INTO chat_history (
+            user_id,
+            session_id,
+            message_type,
+            content,
+            message_order,
+            create_time
+        ) VALUES (
+            #{userId},
+            #{sessionId},
+            #{messageType},
+            #{content},
+            #{messageOrder},
+            #{createTime}
+        )
+    </insert>
+
+    <!-- 批量插入聊天记录 -->
+    <insert id="insertBatch" parameterType="java.util.List">
+        INSERT INTO chat_history (
+            user_id,
+            session_id,
+            message_type,
+            content,
+            message_order,
+            create_time
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+                #{item.userId},
+                #{item.sessionId},
+                #{item.messageType},
+                #{item.content},
+                #{item.messageOrder},
+                #{item.createTime}
+            )
+        </foreach>
+    </insert>
+
+    <!-- 根据用户ID获取聊天历史（按时间倒序，带用户信息） -->
+    <select id="selectByUserId" resultMap="ChatHistoryResultMap">
+        SELECT 
+            ch.chat_id,
+            ch.user_id,
+            ch.session_id,
+            ch.message_type,
+            ch.content,
+            ch.message_order,
+            ch.create_time,
+            u.user_name,
+            u.name
+        FROM chat_history ch
+        LEFT JOIN user u ON ch.user_id = u.user_id
+        WHERE ch.user_id = #{userId}
+        ORDER BY ch.create_time DESC
+        <if test="limit != null and limit > 0">
+            LIMIT #{limit}
+        </if>
+    </select>
+
+    <!-- 根据会话ID获取聊天历史（按消息顺序） -->
+    <select id="selectBySessionId" resultMap="ChatHistoryResultMap">
+        SELECT 
+            ch.chat_id,
+            ch.user_id,
+            ch.session_id,
+            ch.message_type,
+            ch.content,
+            ch.message_order,
+            ch.create_time,
+            u.user_name,
+            u.name
+        FROM chat_history ch
+        LEFT JOIN user u ON ch.user_id = u.user_id
+        WHERE ch.session_id = #{sessionId}
+        ORDER BY ch.message_order ASC, ch.create_time ASC
+    </select>
+
+    <!-- 获取用户的最近N次会话 -->
+    <select id="selectRecentSessions" resultMap="ChatHistoryResultMap">
+        SELECT 
+            ch.chat_id,
+            ch.user_id,
+            ch.session_id,
+            ch.message_type,
+            ch.content,
+            ch.message_order,
+            ch.create_time,
+            u.user_name,
+            u.name
+        FROM chat_history ch
+        LEFT JOIN user u ON ch.user_id = u.user_id
+        WHERE ch.user_id = #{userId}
+          AND ch.session_id IN (
+              SELECT DISTINCT session_id 
+              FROM chat_history 
+              WHERE user_id = #{userId}
+              ORDER BY create_time DESC
+              LIMIT #{sessionLimit}
+          )
+        ORDER BY ch.create_time DESC
+    </select>
+
+    <!-- 删除用户的所有聊天记录 -->
+    <delete id="deleteByUserId">
+        DELETE FROM chat_history WHERE user_id = #{userId}
+    </delete>
+
+    <!-- 删除指定会话的聊天记录 -->
+    <delete id="deleteBySessionId">
+        DELETE FROM chat_history WHERE session_id = #{sessionId}
+    </delete>
+
+    <!-- 删除指定时间之前的聊天记录 -->
+    <delete id="deleteOldRecords">
+        DELETE FROM chat_history 
+        WHERE create_time &lt; DATE_SUB(NOW(), INTERVAL #{beforeDays} DAY)
+    </delete>
+
+    <!-- 统计用户的聊天记录数 -->
+    <select id="countByUserId" resultType="long">
+        SELECT COUNT(*) FROM chat_history WHERE user_id = #{userId}
+    </select>
+
+    <!-- 获取用户的所有会话ID列表 -->
+    <select id="selectSessionIdsByUserId" resultType="string">
+        SELECT DISTINCT session_id 
+        FROM chat_history 
+        WHERE user_id = #{userId}
+        ORDER BY MAX(create_time) DESC
+    </select>
+
+</mapper>

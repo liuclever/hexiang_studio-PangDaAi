@@ -1,0 +1,227 @@
+<!--pages/attendance/course/index.wxml-->
+<view class="container">
+  <!-- 顶部导航区域 -->
+  <view class="header">
+    <view class="title-area">
+      <text class="page-title">课程考勤</text>
+    </view>
+    
+    <!-- 筛选栏 -->
+    <view class="filter-bar">
+      <view class="filter-chips">
+        <view class="chip {{filter === 'all' ? 'active' : ''}}" bindtap="setFilter" data-filter="all">
+          全部课程
+        </view>
+        <view class="chip {{filter === 'ongoing' ? 'active' : ''}}" bindtap="setFilter" data-filter="ongoing">
+          进行中
+        </view>
+        <view class="chip {{filter === 'upcoming' ? 'active' : ''}}" bindtap="setFilter" data-filter="upcoming">
+          即将开始
+        </view>
+        <view class="chip {{filter === 'ended' ? 'active' : ''}}" bindtap="setFilter" data-filter="ended">
+          已结束
+        </view>
+      </view>
+    </view>
+    
+    <!-- 创建按钮 (仅管理员) -->
+    <view wx:if="{{userRole === 'admin'}}" class="action-bar">
+      <button class="create-btn" bindtap="showCreateForm">
+        <t-icon name="add" size="32rpx" color="#ffffff"></t-icon>
+        创建课程考勤
+      </button>
+    </view>
+  </view>
+
+  <!-- 课程列表 -->
+  <view class="course-list">
+    <view wx:if="{{filteredCourses.length === 0}}" class="empty-state">
+      <t-icon name="inbox" size="120rpx" color="#cccccc" class="empty-icon"></t-icon>
+      <text class="empty-text">暂无{{filterWxs.getFilterText(filter)}}课程</text>
+    </view>
+    
+    <view wx:for="{{filteredCourses}}" wx:key="planId" class="course-card" bindtap="viewCourseDetail" data-course="{{item}}">
+      <view class="course-card-content">
+        <view class="course-header">
+          <view class="course-title-row">
+            <text class="course-title">{{item.name}}</text>
+            <view class="status-indicator {{item.status}}">
+              {{item.statusText}}
+            </view>
+          </view>
+          
+          <view class="course-meta">
+            <view class="course-info">
+              <text class="course-label">课程:</text>
+              <text class="course-value">{{item.courseName || '未关联课程'}}</text>
+            </view>
+            <view class="time-info">
+              <text class="time-label">时间:</text>
+              <text class="time-value">{{tools.formatDateTime(item.startTime)}} - {{tools.formatDateTime(item.endTime)}}</text>
+            </view>
+            <view class="location-info">
+              <text class="location-label">地点:</text>
+              <text class="location-value">{{item.location}}</text>
+            </view>
+          </view>
+        </view>
+        
+        <view class="course-body">
+          <view wx:if="{{item.note}}" class="course-desc">
+            {{tools.truncateText(item.note, 80)}}
+          </view>
+          
+          <view class="course-stats">
+            <view class="stat-item">
+              <text class="stat-value">{{item.attendanceCount || 0}}/{{item.totalStudents || 0}}</text>
+              <text class="stat-label">已签到</text>
+            </view>
+            <view class="stat-divider"></view>
+            <view class="stat-item">
+              <text class="stat-value">{{item.expectedCount || 0}}</text>
+              <text class="stat-label">应到人数</text>
+            </view>
+            <view class="stat-divider"></view>
+            <view class="stat-item">
+              <text class="stat-value">{{item.attendanceRate}}%</text>
+              <text class="stat-label">出勤率</text>
+            </view>
+          </view>
+        </view>
+        
+        <view class="course-footer">
+          <view class="footer-left">
+            <text class="creator">创建者: {{item.createUserName || '系统'}}</text>
+          </view>
+          <view class="footer-right">
+            <button class="sign-btn" bindtap="viewRecords" data-plan="{{item}}" catchtap="true">
+              查看详情
+            </button>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 创建课程考勤弹窗 -->
+<view wx:if="{{showCreateForm}}" class="edit-form-overlay" bindtap="hideCreateForm">
+  <view class="edit-form-modal" catchtap="preventClose">
+    <view class="edit-form-header">
+      <text class="edit-form-title">创建课程考勤</text>
+      <t-icon name="close" size="32rpx" color="#999" bindtap="hideCreateForm" />
+    </view>
+    
+    <scroll-view scroll-y="true" class="edit-form-content">
+      <view class="form-item">
+        <text class="form-label">考勤名称</text>
+        <input class="form-input" placeholder="请输入考勤名称" value="{{createForm.name}}" bindinput="onCreateNameInput" />
+      </view>
+      
+      <view class="form-item">
+        <text class="form-label">关联课程 *</text>
+        <picker range="{{allCourses}}" range-key="name" value="{{createForm.courseIndex}}" bindchange="onCreateCourseChange" class="form-picker">
+          <view class="picker-display">{{createForm.courseDisplay || '请选择关联课程'}}</view>
+        </picker>
+      </view>
+      
+      <view class="form-item">
+        <text class="form-label">开始时间</text>
+        <picker mode="multiSelector" range="{{dateTimeRange}}" value="{{startTimeIndex}}" bindchange="onCreateStartTimeChange" class="form-picker">
+          <view class="picker-display">{{createForm.startTimeDisplay || '请选择开始时间'}}</view>
+        </picker>
+      </view>
+      
+      <view class="form-item">
+        <text class="form-label">结束时间</text>
+        <picker mode="multiSelector" range="{{dateTimeRange}}" value="{{endTimeIndex}}" bindchange="onCreateEndTimeChange" class="form-picker">
+          <view class="picker-display">{{createForm.endTimeDisplay || '请选择结束时间'}}</view>
+        </picker>
+      </view>
+      
+      <view class="form-item">
+        <text class="form-label">活动地点</text>
+        <picker range="{{commonLocations}}" range-key="name" value="{{createForm.locationIndex}}" bindchange="onCreateLocationChange" class="form-picker">
+          <view class="picker-display">{{createForm.locationDisplay || '请选择活动地点'}}</view>
+        </picker>
+      </view>
+      
+      <view class="form-row">
+        <view class="form-item half">
+          <text class="form-label">纬度</text>
+          <view class="form-display">{{createForm.locationLat || '请先选择地点'}}</view>
+        </view>
+        <view class="form-item half">
+          <text class="form-label">经度</text>
+          <view class="form-display">{{createForm.locationLng || '请先选择地点'}}</view>
+        </view>
+      </view>
+      
+      <view class="form-item">
+        <text class="form-label">签到半径</text>
+        <input class="form-input" type="number" placeholder="请输入签到半径(米)" value="{{createForm.radius}}" bindinput="onCreateRadiusInput" />
+      </view>
+      
+      <view class="form-item">
+        <text class="form-label">考勤状态</text>
+        <picker range="{{statusOptions}}" range-key="label" value="{{createForm.statusIndex}}" bindchange="onCreateStatusChange" class="form-picker">
+          <view class="picker-display">{{statusOptions[createForm.statusIndex].label}}</view>
+        </picker>
+      </view>
+      
+      <view class="form-item">
+        <text class="form-label">备注说明</text>
+        <textarea class="form-textarea" placeholder="请输入备注说明" value="{{createForm.note}}" bindinput="onCreateNoteInput"></textarea>
+      </view>
+    </scroll-view>
+    
+    <view class="edit-form-actions">
+      <button class="form-btn cancel" bindtap="hideCreateForm">取消</button>
+      <button class="form-btn confirm {{submitting ? 'loading' : ''}}" bindtap="submitCreate" disabled="{{submitting}}">
+        {{submitting ? '创建中...' : '创建考勤'}}
+      </button>
+    </view>
+  </view>
+</view>
+
+<!-- 工具类 WXS 模块 -->
+<wxs module="tools">
+  // 格式化日期时间
+  function formatDateTime(dateStr) {
+    if (!dateStr) return '';
+    var date = getDate(dateStr);
+    return (date.getMonth() + 1) + '/' + date.getDate() + ' ' + 
+           padZero(date.getHours()) + ':' + padZero(date.getMinutes());
+  }
+  
+  // 补零
+  function padZero(num) {
+    return num < 10 ? '0' + num : num;
+  }
+  
+  // 截断文本
+  function truncateText(text, maxLength) {
+    if (!text) return '';
+    return text.length <= maxLength ? text : text.substring(0, maxLength) + '...';
+  }
+  
+  module.exports = {
+    formatDateTime: formatDateTime,
+    truncateText: truncateText
+  };
+</wxs>
+
+<wxs module="filterWxs">
+  function getFilterText(filterType) {
+    switch(filterType) {
+      case 'ongoing': return '进行中的';
+      case 'upcoming': return '即将开始的';
+      case 'ended': return '已结束的';
+      default: return '';
+    }
+  }
+  
+  module.exports = {
+    getFilterText: getFilterText
+  };
+</wxs> 

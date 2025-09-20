@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.back_hexiang_studio.mapper.SubTaskMemberMapper">
+    <insert id="insert">
+        insert into sub_member (sub_task_id, user_id, role, note)
+        values (#{subTaskId}, #{userId}, #{role}, #{note})
+    </insert>
+
+    <delete id="deleteByTaskId">
+        delete sm from sub_member sm
+        join sub_task st on sm.sub_task_id = st.sub_task_id
+        where st.task_id = #{taskId}
+    </delete>
+</mapper>

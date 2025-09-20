@@ -1,0 +1,158 @@
+<!--pages/materials/detail.wxml-->
+<view class="detail-container">
+  <!-- 加载状态 -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <t-loading theme="circular" size="60rpx" text="加载中..." />
+  </view>
+
+  <!-- 错误状态 -->
+  <view wx:elif="{{error}}" class="error-container">
+    <t-empty icon="error" description="加载失败">
+      <t-button slot="action" variant="outline" bindtap="refreshData">重新加载</t-button>
+    </t-empty>
+  </view>
+
+  <!-- 资料详情 -->
+  <view wx:else class="detail-content">
+    <!-- 资料卡片 -->
+    <view class="material-card">
+      <!-- 文件信息 -->
+      <view class="file-header">
+        <view class="file-info">
+          <view class="file-icon">
+            <t-icon name="{{material.fileTypeIcon}}" size="64rpx" color="#4A90E2" />
+          </view>
+          <view class="file-details">
+            <text class="file-name">{{material.fileName}}</text>
+            <view class="file-meta">
+              <text class="file-size">{{material.formattedSize}}</text>
+              <text class="file-separator">•</text>
+              <text class="file-type">{{material.fileType}}</text>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 更多操作 -->
+        <view class="more-btn" bindtap="showMoreActions">
+          <t-icon name="more" size="40rpx" color="#666" />
+        </view>
+      </view>
+
+      <!-- 操作按钮组 -->
+      <view class="action-group">
+        <t-button 
+          class="action-button preview-btn" 
+          variant="outline"
+          bindtap="previewMaterial"
+        >
+          <t-icon name="view-module" size="32rpx" />
+          <text class="btn-text">预览</text>
+        </t-button>
+        
+        <t-button 
+          class="action-button download-btn" 
+          variant="outline"
+          bindtap="downloadMaterial"
+        >
+          <t-icon name="download" size="32rpx" />
+          <text class="btn-text">下载</text>
+        </t-button>
+        
+        <t-button 
+          class="action-button share-btn" 
+          variant="outline"
+          bindtap="shareMaterial"
+        >
+          <t-icon name="share" size="32rpx" />
+          <text class="btn-text">分享</text>
+        </t-button>
+      </view>
+
+      <!-- 资料描述 -->
+      <view wx:if="{{material.description}}" class="description-section">
+        <text class="section-title">资料描述</text>
+        <text class="description-text">{{material.description}}</text>
+      </view>
+    </view>
+
+    <!-- 详细信息 -->
+    <view class="info-card">
+      <text class="card-title">详细信息</text>
+      
+      <view class="info-list">
+        <!-- 分类 -->
+        <view class="info-item">
+          <text class="info-label">所属分类</text>
+          <view class="category-tag">
+            <text class="category-text">{{material.categoryName}}</text>
+          </view>
+        </view>
+        
+        <!-- 上传者 -->
+        <view class="info-item">
+          <text class="info-label">上传者</text>
+          <text class="info-value">{{material.uploaderName}}</text>
+        </view>
+        
+        <!-- 上传时间 -->
+        <view class="info-item">
+          <text class="info-label">上传时间</text>
+          <text class="info-value">{{material.formattedUploadTime}}</text>
+        </view>
+        
+        <!-- 访问权限 -->
+        <view class="info-item">
+          <text class="info-label">访问权限</text>
+          <view class="permission-tag {{material.isPublic === 1 ? 'public' : 'private'}}">
+            <text class="permission-text">{{material.isPublicText}}</text>
+          </view>
+        </view>
+        
+        <!-- 下载次数 -->
+        <view class="info-item">
+          <text class="info-label">下载次数</text>
+          <text class="info-value">{{material.downloadCount || 0}} 次</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 相关资料 -->
+    <view wx:if="{{relatedMaterials.length > 0}}" class="related-section">
+      <view class="section-header">
+        <text class="section-title">相关资料</text>
+        <text class="section-subtitle">为您推荐</text>
+      </view>
+      
+      <scroll-view class="related-list" scroll-x enable-flex>
+        <view 
+          wx:for="{{relatedMaterials}}" 
+          wx:key="id"
+          class="related-item"
+          bindtap="viewRelatedMaterial"
+          data-id="{{item.id}}"
+        >
+                  <view class="related-file">
+          <view class="related-icon">
+            <t-icon name="{{item.fileTypeIcon}}" size="40rpx" color="#666" />
+          </view>
+          <view class="related-info">
+            <text class="related-name">{{item.fileName}}</text>
+            <text class="related-size">{{item.formattedSize}}</text>
+          </view>
+        </view>
+        </view>
+      </scroll-view>
+    </view>
+
+    <!-- 底部安全距离 -->
+    <view class="bottom-safe"></view>
+  </view>
+</view>
+
+<!-- 浮动操作按钮 -->
+<view wx:if="{{material && !loading && !error && canEdit}}" class="fab-container">
+  <!-- 编辑按钮（管理员或上传者） -->
+  <view class="fab-item edit-fab" bindtap="editMaterial">
+    <t-icon name="edit" size="32rpx" color="#fff" />
+  </view>
+</view> 

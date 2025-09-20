@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.back_hexiang_studio.mapper.CommonLocationMapper">
+    <!-- 结果映射 -->
+    <resultMap id="CommonLocationMap" type="com.back_hexiang_studio.entity.CommonLocation">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="latitude" property="latitude"/>
+        <result column="longitude" property="longitude"/>
+        <result column="description" property="description"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+    
+    <!-- 获取所有常用签到地点 -->
+    <select id="getAllCommonLocations" resultMap="CommonLocationMap">
+        SELECT id, name, latitude, longitude, description, create_time
+        FROM common_location
+        ORDER BY id
+    </select>
+    
+    <!-- 根据ID获取常用签到地点 -->
+    <select id="getCommonLocationById" resultMap="CommonLocationMap">
+        SELECT id, name, latitude, longitude, description, create_time
+        FROM common_location
+        WHERE id = #{id}
+    </select>
+    <!-- 根据id找常用签到地点信息 -->
+    <select id="getCommonLocationsById" resultType="java.util.Map">
+        select latitude,longitude from common_location where id = #{id}
+    </select>
+
+    <!-- 新增常用签到地点 -->
+    <insert id="insertCommonLocation" parameterType="com.back_hexiang_studio.entity.CommonLocation" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO common_location (name, latitude, longitude, description, create_time)
+        VALUES (#{name}, #{latitude}, #{longitude}, #{description}, #{createTime})
+    </insert>
+    
+    <!-- 更新常用签到地点 -->
+    <update id="updateCommonLocation" parameterType="com.back_hexiang_studio.entity.CommonLocation">
+        UPDATE common_location
+        SET name = #{name},
+            latitude = #{latitude},
+            longitude = #{longitude},
+            description = #{description}
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 删除常用签到地点 -->
+    <delete id="deleteCommonLocation">
+        DELETE FROM common_location
+        WHERE id = #{id}
+    </delete>
+</mapper> 

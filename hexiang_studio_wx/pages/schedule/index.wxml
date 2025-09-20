@@ -1,0 +1,8 @@
+<!--pages/schedule/index.wxml-->
+<view class="schedule-page">
+  <!-- 使用值班表组件 -->
+  <duty-schedule-table 
+    show-actions="{{true}}"
+    bind:dutydetail="onDutyDetail">
+  </duty-schedule-table>
+</view> 

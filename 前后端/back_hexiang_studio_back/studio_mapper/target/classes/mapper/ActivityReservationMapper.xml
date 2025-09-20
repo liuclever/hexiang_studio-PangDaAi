@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.back_hexiang_studio.mapper.ActivityReservationMapper">
+
+    <!-- 基础结果映射 -->
+    <resultMap id="baseResultMap" type="com.back_hexiang_studio.entity.ActivityReservation">
+        <id column="reservation_id" property="reservationId"/>
+        <result column="plan_id" property="planId"/>
+        <result column="student_id" property="studentId"/>
+        <result column="status" property="status"/>
+        <result column="reservation_time" property="reservationTime"/>
+        <result column="cancel_time" property="cancelTime"/>
+        <result column="remark" property="remark"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 新增预约记录 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="reservationId">
+        INSERT INTO activity_reservation (
+            plan_id, student_id, status, reservation_time, remark, create_time, update_time
+        ) VALUES (
+            #{planId}, #{studentId}, #{status}, #{reservationTime}, #{remark}, #{createTime}, #{updateTime}
+        )
+    </insert>
+
+    <!-- 批量新增预约记录 -->
+    <insert id="batchInsert">
+        INSERT INTO activity_reservation (
+            plan_id, student_id, status, reservation_time, remark, create_time, update_time
+        ) VALUES
+        <foreach collection="reservations" item="item" separator=",">
+            (#{item.planId}, #{item.studentId}, #{item.status}, #{item.reservationTime}, 
+             #{item.remark}, #{item.createTime}, #{item.updateTime})
+        </foreach>
+    </insert>
+
+    <!-- 根据ID查询预约记录 -->
+    <select id="selectById" resultMap="baseResultMap">
+        SELECT * FROM activity_reservation WHERE reservation_id = #{reservationId}
+    </select>
+
+    <!-- 根据计划ID和学生ID查询预约记录 -->
+    <select id="selectByPlanIdAndStudentId" resultMap="baseResultMap">
+        SELECT * FROM activity_reservation 
+        WHERE plan_id = #{planId} AND student_id = #{studentId}
+    </select>
+
+    <!-- 更新预约记录 -->
+    <update id="update">
+        UPDATE activity_reservation SET
+            status = #{status},
+            cancel_time = #{cancelTime},
+            remark = #{remark},
+            update_time = #{updateTime}
+        WHERE reservation_id = #{reservationId}
+    </update>
+
+    <!-- 取消预约（软删除） -->
+    <update id="cancelReservation">
+        UPDATE activity_reservation SET
+            status = 'cancelled',
+            cancel_time = NOW(),
+            update_time = NOW()
+        WHERE reservation_id = #{reservationId}
+    </update>
+
+    <!-- 批量取消预约 -->
+    <update id="batchCancelReservation">
+        UPDATE activity_reservation SET
+            status = 'cancelled',
+            cancel_time = NOW(),
+            update_time = NOW()
+        WHERE plan_id = #{planId} AND student_id IN
+        <foreach collection="studentIds" item="studentId" open="(" separator="," close=")">
+            #{studentId}
+        </foreach>
+    </update>
+
+    <!-- 删除预约记录 -->
+    <delete id="deleteById">
+        DELETE FROM activity_reservation WHERE reservation_id = #{reservationId}
+    </delete>
+
+    <!-- 根据计划ID删除所有预约记录 -->
+    <delete id="deleteByPlanId">
+        DELETE FROM activity_reservation WHERE plan_id = #{planId}
+    </delete>
+
+    <!-- 分页查询预约记录（带学生信息） -->
+    <select id="selectByPage" resultType="java.util.Map">
+        SELECT 
+            ar.reservation_id,
+            ar.plan_id,
+            ar.student_id,
+            ar.status,
+            ar.reservation_time,
+            ar.cancel_time,
+            ar.remark,
+            ar.create_time,
+            ar.update_time,
+            u.name as student_name,
+            s.student_number
+        FROM activity_reservation ar
+        LEFT JOIN student s ON ar.student_id = s.student_id
+        LEFT JOIN user u ON s.user_id = u.user_id
+        WHERE 1=1
+        <if test="params.planId != null">
+            AND ar.plan_id = #{params.planId}
+        </if>
+        <if test="params.keyword != null and params.keyword != ''">
+            AND (u.name LIKE CONCAT('%', #{params.keyword}, '%') 
+                 OR s.student_number LIKE CONCAT('%', #{params.keyword}, '%'))
+        </if>
+        <if test="params.status != null and params.status != ''">
+            AND ar.status = #{params.status}
+        </if>
+        ORDER BY ar.reservation_time DESC
+    </select>
+
+    <!-- 查询预约记录总数 -->
+    <select id="selectCount" resultType="int">
+        SELECT COUNT(*)
+        FROM activity_reservation ar
+        LEFT JOIN student s ON ar.student_id = s.student_id
+        LEFT JOIN user u ON s.user_id = u.user_id
+        WHERE 1=1
+        <if test="params.planId != null">
+            AND ar.plan_id = #{params.planId}
+        </if>
+        <if test="params.keyword != null and params.keyword != ''">
+            AND (u.name LIKE CONCAT('%', #{params.keyword}, '%') 
+                 OR s.student_number LIKE CONCAT('%', #{params.keyword}, '%'))
+        </if>
+        <if test="params.status != null and params.status != ''">
+            AND ar.status = #{params.status}
+        </if>
+    </select>
+
+    <!-- 根据计划ID查询已预约的学生列表 -->
+    <select id="selectReservedStudentsByPlanId" resultType="java.util.Map">
+        SELECT 
+            ar.student_id,
+            u.name as student_name,
+            s.student_number,
+            ar.reservation_time,
+            ar.status,
+            ar.remark
+        FROM activity_reservation ar
+        LEFT JOIN student s ON ar.student_id = s.student_id
+        LEFT JOIN user u ON s.user_id = u.user_id
+        WHERE ar.plan_id = #{planId} AND ar.status IN ('reserved', 'checked_in')
+        ORDER BY ar.reservation_time
+    </select>
+
+    <!-- 根据计划ID查询已预约的学生ID列表 -->
+    <select id="selectReservedStudentIdsByPlanId" resultType="java.lang.Long">
+        SELECT student_id FROM activity_reservation 
+        WHERE plan_id = #{planId} AND status = 'reserved'
+    </select>
+
+    <!-- 根据学生ID查询其预约的活动列表 -->
+    <select id="selectReservationsByStudentId" resultType="java.util.Map">
+        SELECT 
+            ar.reservation_id,
+            ar.plan_id,
+            ar.status,
+            ar.reservation_time,
+            ar.cancel_time,
+            ar.remark,
+            ap.name as activity_name,
+            ap.start_time,
+            ap.end_time,
+            ap.location
+        FROM activity_reservation ar
+        LEFT JOIN attendance_plan ap ON ar.plan_id = ap.plan_id
+        WHERE ar.student_id = #{studentId}
+        <if test="status != null and status != ''">
+            AND ar.status = #{status}
+        </if>
+        ORDER BY ar.reservation_time DESC
+    </select>
+
+    <!-- 统计活动的预约数量 -->
+    <select id="getReservationStatistics" resultType="java.util.Map">
+        SELECT 
+            COUNT(*) as total_reservations,
+            COUNT(CASE WHEN status = 'reserved' THEN 1 END) as active_reservations,
+            COUNT(CASE WHEN status = 'cancelled' THEN 1 END) as cancelled_reservations
+        FROM activity_reservation 
+        WHERE plan_id = #{planId}
+    </select>
+
+    <!-- 检查学生是否已预约某活动 -->
+    <select id="isStudentReserved" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM activity_reservation 
+        WHERE plan_id = #{planId} AND student_id = #{studentId} AND status IN ('reserved', 'checked_in')
+    </select>
+
+    <!-- 更新学生预约状态 -->
+    <update id="updateReservationStatus">
+        UPDATE activity_reservation 
+        SET status = #{status}, update_time = NOW()
+        WHERE plan_id = #{planId} AND student_id = #{studentId}
+    </update>
+
+</mapper> 

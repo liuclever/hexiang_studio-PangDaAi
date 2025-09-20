@@ -1,0 +1,119 @@
+<!-- 公告详情页面 -->
+<view class="detail-container">
+  <!-- 公告标题（合并头部信息） -->
+  <view class="detail-section title-section">
+    <view class="title-header">
+      <view class="type-tag type-{{detail.type}}">
+        {{detail.typeText}}
+      </view>
+      <view class="publish-info">
+        <view class="publisher">
+          <t-icon name="user" size="14" />
+          <text>{{detail.publisher}}</text>
+        </view>
+        <view class="publish-time">{{detail.publishDateFormatted}}</view>
+      </view>
+    </view>
+    <view class="section-label">
+      <t-icon name="notification" size="16" />
+      <text>公告标题</text>
+    </view>
+    <view class="detail-title">{{detail.title}}</view>
+  </view>
+
+  <!-- 公告内容 -->
+  <view class="detail-section">
+    <view class="section-label">
+      <t-icon name="chat" size="16" />
+      <text>公告内容</text>
+    </view>
+    <view class="detail-content">
+      <text class="content-text">{{detail.content}}</text>
+    </view>
+  </view>
+
+  <!-- 图片展示 -->
+  <view class="detail-section" wx:if="{{detail.images && detail.images.length > 0}}">
+    <view class="section-label">
+      <t-icon name="image" size="16" />
+      <text>展示图片 ({{detail.images.length}}张)</text>
+    </view>
+    <view class="images-grid">
+      <view 
+        class="image-item"
+        wx:for="{{detail.images}}"
+        wx:key="id"
+        bind:tap="previewImage"
+        data-current="{{index}}"
+      >
+        <image 
+          src="{{item.fullUrl}}" 
+          mode="aspectFill"
+          lazy-load
+        />
+        <view class="image-overlay">
+          <t-icon name="zoom-in" size="20" color="#fff" />
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 附件下载 -->
+  <view class="detail-section" wx:if="{{detail.attachments && detail.attachments.length > 0}}">
+    <view class="section-label">
+      <t-icon name="attach" size="16" />
+      <text>附件下载 ({{detail.attachments.length}}个)</text>
+    </view>
+    <view class="attachments-list">
+      <view 
+        class="attachment-item"
+        wx:for="{{detail.attachments}}"
+        wx:key="id"
+      >
+        <view class="attachment-info">
+          <view class="attachment-icon">
+            <t-icon name="file" size="20" />
+          </view>
+          <view class="attachment-details">
+            <view class="attachment-name">{{item.fileName}}</view>
+            <view class="attachment-size">{{item.fileSizeFormatted}}</view>
+          </view>
+        </view>
+        <view class="attachment-actions">
+          <view 
+            class="action-btn preview-btn"
+            bind:tap="previewAttachment"
+            data-item="{{item}}"
+          >
+            <t-icon name="browse" size="16" />
+            <text>预览</text>
+          </view>
+          <view 
+            class="action-btn download-btn"
+            bind:tap="downloadAttachment"
+            data-item="{{item}}"
+          >
+            <t-icon name="download" size="16" />
+            <text>下载</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部信息 -->
+  <view class="detail-footer">
+    <view class="footer-info">
+      <t-icon name="time" size="14" />
+      <text>发布时间：{{detail.publishDateFull}}</text>
+    </view>
+  </view>
+</view>
+
+<!-- 加载状态 -->
+<view class="loading-overlay" wx:if="{{loading}}">
+  <view class="loading-content">
+    <view class="loading-spinner"></view>
+    <view class="loading-text">加载中...</view>
+  </view>
+</view>

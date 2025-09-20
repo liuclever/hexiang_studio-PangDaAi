@@ -1,0 +1,120 @@
+<!--pages/task/index.wxml-->
+<view class="container">
+  <!-- 导航栏 -->
+  <view class="header">
+    <view class="title-area">
+      <text class="page-title">{{pageTitle}}</text>
+    </view>
+    
+    <!-- 筛选栏 -->
+    <view class="filter-bar">
+      <view class="filter-chips">
+        <view class="chip {{filter === 'all' ? 'active' : ''}}" bindtap="setFilter" data-filter="all">
+          全部任务
+        </view>
+        <view class="chip {{filter === 'in_progress' ? 'active' : ''}}" bindtap="setFilter" data-filter="in_progress">
+          进行中
+        </view>
+        <view class="chip {{filter === 'urgent' ? 'active' : ''}}" bindtap="setFilter" data-filter="urgent">
+          紧急
+        </view>
+        <view class="chip {{filter === 'overdue' ? 'active' : ''}}" bindtap="setFilter" data-filter="overdue">
+          逾期
+        </view>
+        <view class="chip {{filter === 'completed' ? 'active' : ''}}" bindtap="setFilter" data-filter="completed">
+          已完成
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 任务警告 -->
+  <view wx:if="{{hasUncompletedTasks && filter !== 'completed'}}" class="task-warning {{reminderType}}">
+    <view class="warning-content">
+      <view class="warning-icon">!</view>
+      <view class="warning-text">{{reminderText}}</view>
+    </view>
+  </view>
+
+  <!-- 任务列表 -->
+  <view class="task-list">
+    <view wx:if="{{filteredTasks.length === 0}}" class="empty-state">
+      <image src="/images/icons/empty.png" mode="aspectFit" class="empty-icon"></image>
+      <text class="empty-text">暂无{{filter === 'all' ? '' : filter === 'in_progress' ? '进行中' : 
+                                   filter === 'urgent' ? '紧急' : filter === 'overdue' ? '逾期' : '已完成'}}任务</text>
+    </view>
+    
+    <view wx:for="{{filteredTasks}}" wx:key="id" class="task-card" bindtap="viewTaskDetail" data-id="{{item.id}}">
+      <view class="task-card-content">
+        <view class="task-header">
+          <view class="task-title-row">
+            <text class="task-title">{{item.title}}</text>
+            <view class="status-indicator {{item.status}}">
+              {{item.status === 'urgent' ? '紧急' : 
+                item.status === 'overdue' ? '已逾期' : 
+                item.status === 'completed' ? '已完成' : 
+                item.status === 'rejected' ? '已退回' : 
+                item.status === 'pending_review' ? '待审核' : '进行中'}}
+            </view>
+          </view>
+          
+          <view class="task-meta">
+            <text class="creator">{{item.creatorName || '系统管理员'}}</text>
+            <text class="deadline">截止: {{item.endTime ? tools.formatDate(item.endTime) : '无期限'}}</text>
+          </view>
+        </view>
+        
+        <view class="task-body">
+          <view class="progress-area">
+            <view class="progress-info">
+              <text class="progress-text">完成进度 {{item.progress || 0}}%</text>
+              <text class="subtask-count">{{item.completedSubTaskCount || 0}}/{{item.totalSubTaskCount || 0}} 子任务</text>
+            </view>
+            <view class="progress-bar-bg">
+              <view class="progress-bar" style="width: {{item.progress || 0}}%"></view>
+            </view>
+          </view>
+          
+          <view wx:if="{{item.description}}" class="task-desc">
+            {{tools.truncateText(item.description, 60)}}
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 工具类 WXS 模块 -->
+<wxs module="tools">
+  // 格式化日期
+  function formatDate(dateStr) {
+    if (!dateStr) return '无期限';
+    var date = getDate(dateStr);
+    return date.getFullYear() + '-' + 
+           padZero(date.getMonth() + 1) + '-' + 
+           padZero(date.getDate());
+  }
+  
+  // 补零
+  function padZero(num) {
+    return num < 10 ? '0' + num : num;
+  }
+  
+  // 截断文本
+  function truncateText(text, maxLength) {
+    if (!text) return '';
+    return text.length <= maxLength ? text : text.substring(0, maxLength) + '...';
+  }
+  
+  // 计算进度百分比
+  function calculateProgress(completed, total) {
+    if (!total || total <= 0) return 0;
+    return Math.round((completed / total) * 100);
+  }
+  
+  module.exports = {
+    formatDate: formatDate,
+    truncateText: truncateText,
+    calculateProgress: calculateProgress
+  };
+</wxs> 

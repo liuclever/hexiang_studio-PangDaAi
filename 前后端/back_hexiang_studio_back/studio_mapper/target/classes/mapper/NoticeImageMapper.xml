@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.back_hexiang_studio.mapper.NoticeImageMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="imageId">
+        insert into notice_image (notice_id, image_name, image_path, image_size, image_type, create_user, create_time)
+        values (#{noticeId}, #{imageName}, #{imagePath}, #{imageSize}, #{imageType}, #{createUser}, #{createTime})
+    </insert>
+
+    <select id="getByNoticeId" resultType="com.back_hexiang_studio.dv.vo.NoticeImageVo">
+        select image_id as imageId, image_name as imageName, image_path as filePath, image_size as fileSize, image_type as fileType, create_time as createTime
+        from notice_image where notice_id = #{noticeId}
+    </select>
+
+    <select id="getById" resultType="com.back_hexiang_studio.dv.vo.NoticeImageVo">
+        select * from notice_image where image_id = #{id}
+    </select>
+    
+    <delete id="deleteByNoticeId">
+        delete from notice_image where notice_id = #{noticeId}
+    </delete>
+
+    <delete id="deleteBatch">
+        delete from notice_image where image_id in
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deleteById">
+        delete from notice_image where image_id = #{id}
+    </delete>
+
+</mapper> 

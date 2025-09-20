@@ -1,0 +1,369 @@
+#下面这些内容是为了让MyBatis映射
+#指定Mybatis的Mapper文件
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+#指定Mybatis的实体目录
+  type-aliases-package: com.back_hexiang_studio.entity
+#  configuration:
+
+# 应用服务 WEB 访问端口
+server:
+  port: 8044
+
+
+# 数据源配置
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/hexiang_studio?allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password: 123456789
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # 文件上传配置 - 设置足够大的限制，让我们的验证管理器来处理具体限制
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 500MB        # 设置足够大，让FileValidationManager来限制
+      max-request-size: 1GB       # 整个请求大小限制
+      file-size-threshold: 2KB
+      location: ${java.io.tmpdir}
+  data:
+    redis:
+      database: 0
+      timeout: 5000ms
+      password: 123456
+      port: 6379
+      host: 127.0.0.1
+
+# PageHelper 分页插件配置
+pagehelper:
+  helper-dialect: mysql
+  reasonable: true
+  support-methods-arguments: true
+  params: count=countSql
+
+# 文件上传存储配置
+file:
+  upload:
+    path: D:\JAVA\hexiang_studio\resource\upload
+  access:
+    url: /upload  # 文件访问URL前缀
+
+ai:
+  # 通义千问API密钥（与langchain4j共用）
+  api-key: ${DASHSCOPE_API_KEY:sk-dd08c0d9e37747caa988b75e16d54d44}
+  base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+  
+  # 模型配置
+  models:
+    # 超快速模型 - 日常对话
+    qwen-flash:
+      name: "qwen-flash"
+      displayName: "通义千问-闪电版"
+      description: "超快速响应模型，适用于简单对话和基础查询"
+      costRate: 0.5
+      maxTokens: 4000
+      maxInputTokens: 2000
+      category: "CASUAL"
+      features: ["超快响应", "低成本", "基础对话"]
+      usageScenarios: ["简单问答", "日常闲聊", "基础查询"]
+      
+    # 平衡性能模型
+    qwen-plus:
+      name: "qwen-plus"
+      displayName: "通义千问-增强版"
+      description: "平衡性能模型，适用于工作室日常管理"
+      costRate: 2.0
+      maxTokens: 8000
+      maxInputTokens: 6000
+      category: "STUDIO_QUERY"
+      features: ["平衡性能", "工具调用", "数据处理"]
+      usageScenarios: ["成员查询", "基础任务管理", "简单数据分析"]
+      
+    qwen-plus-latest:
+      name: "qwen-plus-latest"
+      displayName: "通义千问-增强版(最新)"
+      description: "最新的平衡性能模型，功能更完善"
+      costRate: 2.5
+      maxTokens: 8000
+      maxInputTokens: 6000
+      category: "STUDIO_QUERY"
+      features: ["最新功能", "更好理解", "工具调用优化"]
+      usageScenarios: ["复杂查询", "多步任务", "上下文分析"]
+
+    # 高性能模型
+    qwen-max:
+      name: "qwen-max"
+      displayName: "通义千问-旗舰版"
+      description: "高性能模型，适用于复杂的工作室管理任务"
+      costRate: 8.0
+      maxTokens: 8000
+      maxInputTokens: 6000
+      category: "STUDIO_MANAGEMENT"
+      features: ["高级推理", "复杂任务处理", "多工具协调"]
+      usageScenarios: ["复杂任务分析", "决策支持", "工作流优化"]
+      
+    qwen-max-latest:
+      name: "qwen-max-latest"
+      displayName: "通义千问-旗舰版(最新)"
+      description: "最新高性能模型，最强推理能力"
+      costRate: 10.0
+      maxTokens: 8000
+      maxInputTokens: 6000
+      category: "COMPLEX_ANALYSIS"
+      features: ["顶级推理", "复杂分析", "策略规划"]
+      usageScenarios: ["战略分析", "复杂决策", "深度思考"]
+
+    # 长文处理专用模型
+    qwen3-max-preview:
+      name: "qwen3-max-preview"
+      displayName: "通义千问3.0-旗舰预览版"
+      description: "长文处理专用模型，支持超长上下文"
+      costRate: 15.0
+      maxTokens: 32000
+      maxInputTokens: 28000
+      category: "LONG_CONTENT"
+      features: ["超长上下文", "长文生成", "文档处理"]
+      usageScenarios: ["长篇报告", "详细计划", "文档总结", "方案制定"]
+
+    # 编程专用模型
+    qwen3-coder-plus:
+      name: "qwen3-coder-plus"
+      displayName: "通义千问3.0-代码增强版"
+      description: "专业编程模型，擅长代码生成和调试"
+      costRate: 12.0
+      maxTokens: 16000
+      maxInputTokens: 12000
+      category: "CODE_GENERATION"
+      features: ["代码生成", "代码分析", "Bug修复", "技术方案"]
+      usageScenarios: ["代码编写", "系统设计", "技术调试", "架构分析"]
+      
+    qwen3-coder-plus-2025-07-22:
+      name: "qwen3-coder-plus-2025-07-22"
+      displayName: "通义千问3.0-代码增强版(7月版)"
+      description: "2025年7月最新编程模型，功能更强大"
+      costRate: 13.0
+      maxTokens: 16000
+      maxInputTokens: 12000
+      category: "CODE_GENERATION"
+      features: ["最新编程能力", "更准确代码生成", "复杂项目支持", "多语言精通"]
+      usageScenarios: ["复杂系统开发", "代码重构", "性能优化", "新技术应用"]
+
+  # 问题类型与模型映射规则
+  questionTypes:
+    CASUAL:
+      description: "普通问题"
+      defaultModel: "qwen-flash"
+      keywords: ["你好", "hello", "hi", "谢谢", "再见", "天气", "新闻", "时间"]
+      priority: 1
+      
+    STUDIO_QUERY:
+      description: "工作室查询"
+      defaultModel: "qwen-plus"
+      keywords: ["查询", "查看", "显示", "列表", "谁是", "我是谁", "成员", "人员", "统计"]
+      priority: 2
+      
+    STUDIO_MANAGEMENT:
+      description: "工作室管理"
+      defaultModel: "qwen-max"
+      keywords: ["任务", "考勤", "请假", "审批", "权限", "角色", "部门", "管理", "分配"]
+      priority: 3
+      
+    COMPLEX_ANALYSIS:
+      description: "复杂分析"
+      defaultModel: "qwen-max-latest"
+      keywords: ["分析", "对比", "建议", "优化", "决策", "策略", "评估", "如何提高"]
+      priority: 4
+      
+    LONG_CONTENT:
+      description: "长文处理"
+      defaultModel: "qwen3-max-preview"
+      keywords: ["计划", "方案", "总结", "报告", "详细说明", "完整介绍", "制定.*计划"]
+      priority: 5
+      
+    CODE_GENERATION:
+      description: "代码生成"
+      defaultModel: "qwen3-coder-plus-2025-07-22"
+      keywords: ["代码", "编程", "开发", "bug", "调试", "系统设计", "架构", "算法", "数据库", "API"]
+      priority: 4
+
+  # 智能选择规则
+  selectionRules:
+    # 长度阈值规则
+    lengthThresholds:
+      longContent: 2000      # 超过2000字符使用长文模型
+      mediumContent: 1000    # 1000-2000字符考虑上下文复杂度
+      shortContent: 200      # 200字符以下优先快速模型
+      
+    # 复杂度阈值规则  
+    complexityThresholds:
+      veryHigh: 8           # 复杂度>=8使用最高级模型
+      high: 5               # 复杂度>=5使用高级模型
+      medium: 3             # 复杂度>=3使用中级模型
+      low: 1                # 复杂度<3使用基础模型
+      
+    # 成本控制规则
+    costControl:
+      highCostThreshold: 0.7    # 高成本模型使用比例阈值
+      dailyCostLimit: 100.0     # 用户每日成本限制
+      emergencyModel: "qwen-plus" # 紧急情况下的备用模型
+      
+    # 性能优化规则
+    performance:
+      responseTimeLimit: 5000   # 响应时间限制(毫秒)
+      failureRateThreshold: 0.1 # 失败率阈值
+      fallbackModel: "qwen-plus-latest" # 降级模型
+
+  # 监控配置
+  monitoring:
+    # 统计周期
+    statsPeriods:
+      realtime: 1     # 实时统计周期(小时)
+      daily: 24       # 日统计周期(小时)  
+      weekly: 168     # 周统计周期(小时)
+      monthly: 720    # 月统计周期(小时)
+      
+    # 预警阈值
+    alerts:
+      highCostUserThreshold: 10.0    # 高成本用户阈值
+      anomalousUsageThreshold: 50    # 异常使用次数阈值
+      failureRateThreshold: 5.0      # 失败率预警阈值
+      responseTimeThreshold: 10000   # 响应时间预警阈值
+      
+    # 自动优化
+    autoOptimization:
+      enabled: true
+      modelSwitchThreshold: 0.2     # 模型切换阈值
+      costOptimizationEnabled: true # 成本优化开关
+      performanceOptimizationEnabled: true # 性能优化开关
+
+# 天气查询API配置 - 使用本地部署的60s API
+weather:
+  api:
+    city: "重庆"
+    base-url: "http://localhost:4399"
+
+# JWT 配置
+jwt:
+  secret: hexiangstidoadminiswenhanhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+  # JWT密钥，生产环境建议使用更复杂的密钥或从环境变量读取
+  expiration: 36000000  # token过期时间，单位：毫秒 (10小时)
+  issuer: hexiang_studio  # 签发人
+
+# ===================================================================
+# LangChain4j & 胖达 AI 助手配置（使用官方DashScope配置）
+# ===================================================================
+langchain4j:
+  # OpenAI 兼容配置 - 连接通义千问
+  open-ai:
+    # 聊天模型配置 - 通用默认模型（回退配置）
+    chat-model:
+      api-key: ${DASHSCOPE_API_KEY:sk-dd08c0d9e37747caa988b75e16d54d44}
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+      model-name: qwen-plus
+      temperature: 0.8
+      max-tokens: 8000
+      timeout: 180s
+      log-requests: true
+      log-responses: true
+      
+    # 流式聊天模型配置 - 通用默认模型（回退配置）
+    streaming-chat-model:
+      api-key: ${DASHSCOPE_API_KEY:sk-dd08c0d9e37747caa988b75e16d54d44}
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+      model-name: qwen-plus
+      temperature: 0.8
+      max-tokens: 8000
+      timeout: 180s
+      log-requests: true
+      log-responses: true
+      
+    # 向量模型配置（让 Starter 自动创建 EmbeddingModel Bean）
+    embedding-model:
+      api-key: ${DASHSCOPE_API_KEY:sk-dd08c0d9e37747caa988b75e16d54d44}
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+      model-name: text-embedding-v3
+      timeout: 60s
+  embedding-store:
+    # 本地开发使用 Chroma，它会自动下载并运行一个 Docker 容器
+    # 生产环境建议替换为 Milvus, PGVector 等更专业的向量数据库
+    provider: milvus # <--- 切换为 milvus
+    host: localhost
+    port: 19530
+    database-name: hexiang_studio # <--- 数据库名
+    collection-name: hexiang_studio_rag_v2
+    dimension: 1024 # <--- text-embedding-v3模型输出维度为1024
+    
+# 胖达 AI 助手 业务配置
+pangda-ai:
+  # 启用状态
+  enabled: true
+  
+  # 意图分类配置
+  intent-classification:
+    # 通用信息关键词（用于判断是否为工作室相关查询）
+    general-keywords: ["天气", "新闻", "股票", "娱乐", "体育", "音乐", "电影"]
+    # 工作室相关关键词
+    studio-keywords: ["学生", "课程", "考勤", "作业", "任务", "公告", "活动", "请假"]
+    
+  # 复杂度分类配置  
+  complexity-classification:
+    # 简单查询关键词（可直接通过API工具解决）
+    simple-keywords: ["查询", "显示", "列出", "多少", "什么时候"]
+    # 复杂任务关键词（需要多步骤处理）
+    complex-keywords: ["分析", "统计", "对比", "生成报告", "制定计划", "推荐"]
+    
+  # RAG 相关配置
+  rag:
+    # 向量存储配置
+    storage:
+      path: "rag/vectors"
+    # 向量检索配置
+    vector:
+      max-results: 10
+      min-score: 0.5
+    # 检索配置
+    retrieval:
+      max-results: 10
+      min-score: 0.5
+      time-decay-days: 30
+    # 数据同步配置
+    sync:
+      batch-size: 50
+      auto-sync: true
+      auto-init: true  # 启动时自动初始化向量数据库
+      max-content-length: 2000
+    # 文档切分大小（用于向量化）
+    chunk-size: 500
+    # 文档切分重叠部分
+    chunk-overlap: 50
+    
+  # Memory 配置
+  memory:
+    # 对话历史保留轮数
+    max-messages: 20
+    # 是否启用持久化（保存到数据库）
+    persistent: true
+    # Memory 过期时间（小时）
+    expiration-hours: 24
+    
+  # 工具调用配置
+  tools:
+    # 工具调用超时时间（秒）
+    timeout: 30
+    # 是否启用工具调用日志
+    logging-enabled: true
+
+# 日志配置 - 启用详细调试
+logging:
+  level:
+    com.back_hexiang_studio.pangDaAi: DEBUG
+    dev.langchain4j: DEBUG
+    dev.langchain4j.service: DEBUG
+    dev.langchain4j.agent: DEBUG
+    dev.langchain4j.model.chat: DEBUG
+    org.springframework.aop: DEBUG
+    root: INFO
+
+
+

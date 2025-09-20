@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.back_hexiang_studio.mapper.UserHonorMapper">
+
+    <!-- 用户荣誉信息的结果映射 -->
+    <resultMap id="userHonorResultMap" type="com.back_hexiang_studio.dv.vo.UserHonorVo">
+        <id column="honors_id" property="id"/>
+        <result column="user_id" property="user_id"/>
+        <result column="honor_name" property="honor_name"/>
+        <result column="honor_level" property="honor_level"/>
+        <result column="issue_org" property="issue_org"/>
+        <result column="issue_date" property="issue_date"/>
+        <result column="certificate_no" property="certificate_no"/>
+        <result column="description" property="description"/>
+        <result column="attachment" property="attachment"/>
+        <result column="create_time" property="create_time"/>
+        <result column="create_user" property="create_user"/>
+        <result column="update_time" property="update_time"/>
+        <result column="update_user" property="update_user"/>
+    </resultMap>
+    
+    <!-- 用户荣誉实体结果映射 -->
+    <resultMap id="userHonorEntityResultMap" type="com.back_hexiang_studio.entity.UserHonor">
+        <id column="honors_id" property="honorsId"/>
+        <result column="user_id" property="userId"/>
+        <result column="honor_name" property="honorName"/>
+        <result column="honor_level" property="honorLevel"/>
+        <result column="issue_org" property="issueOrg"/>
+        <result column="issue_date" property="issueDate"/>
+        <result column="certificate_no" property="certificateNo"/>
+        <result column="description" property="description"/>
+        <result column="attachment" property="attachment"/>
+        <result column="create_time" property="createTime"/>
+        <result column="create_user" property="createUser"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="update_user" property="updateUser"/>
+    </resultMap>
+    
+    <!-- 根据用户ID查询用户荣誉列表 -->
+    <select id="findByUserId" resultMap="userHonorResultMap">
+        SELECT * FROM user_honors WHERE user_id = #{userId}
+    </select>
+    
+    <!-- 根据荣誉ID查询荣誉信息 -->
+    <select id="findById" resultMap="userHonorResultMap">
+        SELECT * FROM user_honors WHERE honors_id = #{honorId}
+    </select>
+    
+    <!-- 添加用户荣誉信息 -->
+    <insert id="insert" parameterType="com.back_hexiang_studio.entity.UserHonor">
+        INSERT INTO user_honors (
+            user_id, 
+            honor_name, 
+            honor_level, 
+            issue_org, 
+            issue_date, 
+            certificate_no, 
+            description, 
+            attachment, 
+            create_time, 
+            update_time
+        ) VALUES (
+            #{userId}, 
+            #{honorName}, 
+            #{honorLevel}, 
+            #{issueOrg}, 
+            #{issueDate}, 
+            #{certificateNo}, 
+            #{description}, 
+            #{attachment},
+            NOW(),
+            NOW()
+        )
+    </insert>
+    
+    <!-- 更新用户荣誉信息 -->
+    <update id="update" parameterType="com.back_hexiang_studio.entity.UserHonor">
+        UPDATE user_honors
+        <set>
+            <if test="honorName != null">honor_name = #{honorName},</if>
+            <if test="honorLevel != null">honor_level = #{honorLevel},</if>
+            <if test="issueOrg != null">issue_org = #{issueOrg},</if>
+            <if test="issueDate != null">issue_date = #{issueDate},</if>
+            <if test="certificateNo != null">certificate_no = #{certificateNo},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="attachment != null">attachment = #{attachment},</if>
+            update_time = NOW()
+        </set>
+        WHERE honors_id = #{honorsId}
+    </update>
+    
+    <!-- 删除用户荣誉信息 -->
+    <delete id="delete">
+        DELETE FROM user_honors WHERE honors_id = #{honorId}
+    </delete>
+
+    <delete id="deleteByUserIds" parameterType="java.util.List">
+        DELETE FROM user_honors
+        WHERE user_id IN
+        <foreach item="userId" collection="userIds" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+    </delete>
+    
+</mapper> 

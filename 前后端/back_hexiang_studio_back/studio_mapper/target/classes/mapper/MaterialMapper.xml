@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.back_hexiang_studio.mapper.MaterialMapper">
+    <!-- 结果映射 -->
+    <resultMap id="materialVoMap" type="com.back_hexiang_studio.dv.vo.material.materialVo">
+        <id column="id" property="id"/>
+        <result column="file_name" property="fileName"/>
+        <result column="file_type" property="fileType"/>
+        <result column="file_size" property="fileSize"/>
+        <result column="url" property="url"/>
+        <result column="description" property="description"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="category_name" property="name"/>
+        <result column="upload_time" property="uploadTime"/>
+        <result column="uploader_id" property="uploaderId"/>
+        <result column="uploader" property="uploader"/>
+        <result column="download_count" property="downloadCount"/>
+        <result column="is_public" property="isPublic"/>
+        <result column="status" property="status"/>
+    </resultMap>
+    
+    <resultMap id="materialDetailMap" type="com.back_hexiang_studio.dv.vo.material.materialDetailVo">
+        <id column="id" property="id"/>
+        <result column="file_name" property="fileName"/>
+        <result column="file_type" property="fileType"/>
+        <result column="file_size" property="fileSize"/>
+        <result column="url" property="url"/>
+        <result column="description" property="description"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="category_name" property="category"/>
+        <result column="upload_time" property="uploadTime"/>
+        <result column="uploader_id" property="uploaderId"/>
+        <result column="uploader" property="uploader"/>
+        <result column="download_count" property="downloadCount"/>
+        <result column="is_public" property="isPublic"/>
+        <result column="status" property="status"/>
+    </resultMap>
+    
+    <!-- 批量插入资料 -->
+    <insert id="insertBatch" parameterType="java.util.List">
+        INSERT INTO material 
+        (file_name, file_type, file_size, url, description, category_id, upload_time, 
+        uploader_id, is_public, download_count, status, update_time, update_id)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.fileName}, #{item.fileType}, #{item.fileSize}, #{item.url}, #{item.description}, 
+            #{item.categoryId}, #{item.uploadTime}, #{item.uploaderId}, 
+            #{item.isPublic}, #{item.downloadCount}, #{item.status}, #{item.updateTime}, 
+            #{item.updateUser})
+        </foreach>
+    </insert>
+    
+    <!-- 增加下载次数 -->
+    <update id="incrementDownloadCount">
+        UPDATE material SET download_count = download_count + 1 WHERE id = #{id}
+    </update>
+    
+    <!-- 更新资料信息 -->
+    <update id="update">
+        UPDATE material 
+        SET description = #{description},
+            category_id = #{categoryId},
+            is_public = #{isPublic},
+            url = #{url},
+            update_time = #{updateTime},
+            update_id = #{updateUser}
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 删除资料 -->
+    <delete id="deleteMaterial">
+        DELETE FROM material WHERE id = #{id}
+    </delete>
+    
+    <!-- 获取资料列表 -->
+    <select id="getList" resultMap="materialVoMap">
+        SELECT 
+            m.id, 
+            m.file_name, 
+            m.file_type, 
+            m.file_size, 
+            m.url, 
+            m.description, 
+            m.category_id, 
+            mc.name AS category_name, 
+            m.upload_time, 
+            m.uploader_id, 
+            u.name AS uploader, 
+            m.download_count, 
+            m.is_public,
+            m.status
+        FROM 
+            material m
+        LEFT JOIN 
+            material_category mc ON m.category_id = mc.id
+        LEFT JOIN 
+            user u ON u.user_id = m.uploader_id
+        <where>
+            <if test="fileType != null and fileType != ''">
+                AND m.file_type = #{fileType}
+            </if>
+            <if test="fileTypes != null and fileTypes.size() > 0">
+                AND m.file_type IN
+                <foreach collection="fileTypes" item="type" open="(" separator="," close=")">
+                    #{type}
+                </foreach>
+            </if>
+            <if test="name != null and name != ''">
+                AND (m.file_name LIKE CONCAT('%', #{name}, '%') OR m.description LIKE CONCAT('%', #{name}, '%'))
+            </if>
+            <if test="status != null and status != ''">
+                AND m.status = #{status}
+            </if>
+            <if test="categoryId != null">
+                AND m.category_id = #{categoryId}
+            </if>
+            <if test="startDate != null and startDate != ''">
+                AND m.upload_time &gt;= #{startDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND m.upload_time &lt;= #{endDate}
+            </if>
+            <if test="isPublic != null">
+                AND m.is_public = #{isPublic}
+            </if>
+        </where>
+        ORDER BY m.upload_time DESC
+    </select>
+    
+    <!-- 获取资料详情 -->
+    <select id="getDetail" resultMap="materialDetailMap">
+        SELECT 
+            m.id, 
+            m.file_name, 
+            m.file_type, 
+            m.file_size, 
+            m.url, 
+            m.description, 
+            m.category_id, 
+            mc.name AS category_name, 
+            m.upload_time, 
+            m.uploader_id, 
+            u.name AS uploader, 
+            m.download_count, 
+            m.is_public,
+            m.status
+        FROM 
+            material m
+        LEFT JOIN 
+            material_category mc ON m.category_id = mc.id
+        LEFT JOIN 
+            user u ON u.user_id = m.uploader_id
+        WHERE 
+            m.id = #{id}
+    </select>
+    
+    <!-- 添加资料下载记录 -->
+    <insert id="addDownloadRecord">
+        INSERT INTO material_download_record 
+        (material_id, user_id, download_time, ip_address, device_info)
+        VALUES
+        (#{materialId}, #{userId}, #{downloadTime}, #{ipAddress}, #{deviceInfo})
+    </insert>
+    
+    <!-- 根据分类ID获取资料列表 -->
+    <select id="getMaterialsByCategoryId" resultMap="materialDetailMap">
+        SELECT 
+            m.id, 
+            m.file_name, 
+            m.file_type, 
+            m.file_size, 
+            m.url, 
+            m.description, 
+            m.category_id, 
+            mc.name AS category_name, 
+            m.upload_time, 
+            m.uploader_id, 
+            u.name AS uploader, 
+            m.download_count, 
+            m.is_public,
+            m.status
+        FROM 
+            material m
+        LEFT JOIN 
+            material_category mc ON m.category_id = mc.id
+        LEFT JOIN 
+            user u ON u.user_id = m.uploader_id
+        WHERE 
+            m.category_id = #{categoryId}
+        ORDER BY m.upload_time DESC
+    </select>
+</mapper>
+

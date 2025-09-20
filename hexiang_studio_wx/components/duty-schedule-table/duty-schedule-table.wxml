@@ -1,0 +1,150 @@
+<!--components/duty-schedule-table/duty-schedule-table.wxml-->
+<view class="duty-schedule-container">
+  <!-- 头部周选择器 -->
+  <view class="week-selector">
+    <view class="week-nav">
+      <button class="nav-btn" bindtap="prevWeek">
+        <t-icon name="chevron-left" size="32rpx" color="#666"></t-icon>
+      </button>
+      
+      <view class="week-info">
+        <text class="week-title">值班表</text>
+        <text class="week-date">{{weekInfo.startDate}} - {{weekInfo.endDate}}</text>
+      </view>
+      
+      <button class="nav-btn" bindtap="nextWeek">
+        <t-icon name="chevron-right" size="32rpx" color="#666"></t-icon>
+      </button>
+    </view>
+    
+    <!-- 快速跳转到本周 -->
+    <button wx:if="{{!isCurrentWeek}}" class="current-week-btn" bindtap="goToCurrentWeek">
+      回到本周
+    </button>
+  </view>
+
+  <!-- 星期标题行 -->
+  <view class="weekdays-header">
+    <view class="time-slot-header">时间</view>
+    <view wx:for="{{weekdays}}" wx:key="date" class="weekday-header {{item.isToday ? 'today' : ''}}">
+      <view class="weekday-name">{{item.name}}</view>
+      <view class="weekday-date">{{item.date}}</view>
+    </view>
+  </view>
+
+  <!-- 值班表主体 -->
+  <scroll-view class="duty-table" scroll-y="true">
+    <view wx:for="{{timeSlots}}" wx:key="slot" class="time-row">
+      <!-- 时间段标题 -->
+      <view class="time-slot-cell">
+        <text class="time-text">{{item.slot}}</text>
+        <text class="time-period">{{item.period}}</text>
+      </view>
+      
+      <!-- 每一天的值班安排 -->
+      <view wx:for="{{weekdays}}" wx:key="date" wx:for-item="day" wx:for-index="dayIndex" 
+            class="duty-cell {{day.isToday ? 'today' : ''}}" 
+            bindtap="onCellTap" 
+            data-day="{{day.dateStr}}" 
+            data-slot="{{item.slot}}">
+        
+
+        
+        <!-- 值班人员列表 -->
+        <view wx:if="{{dutyData[day.dateStr] && dutyData[day.dateStr][item.slot]}}" class="duty-content">
+          <view class="students-container">
+            <view wx:for="{{dutyData[day.dateStr][item.slot].students}}" wx:key="studentId" 
+                  class="student-tag {{tools.getStatusClass(item.attendanceStatus)}} {{item.isCurrentUser ? 'current-user' : ''}}">
+              <text class="student-name">{{item.studentName}}</text>
+            </view>
+          </view>
+          
+          <!-- 值班状态指示器 -->
+          <view class="duty-status">
+            <view wx:if="{{dutyData[day.dateStr][item.slot].isActive}}" class="status-indicator active">
+              进行中
+            </view>
+            <view wx:elif="{{dutyData[day.dateStr][item.slot].isUpcoming}}" class="status-indicator upcoming">
+              即将开始
+            </view>
+            <view wx:elif="{{dutyData[day.dateStr][item.slot].isCompleted}}" class="status-indicator completed">
+              已完成
+            </view>
+          </view>
+        </view>
+        
+        <!-- 空值班时段 -->
+        <view wx:else class="empty-duty">
+          <text class="empty-text">无安排</text>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 状态图例 -->
+  <view class="legend">
+    <text class="legend-title">状态图例：</text>
+    <view class="legend-item">
+      <view class="legend-marker status-present"></view>
+      <text>已签到</text>
+    </view>
+    <view class="legend-item">
+      <view class="legend-marker status-pending"></view>
+      <text>待签到</text>
+    </view>
+    <view class="legend-item">
+      <view class="legend-marker status-late"></view>
+      <text>迟到</text>
+    </view>
+    <view class="legend-item">
+      <view class="legend-marker status-absent"></view>
+      <text>缺勤</text>
+    </view>
+    <view class="legend-item">
+      <view class="legend-marker status-leave"></view>
+      <text>请假</text>
+    </view>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-actions">
+    <button class="action-btn primary" bindtap="goToMyDuties">
+      <t-icon name="user-time" size="32rpx" color="#ffffff"></t-icon>
+      <text>我的值班</text>
+    </button>
+    
+    <button class="action-btn secondary" bindtap="refreshData">
+      <t-icon name="refresh" size="32rpx" color="#007aff"></t-icon>
+      <text>刷新</text>
+    </button>
+  </view>
+</view>
+
+<!-- 工具函数 -->
+<wxs module="tools">
+  function getStatusIcon(status) {
+    switch(status) {
+      case 'present': return 'check-circle-filled';
+      case 'late': return 'time-filled';
+      case 'absent': return 'close-circle-filled';
+      case 'leave': return 'heart-filled';
+      default: return 'time';
+    }
+  }
+  
+  function getStatusClass(status) {
+    switch(status) {
+      case 'present': return 'status-present';
+      case 'late': return 'status-late';
+      case 'absent': return 'status-absent';
+      case 'leave': return 'status-leave';
+      case 'pending': return 'status-pending';
+      default: return 'status-normal';
+    }
+  }
+  
+  module.exports = {
+    getStatusIcon: getStatusIcon,
+    getStatusClass: getStatusClass
+  };
+</wxs> 

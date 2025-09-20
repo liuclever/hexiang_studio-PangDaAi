@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.back_hexiang_studio.mapper.DutyScheduleStudentMapper">
+    
+    <!-- 结果映射 -->
+    <resultMap id="relationResultMap" type="com.back_hexiang_studio.entity.DutyScheduleStudent">
+        <id column="id" property="id"/>
+        <result column="schedule_id" property="scheduleId"/>
+        <result column="student_id" property="studentId"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="create_user" property="createUser"/>
+    </resultMap>
+    
+    <!-- 插入值班学生关联 -->
+    <insert id="insert" parameterType="com.back_hexiang_studio.entity.DutyScheduleStudent" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO duty_schedule_student (
+            schedule_id, student_id, status, create_time, create_user
+        ) VALUES (
+            #{scheduleId}, #{studentId}, #{status}, #{createTime}, #{createUser}
+        )
+    </insert>
+    
+    <!-- 批量插入值班学生关联 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO duty_schedule_student (
+            schedule_id, student_id, status, create_time, create_user
+        ) VALUES 
+        <foreach collection="list" item="item" separator=",">
+            (#{item.scheduleId}, #{item.studentId}, #{item.status}, #{item.createTime}, #{item.createUser})
+        </foreach>
+    </insert>
+    
+    <!-- 根据值班安排ID查询学生列表 -->
+    <select id="selectStudentsByScheduleId" parameterType="long" resultType="map">
+        SELECT 
+            dss.id, 
+            dss.schedule_id as scheduleId, 
+            dss.student_id as studentId, 
+            dss.status,
+            u.name as studentName, 
+            u.phone as studentPhone,
+            s.student_number as studentNumber
+        FROM duty_schedule_student dss
+        JOIN student s ON dss.student_id = s.student_id
+        JOIN user u ON s.user_id = u.user_id
+        WHERE dss.schedule_id = #{scheduleId}
+        ORDER BY u.name
+    </select>
+    
+    <!-- 根据值班安排ID和学生ID查询关联 -->
+    <select id="selectByScheduleIdAndStudentId" resultMap="relationResultMap">
+        SELECT * FROM duty_schedule_student 
+        WHERE schedule_id = #{scheduleId} AND student_id = #{studentId}
+    </select>
+    
+    <!-- 更新值班学生关联 -->
+    <update id="update" parameterType="com.back_hexiang_studio.entity.DutyScheduleStudent">
+        UPDATE duty_schedule_student
+        SET 
+            status = #{status}
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 删除值班学生关联 -->
+    <delete id="deleteById" parameterType="long">
+        DELETE FROM duty_schedule_student WHERE id = #{id}
+    </delete>
+    
+    <!-- 根据值班安排ID删除所有关联 -->
+    <delete id="deleteByScheduleId" parameterType="long">
+        DELETE FROM duty_schedule_student WHERE schedule_id = #{scheduleId}
+    </delete>
+    
+    <!-- 根据值班安排ID和学生ID删除关联 -->
+    <delete id="deleteByScheduleIdAndStudentId">
+        DELETE FROM duty_schedule_student 
+        WHERE schedule_id = #{scheduleId} AND student_id = #{studentId}
+    </delete>
+    
+    <!-- 检查学生是否在值班名单中 -->
+    <select id="isStudentInDutySchedule" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM duty_schedule_student
+        WHERE schedule_id = #{scheduleId} AND student_id = #{studentId}
+        AND status = 'normal'
+    </select>
+    
+    <!-- 获取指定值班安排的学生信息 -->
+    <select id="getStudentsByScheduleId" resultType="java.util.Map">
+        SELECT 
+            s.student_id as studentId,
+            u.name as studentName,
+            s.student_number as studentNumber,
+            dss.schedule_id as scheduleId,
+            dss.create_time as createTime,
+            dss.status,
+            u.phone as studentPhone
+        FROM 
+            duty_schedule_student dss
+        JOIN 
+            student s ON dss.student_id = s.student_id
+        JOIN
+            user u ON s.user_id = u.user_id
+        WHERE 
+            dss.schedule_id = #{scheduleId}
+        ORDER BY 
+            u.name ASC
+    </select>
+
+    <select id="findByScheduleId" resultType="com.back_hexiang_studio.entity.DutyScheduleStudent">
+        SELECT * FROM duty_schedule_student WHERE schedule_id = #{scheduleId}
+    </select>
+</mapper> 

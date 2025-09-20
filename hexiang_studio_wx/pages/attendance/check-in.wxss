@@ -1,0 +1,500 @@
+/* pages/attendance/check-in.wxss */
+
+/* 考勤卡片滑动区域 */
+.attendance-cards-wrapper {
+  margin: 30rpx 40rpx 10rpx 40rpx;
+}
+
+.attendance-cards {
+  height: 340rpx;
+  border-radius: 16rpx;
+}
+
+.card-item {
+  padding: 0 8rpx;
+}
+
+.attendance-card {
+  height: 300rpx;
+  background: #ffffff;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08), 0 2rpx 4rpx rgba(0, 0, 0, 0.04);
+  border: 1rpx solid rgba(0, 0, 0, 0.05);
+  position: relative;
+}
+
+.card-content {
+  padding: 24rpx;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+/* 卡片头部 */
+.card-header {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16rpx;
+}
+
+.plan-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  flex: 1;
+  margin-right: 20rpx;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 右侧标识区域 */
+.right-badges {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8rpx;
+}
+
+.status-badge {
+  font-size: 22rpx;
+  padding: 6rpx 12rpx;
+  border-radius: 12rpx;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.status-badge.status-upcoming {
+  background: #f6ffed;
+  color: #52c41a;
+  border: 1rpx solid #b7eb8f;
+}
+
+.status-badge.status-active {
+  background: #e6f7ff;
+  color: #1890ff;
+  border: 1rpx solid #91d5ff;
+}
+
+.status-badge.status-ended {
+  background: #f5f5f5;
+  color: #999999;
+  border: 1rpx solid #d9d9d9;
+}
+
+/* 考勤类型标识 */
+.type-badge {
+  font-size: 20rpx;
+  padding: 4rpx 10rpx;
+  border-radius: 10rpx;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.type-badge.type-activity {
+  background: #fff7e6;
+  color: #fa8c16;
+  border: 1rpx solid #ffd591;
+}
+
+.type-badge.type-course {
+  background: #f6ffed;
+  color: #52c41a;
+  border: 1rpx solid #b7eb8f;
+}
+
+.type-badge.type-duty {
+  background: #f9f0ff;
+  color: #722ed1;
+  border: 1rpx solid #d3adf7;
+}
+
+.meta-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  flex: 1;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  font-size: 26rpx;
+  color: #666666;
+}
+
+.meta-text {
+  margin-left: 8rpx;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 卡片底部 */
+.card-footer {
+  border-top: 1rpx solid #f0f0f0;
+  padding-top: 12rpx;
+  margin-top: 16rpx;
+  flex-shrink: 0;
+}
+
+.stats-item {
+  display: flex;
+  align-items: center;
+  font-size: 24rpx;
+  color: #666666;
+}
+
+.stats-text {
+  margin-left: 8rpx;
+  color: #1890ff;
+  font-weight: 500;
+}
+
+/* 无考勤卡片 */
+.no-attendance-card {
+  margin: 20rpx;
+  height: 180rpx;
+  background: #ffffff;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1rpx dashed #d9d9d9;
+}
+
+.no-attendance-content {
+  text-align: center;
+  color: #999999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.no-attendance-content .empty-icon {
+  margin-bottom: 12rpx;
+  opacity: 0.5;
+}
+
+.no-attendance-content .message {
+  font-size: 26rpx;
+}
+
+/* 调整整体间距 */
+.container {
+  background: #f8f9fa;
+  min-height: 100vh;
+  padding-top: calc(env(safe-area-inset-top) + 20rpx);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 80rpx);
+}
+
+/* 地图区域 */
+.map-container {
+  position: relative;
+  width: 100%;
+  height: 500rpx;
+  margin: 0 20rpx 20rpx 20rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.map {
+  width: 100%;
+  height: 100%;
+}
+
+
+
+/* 加载遮罩 */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.loading-icon {
+  width: 80rpx;
+  height: 80rpx;
+  animation: rotate 1s linear infinite;
+  margin-bottom: 20rpx;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.loading-content text {
+  font-size: 28rpx;
+  color: #666;
+}
+
+/* 错误遮罩 */
+.error-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.error-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 40rpx;
+}
+
+.error-icon {
+  width: 100rpx;
+  height: 100rpx;
+  margin-bottom: 20rpx;
+}
+
+.error-content text {
+  font-size: 28rpx;
+  color: #f5222d;
+  text-align: center;
+  margin-bottom: 30rpx;
+}
+
+.retry-btn {
+  min-width: 200rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+  background-color: #1890ff;
+  color: #fff;
+  font-size: 28rpx;
+  border-radius: 40rpx;
+}
+
+/* 签到信息卡片 */
+.checkin-card {
+  background-color: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+  margin: 0 20rpx 30rpx 20rpx;
+  position: relative;
+}
+
+/* 功能按钮区域 */
+.action-buttons {
+  position: relative;
+  height: 60rpx;
+  margin-bottom: 20rpx;
+}
+
+.distance-info {
+  text-align: center;
+  margin-bottom: 30rpx;
+  min-height: 180rpx;
+  position: relative;
+}
+
+.distance-label {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 10rpx;
+}
+
+.distance-value {
+  font-size: 56rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10rpx;
+}
+
+.distance-unit {
+  font-size: 28rpx;
+  font-weight: normal;
+  color: #999;
+}
+
+.distance-status {
+  display: inline-block;
+  padding: 8rpx 24rpx;
+  border-radius: 30rpx;
+  font-size: 24rpx;
+}
+
+.distance-status.in-range {
+  background-color: rgba(82, 196, 26, 0.1);
+  color: #52c41a;
+}
+
+.distance-status.out-range {
+  background-color: rgba(250, 173, 20, 0.1);
+  color: #faad14;
+}
+
+/* 刷新按钮 */
+.refresh-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  padding: 16rpx 24rpx;
+  background: linear-gradient(135deg, #1890ff, #40a9ff);
+  border-radius: 32rpx;
+  border: none;
+  box-shadow: 0 4rpx 12rpx rgba(24, 144, 255, 0.3);
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.refresh-btn:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 2rpx 8rpx rgba(24, 144, 255, 0.3);
+}
+
+.refresh-btn text {
+  font-size: 24rpx;
+  color: #ffffff;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* 内联查看记录按钮 */
+.records-btn-inline {
+  position: absolute;
+  top: 0;
+  right: 140rpx;
+  padding: 14rpx 22rpx;
+  background: linear-gradient(135deg, #52c41a, #73d13d);
+  border-radius: 30rpx;
+  border: none;
+  box-shadow: 0 4rpx 12rpx rgba(82, 196, 26, 0.3);
+  font-size: 22rpx;
+  color: #ffffff;
+  font-weight: 500;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.records-btn-inline:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.3);
+}
+
+/* 签到按钮区域 */
+.checkin-btn-area {
+  text-align: center;
+}
+
+.checkin-btn {
+  width: 80%;
+  height: 90rpx;
+  line-height: 90rpx;
+  background-color: #1890ff;
+  color: #fff;
+  font-size: 32rpx;
+  border-radius: 45rpx;
+  margin-bottom: 20rpx;
+}
+
+.checkin-btn.disabled {
+  background-color: #d9d9d9;
+  color: rgba(0, 0, 0, 0.25);
+}
+
+.checkin-btn.checked {
+  background-color: #f6ffed;
+  border: 2rpx solid #b7eb8f;
+  color: #52c41a;
+  font-weight: 500;
+}
+
+.tips-text {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 已签到状态 */
+.checked-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 已签到状态（主要显示区域） */
+.checked-status-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-bottom: 30rpx;
+  min-height: 180rpx;
+}
+
+/* 已签到状态（紧凑显示） */
+.checked-status-compact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20rpx 0;
+}
+
+.checked-icon-small {
+  width: 60rpx;
+  height: 60rpx;
+  margin-right: 20rpx;
+}
+
+.checked-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.checked-icon {
+  width: 120rpx;
+  height: 120rpx;
+  margin-bottom: 20rpx;
+}
+
+.checked-text {
+  font-size: 32rpx;
+  color: #52c41a;
+  font-weight: 500;
+}
+
+.checked-time {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 4rpx;
+}

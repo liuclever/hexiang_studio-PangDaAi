@@ -1,0 +1,117 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/login/index",
+    "pages/profile/index",
+    "pages/message/index",
+    "pages/user/index",
+    "pages/user/detail",
+    "pages/schedule/index",
+    "pages/attendance/index",
+    "pages/attendance/check-in",
+    "pages/attendance/leave-apply",
+    "pages/attendance/leave-approval",
+    "pages/attendance/records/index",
+    "pages/attendance/activity/index",
+    "pages/attendance/activity/detail",
+    "pages/attendance/course/index",
+    "pages/attendance/course/detail",
+    "pages/attendance/duty/index",
+    "pages/attendance/duty/detail",
+    "pages/course/index",
+    "pages/course/detail",
+    "pages/course/teaching/index",
+    "pages/course/student/index",
+    "pages/announcement/index",
+    "pages/announcement/detail",
+    "pages/user/achievements/index",
+    "pages/task/index",
+    "pages/task/detail",
+    "pages/materials/index",
+    "pages/materials/detail"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#1890FF",
+    "navigationBarTitleText": "何湘技能大师工作室",
+    "navigationBarTextStyle": "white"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#909399",
+    "selectedColor": "#1890FF",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/message/index",
+        "text": "消息"
+      },
+      {
+        "pagePath": "pages/index/index",
+        "text": "工作台"
+      },
+      {
+        "pagePath": "pages/attendance/check-in",
+        "text": "签到"
+      },
+      {
+        "pagePath": "pages/user/index",
+        "text": "成员"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的"
+      }
+    ]
+  },
+  "networkTimeout": {
+    "request": 60000,
+    "downloadFile": 60000
+  },
+  "debug": true,
+  "usingComponents": {
+    "t-button": "tdesign-miniprogram/button/button",
+    "t-textarea": "tdesign-miniprogram/textarea/textarea",
+    "t-cell": "tdesign-miniprogram/cell/cell",
+    "t-icon": "tdesign-miniprogram/icon/icon"
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "您的位置信息将用于签到功能"
+    }
+  },
+  "requiredPrivateInfos": [
+    "getLocation",
+    "chooseLocation"
+  ],
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents",
+  "subPackages": [
+    {
+      "root": "subpackages/user-related",
+      "name": "user-related",
+      "pages": [
+        "pages/achievements/index"
+      ]
+    },
+    {
+      "root": "subpackages/course-related",
+      "name": "course-related", 
+      "pages": [
+        "pages/student/index",
+        "pages/teaching/index"
+      ]
+    },
+    {
+      "root": "subpackages/attendance-related",
+      "name": "attendance-related",
+      "pages": []
+    },
+    {
+      "root": "subpackages/announcement-related",
+      "name": "announcement-related",
+      "pages": []
+    }
+  ]
+} 

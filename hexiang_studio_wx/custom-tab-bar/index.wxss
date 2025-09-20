@@ -1,0 +1,139 @@
+/* 主容器 */
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 98rpx;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20rpx);
+  border-top: 1rpx solid #f0f0f0;
+  display: flex;
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 1000;
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.1);
+}
+
+/* TabBar项目 */
+.tab-bar-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8rpx 0;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* 点击动画效果 */
+.tab-bar-item:active {
+  transform: scale(0.95);
+}
+
+/* 选中状态 */
+.tab-bar-item--active {
+  transform: translateY(-4rpx);
+}
+
+/* 图标容器 */
+.tab-bar-item__icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60rpx;
+  height: 60rpx;
+  margin-bottom: 6rpx;
+}
+
+/* 图标样式 */
+.tab-bar-item__icon {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform-origin: center;
+}
+
+/* 选中状态的图标 */
+.tab-bar-item__icon--active {
+  transform: scale(1.1);
+  filter: drop-shadow(0 4rpx 8rpx rgba(24, 144, 255, 0.3));
+}
+
+/* 选中指示器圆点 */
+.tab-bar-item__dot {
+  position: absolute;
+  bottom: -8rpx;
+  left: 50%;
+  transform: translateX(-50%) scale(0);
+  width: 8rpx;
+  height: 8rpx;
+  background: linear-gradient(135deg, #1890FF 0%, #40a9ff 100%);
+  border-radius: 50%;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* 显示指示器圆点 */
+.tab-bar-item__dot--show {
+  transform: translateX(-50%) scale(1);
+}
+
+/* 文字样式 */
+.tab-bar-item__text {
+  font-size: 20rpx;
+  line-height: 28rpx;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  font-weight: 400;
+}
+
+/* 选中状态的文字 */
+.tab-bar-item__text--active {
+  font-weight: 600;
+  font-size: 22rpx;
+  text-shadow: 0 2rpx 4rpx rgba(24, 144, 255, 0.2);
+}
+
+/* 悬浮效果 */
+.tab-bar-item--active::before {
+  content: '';
+  position: absolute;
+  top: 12rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60rpx;
+  height: 60rpx;
+  background: linear-gradient(135deg, rgba(24, 144, 255, 0.1) 0%, rgba(64, 169, 255, 0.05) 100%);
+  border-radius: 50%;
+  z-index: -1;
+  animation: pulse 2s infinite;
+}
+
+/* 脉冲动画 */
+@keyframes pulse {
+  0% {
+    transform: translateX(-50%) scale(0.8);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateX(-50%) scale(1.1);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateX(-50%) scale(0.8);
+    opacity: 0.7;
+  }
+}
+
+/* 适配iPhone X等机型的底部安全区域 */
+@supports (bottom: env(safe-area-inset-bottom)) {
+  .tab-bar {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 16rpx);
+  }
+}
+
+/* 毛玻璃效果增强 */
+@supports (backdrop-filter: blur(20rpx)) {
+  .tab-bar {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20rpx) saturate(180%);
+  }
+} 

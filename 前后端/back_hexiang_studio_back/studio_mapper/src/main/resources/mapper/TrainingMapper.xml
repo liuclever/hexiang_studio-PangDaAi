@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.back_hexiang_studio.mapper.TrainingMapper">
+
+
+
+    <select id="getTrainingByUserId" resultType="com.back_hexiang_studio.entity.TrainingDirection">
+        select * from training_direction where user_id = #{userId}
+    </select>
+
+    <select id="getIdsByNames" resultType="java.lang.Long">
+        SELECT direction_id
+        FROM training_direction
+        WHERE direction_name IN
+        <foreach collection="names" item="name" open="(" separator="," close=")">
+            #{name}
+        </foreach>
+    </select>
+    <!-- 根据方向名称获取方向信息 -->
+    <select id="getByName" resultType="com.back_hexiang_studio.entity.TrainingDirection">
+        SELECT direction_id, direction_name, description, create_time
+        FROM training_direction
+        WHERE direction_name = #{directionName}
+    </select>
+    <insert id="insertRelation">
+        <!-- 根据角色选择不同的表 -->
+        <choose>
+            <when test="roleType == 'student'">
+                INSERT INTO student_direction (student_id, direction_id)
+                VALUES (#{userId}, #{trainingId})
+            </when>
+            <when test="roleType == 'teacher'">
+                INSERT INTO teacher_direction (teacher_id, direction_id)
+                VALUES (#{userId}, #{trainingId})
+            </when>
+            <otherwise>
+                INSERT INTO student_direction (student_id, direction_id)
+                VALUES (#{userId}, #{trainingId})
+            </otherwise>
+        </choose>
+    </insert>
+
+</mapper>
+

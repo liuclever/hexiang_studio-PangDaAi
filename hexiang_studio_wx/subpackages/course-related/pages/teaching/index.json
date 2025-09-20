@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "授课安排",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark",
+  "usingComponents": {}
+}

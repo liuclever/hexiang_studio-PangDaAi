@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.back_hexiang_studio.mapper.UserMapper">
+
+    <!-- 用户结果映射 -->
+    <resultMap id="UserResultMap" type="com.back_hexiang_studio.entity.User">
+        <id property="userId" column="user_id"/>
+        <result property="userName" column="user_name"/>
+        <result property="name" column="name"/>
+        <result property="sex" column="sex"/>
+        <result property="roleId" column="role_id"/>
+        <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="positionId" column="position_id"/>
+        <result property="avatar" column="avatar"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+    <!-- 用户查询结果映射 -->
+    <resultMap id="UserQueryResultMap" type="com.back_hexiang_studio.dv.vo.basicUserVo">
+        <id property="userId" column="user_id"/>
+        <result property="name" column="name"/>
+        <result property="sex" column="sex"/>
+        <result property="roleId" column="role_id"/>
+        <result property="phone" column="phone"/>
+        <result property="positionId" column="position_id"/>
+        <result property="avatar" column="avatar"/>
+        <result property="status" column="status"/>
+        <result property="email" column="email"/>
+        <result property="departmentId" column="department_id"/>
+        <result property="departmentName" column="department_name"/>
+        <result property="dormitory" column="dormitory"/>
+    </resultMap>
+    <resultMap id="UserMap" type="com.back_hexiang_studio.dv.vo.UserVo">
+        <id property="userId" column="user_id"/>
+        <result property="name" column="name"/>
+        <result property="sex" column="sex"/>
+        <result property="roleId" column="role_id"/>
+        <result property="phone" column="phone"/>
+        <result property="positionId" column="position_id"/>
+        <result property="avatar" column="avatar"/>
+        <result property="status" column="status"/>
+        <result property="email" column="email"/>
+    </resultMap>
+
+
+
+    <update id="updateStatus">
+        update user set status = #{status} where user_id = #{userId}
+    </update>
+
+    <update id="updateUser">
+        update user
+        <set>
+            <if test="userName != null and userName != ''">
+                user_name = #{userName},
+            </if>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="password != null and password != ''">
+                password = #{password},
+            </if>
+            <if test="sex != null">
+                sex = #{sex},
+            </if>
+            <if test="phone != null">
+                phone = #{phone},
+            </if>
+            <if test="email != null">
+                email = #{email},
+            </if>
+            <if test="avatar != null">
+                avatar = #{avatar},
+            </if>
+            <if test="positionId != null">
+                position_id = #{positionId},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="roleId != null">
+                role_id = #{roleId},
+            </if>
+            <if test="updateTime != null" >
+                update_time = #{updateTime},
+            </if>
+            <if test="updateUser != null">
+                updateUser = #{updateUser}
+            </if>
+
+        </set>
+        where user_id = #{userId}
+    </update>
+
+    <delete id="delete" parameterType="java.util.List">
+        delete from user where user_id in
+        <foreach collection="userIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <update id="updateAvatar" parameterType="com.back_hexiang_studio.dv.dto.UserDto">
+        update user set avatar = #{avatar} where user_id = #{userId}
+    </update>
+
+
+    <select id="selectByPage" resultMap="UserQueryResultMap">
+        SELECT 
+            u.user_id as user_id,u.name,u.sex, r.role_id as role_id,  p.position_id as position_id ,u.phone, u.email, u.avatar,u.status,
+            s.department_id as department_id, d.department_name as department_name, s.dormitory as dormitory
+        FROM user u
+        LEFT JOIN position p ON u.position_id = p.position_id
+        LEFT JOIN role r on u.role_id=r.role_id
+        LEFT JOIN student s ON u.user_id = s.user_id AND u.role_id = 1
+        LEFT JOIN department d ON s.department_id = d.department_id
+        <where>
+            <if test="name != null and name != ''">
+                and (u.name like concat('%',#{name},'%') or d.department_name like concat('%',#{name},'%'))
+            </if>
+            <if test="status != null and status != ''">
+                and u.status = #{status}
+            </if>
+            <if test="roleId != null and roleId != ''">
+                and u.role_id = #{roleId}
+            </if>
+            <if test="departmentId != null and departmentId != '' and (roleId == null or roleId == '' or roleId == '1')">
+                and s.department_id = #{departmentId}
+            </if>
+        </where>
+        ORDER BY u.user_id DESC
+    </select>
+
+    <select id="getPermissions" resultType="java.lang.String">
+        SELECT p.permission_code
+        FROM permission p
+                 JOIN role_permission rp ON p.permission_id = rp.permission_id
+        WHERE rp.role_id =#{role_id}
+    </select>
+
+    <select id="getPosition" resultType="java.lang.String">
+        SELECT position_name FROM position p WHERE position_id = #{positionId}
+    </select>
+    
+    <!-- 修改登录验证查询，使用明确的结果映射 -->
+    <select id="select" resultMap="UserResultMap">
+        select * from user where user_name=#{user_name} and password=#{password}
+    </select>
+
+    <!--获取用户详细信息中的基础信息-->
+    <select id="getUserById" resultMap="UserResultMap">
+        SELECT
+            u.user_id as user_id,u.name,u.sex, u.role_id as role_id,  u.position_id as position_id ,u.phone, u.email, u.avatar,u.status,
+            u.create_time as create_time, u.update_time as update_time
+        FROM user u
+                 LEFT JOIN position p ON u.position_id = p.position_id
+                 left join role r on u.role_id=r.role_id
+        WHERE u.user_id = #{userId}
+    </select>
+
+    <select id="getRole" resultType="java.lang.String">
+        SELECT role_id FROM user WHERE user_id = #{currentRoleId}
+    </select>
+ 
+    
+    <!--用户用户列表(任务管理，带名称搜索)-->
+    <select id="getUSerListOfTaskWithKeyword" resultType="com.back_hexiang_studio.dv.vo.task.UserList">
+    select user_id as userId,name,avatar,role_id from user u
+    where role_id in (1,2,3) and status="1"
+    <if test="keyword != null and keyword != ''">
+        and u.name like concat('%',#{keyword},'%')
+    </if>
+    </select>
+
+
+
+    <!-- 添加用户基本信息 -->
+    <insert id="addUser" parameterType="com.back_hexiang_studio.dv.dto.UserDto" useGeneratedKeys="true" keyProperty="userId">
+        INSERT INTO user (
+            role_id,
+            user_name,
+            password,
+            name,
+            sex,
+            phone,
+            email,
+            status,
+            position_id,
+            create_time,
+            createUser,
+            update_time,
+            updateUser,
+            avatar
+        ) VALUES (
+                     #{roleId, jdbcType=BIGINT},
+                     #{userName},
+                     #{password},
+                     #{name},
+                     #{sex},
+                     #{phone},
+                     #{email, jdbcType=VARCHAR},
+                     #{status, jdbcType=VARCHAR},
+                     #{positionId, jdbcType=BIGINT},
+                     NOW(),
+                     #{createUser, jdbcType=BIGINT},
+                     NOW(),
+                     #{updateUser, jdbcType=BIGINT},
+                     #{avatar, jdbcType=VARCHAR}
+                 )
+    </insert>
+
+    <!-- 添加用户角色关联 -->
+    <insert id="addUserRole">
+        INSERT INTO user_role (
+            user_id,
+            role_id,
+            is_current,
+            created_at
+        ) VALUES (
+                     #{userId},
+                     #{roleId},
+                     1,
+                     NOW()
+                 )
+    </insert>
+
+    <!-- 修改用户密码 -->
+    <update id="updatePassword">
+        UPDATE user SET password = #{newPassword} WHERE user_id = #{userId}
+    </update>
+    
+    <!-- 验证用户旧密码 -->
+    <select id="validatePassword" resultType="int">
+        SELECT COUNT(*) FROM user WHERE user_id = #{userId} AND password = #{oldPassword}
+    </select>
+
+    <!-- 按多个职位ID统计用户数量 -->
+    <select id="countByPositionIds" resultType="int">
+        SELECT COUNT(*) FROM user 
+        WHERE position_id IN
+        <foreach collection="positionIds" item="positionId" open="(" close=")" separator=",">
+            #{positionId}
+        </foreach>
+    </select>
+
+    <!-- 按职位ID获取用户列表 -->
+    <select id="getUsersByPositionId" resultType="map">
+        SELECT u.user_id, u.name, u.user_name, u.phone, u.email,
+               p.position_name, p.role, u.avatar, u.status
+        FROM user u
+        LEFT JOIN position p ON u.position_id = p.position_id
+        WHERE u.position_id = #{positionId}
+        ORDER BY u.create_time DESC
+    </select>
+
+</mapper>

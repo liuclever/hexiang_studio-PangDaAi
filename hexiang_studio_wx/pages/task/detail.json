@@ -1,0 +1,19 @@
+{
+  "navigationBarTitleText": "任务详情",
+  "navigationStyle": "custom",
+  "enablePullDownRefresh": true,
+  "backgroundColor": "#f7f7f7",
+  "usingComponents": {
+    "t-button": "tdesign-miniprogram/button/button",
+    "t-textarea": "tdesign-miniprogram/textarea/textarea",
+    "t-cell": "tdesign-miniprogram/cell/cell",
+    "t-navbar": "tdesign-miniprogram/navbar/navbar",
+    "t-icon": "tdesign-miniprogram/icon/icon",
+    "t-tag": "tdesign-miniprogram/tag/tag",
+    "t-image": "tdesign-miniprogram/image/image",
+    "t-popup": "tdesign-miniprogram/popup/popup",
+    "t-empty": "tdesign-miniprogram/empty/empty",
+    "t-steps": "tdesign-miniprogram/steps/steps",
+    "t-step-item": "tdesign-miniprogram/step-item/step-item"
+  }
+} 
