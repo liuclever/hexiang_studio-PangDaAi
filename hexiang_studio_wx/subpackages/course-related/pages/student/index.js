@@ -87,26 +87,13 @@ Page({
    * 加载课程数据
    */
   loadCourses() {
-    const { userId, activeTab } = this.data;
+    const { activeTab } = this.data;
     
     // 显示加载状态
     this.setData({ loading: true });
     
-    // 先从用户ID获取学生ID
-            http.get('/wx/user/getStudentId', { userId })
-      .then(res => {
-        if (res.data) {
-          const studentId = res.data;
-          this.setData({ studentId });
-          
-          console.log('获取到学生ID:', studentId);
-          
-          // 获取学生课程列表
-          return http.get('/wx/course/list', { studentId });
-        } else {
-          throw new Error('获取学生ID失败');
-        }
-      })
+    // 直接调用课程列表API，后端会根据JWT token自动处理角色权限
+    http.get('/wx/course/list')
       .then(res => {
         console.log('获取到课程列表:', res);
         let courses = res.data || [];

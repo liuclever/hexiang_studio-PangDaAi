@@ -25,11 +25,11 @@ public class ChatHistoryServiceImpl implements ChatHistoryService {
     @Autowired
     private ChatHistoryMapper chatHistoryMapper;
 
-    // 🔧 添加会话缓存机制 - 30分钟内保持相同会话ID
+    //  添加会话缓存机制 - 30分钟内保持相同会话ID
     private static final Map<Long, SessionInfo> userSessionCache = new ConcurrentHashMap<>();
     private static final long SESSION_TIMEOUT = 30 * 60 * 1000; // 30分钟
 
-    // 🔧 会话信息数据类
+    //  会话信息数据类
     private static class SessionInfo {
         private final String sessionId;
         private final long timestamp;
@@ -83,9 +83,9 @@ public class ChatHistoryServiceImpl implements ChatHistoryService {
     @Override
     @Transactional
     public void saveConversation(Long userId, String sessionId, String userMessage, String aiResponse) {
-        log.info("🎯 ChatHistoryServiceImpl.saveConversation 被调用了！[用户: {}, 会话: {}, 用户消息长度: {}, AI回复长度: {}]", 
+        log.debug("保存对话开始 - 用户ID: {}, 会话ID: {}, 用户消息长度: {}, AI回复长度: {}",
                 userId, sessionId, 
-                (userMessage != null ? userMessage.length() : "null"), 
+                (userMessage != null ? userMessage.length() : "null"),
                 (aiResponse != null ? aiResponse.length() : "null"));
         
         // 获取当前会话的最大消息序号

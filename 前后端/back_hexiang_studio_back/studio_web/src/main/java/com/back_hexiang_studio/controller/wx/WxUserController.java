@@ -4,6 +4,7 @@ import com.back_hexiang_studio.dv.dto.UserLoginDto;
 import com.back_hexiang_studio.dv.dto.PageDto;
 import com.back_hexiang_studio.dv.vo.UserLoginVo;
 import com.back_hexiang_studio.dv.vo.UserVo;
+import com.back_hexiang_studio.dv.vo.basicUserVo;
 import com.back_hexiang_studio.result.Result;
 import com.back_hexiang_studio.result.PageResult;
 import com.back_hexiang_studio.securuty.TokenService;
@@ -22,6 +23,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;     // ✅ 正确：jakarta
+import jakarta.servlet.http.HttpServletResponse;    // ✅ 正确：jakarta
 
 /**
  * 微信端用户控制器
@@ -53,23 +56,62 @@ public class WxUserController {
     private StudentMapper studentMapper;
 
     /**
-     * 微信用户登录接口
-     * @param userLoginDto 登录信息
-     * @return 登录结果
+     * 微信用户登录 - 双Token模式
      */
     @PostMapping("/login")
-    public Result login(@RequestBody UserLoginDto userLoginDto) {
+    public Result login(@RequestBody UserLoginDto userLoginDto, HttpServletResponse response) {
         log.info("微信用户登录: {}", userLoginDto.getUserName());
         try {
             UserLoginVo loginUser = userService.login(userLoginDto);
-            String token = tokenService.createToken(loginUser.getUserId(), loginUser.getUserName());
-            loginUser.setToken(token);
             
-            log.info("微信用户登录成功: {}", loginUser.getUserName());
-            return Result.success(loginUser);
+            // 使用现有的双Token方法
+            String accessToken = tokenService.createTokenPair(loginUser.getUserId(), loginUser.getUserName(), response);
+            
+            // 🚀 简单修复：从Redis获取刚生成的Refresh Token
+            String refreshToken = tokenService.getRefreshTokenByUserId(loginUser.getUserId());
+            
+            // 构建返回结果
+            Map<String, Object> result = new HashMap<>();
+            result.put("userId", loginUser.getUserId());
+            result.put("userName", loginUser.getUserName());
+            result.put("name", loginUser.getName());
+            result.put("token", accessToken);              // Access Token
+            result.put("refreshToken", refreshToken);      // Refresh Token给小程序
+            result.put("avatar", loginUser.getAvatar());
+            result.put("roleId", loginUser.getRoleId());
+            
+            log.info("微信用户双Token登录成功: {}", loginUser.getUserName());
+            return Result.success(result);
         } catch (BusinessException e) {
             log.warn("微信用户登录失败: {}", e.getMessage());
             return Result.error(e.getMessage());
+        }
+    }
+
+    /**
+     * 微信端Token刷新接口 - 支持请求体传递Refresh Token
+     */
+    @PostMapping("/refresh-by-token")
+    public Result refreshByToken(@RequestBody Map<String, String> request) {
+        try {
+            String refreshToken = request.get("refreshToken");
+            if (refreshToken == null || refreshToken.trim().isEmpty()) {
+                return Result.error("未登录或登录已过期，请重新登录");
+            }
+            
+            String newAccessToken = tokenService.refreshAccessToken(refreshToken);
+            if (newAccessToken == null) {
+                return Result.error("登录已过期，请重新登录");
+            }
+            
+            Map<String, Object> data = new HashMap<>();
+            data.put("accessToken", newAccessToken);
+            
+            log.info("微信端Token通过请求体刷新成功");
+            return Result.success(data);
+        } catch (Exception e) {
+            log.error("微信端Token刷新异常", e);
+            return Result.error("系统异常，请稍后重试");
         }
     }
 
@@ -198,26 +240,37 @@ public class WxUserController {
     public Result getUserStats() {
         log.info("获取微信端用户统计数据");
         try {
-            // 获取用户统计数据
             Map<String, Object> stats = new HashMap<>();
-            
-            // 调用UserService获取统计数据
-            // 这里可能需要在UserService中添加相应的统计方法
-            // 暂时提供模拟数据，后续需要实现具体的统计逻辑
+
+            // 1) 全量用户（含分页器关闭索引，仅作统计）
             PageDto pageDto = new PageDto();
             pageDto.setPage(1);
-            pageDto.setPageSize(999); // 获取所有数据用于统计
+            pageDto.setPageSize(9999);
             PageResult allUsers = userService.list(pageDto);
-            
-            long total = allUsers.getTotal();
-            long active = total; // 假设所有用户都是活跃的，实际需要根据业务逻辑判断
-            long departments = departmentService.countDepartments(); // 实际查询数据库获取部门数量
-            
+
+            long total = allUsers != null ? allUsers.getTotal() : 0L;
+
+            // 2) 在线人数：与管理端保持一致，调用 TokenService.isUserOnline 判断
+            long online = 0L;
+            if (allUsers != null && allUsers.getRecords() != null) {
+                for (Object obj : allUsers.getRecords()) {
+                    if (obj instanceof basicUserVo) {
+                        basicUserVo u = (basicUserVo) obj;
+                        if (u.getUserId() != null && Boolean.TRUE.equals(tokenService.isUserOnline(u.getUserId()))) {
+                            online++;
+                        }
+                    }
+                }
+            }
+
+            // 3) 部门数：调用 DepartmentService 真实统计
+            long departments = departmentService.countDepartments();
+
             stats.put("total", total);
-            stats.put("active", active);
+            stats.put("active", online);
             stats.put("departments", departments);
-            
-            log.info("微信端用户统计查询成功，总用户数: {}, 部门数: {}", total, departments);
+
+            log.info("微信端用户统计查询成功，总人数: {}, 在线人数: {}, 部门数: {}", total, online, departments);
             return Result.success(stats);
         } catch (Exception e) {
             log.error("获取微信端用户统计失败: {}", e.getMessage());

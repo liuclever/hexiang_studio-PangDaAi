@@ -124,7 +124,7 @@ public class TaskSubmissionServiceImpl implements TaskSubmissionService {
             
             if (submission == null) {
                 // 创建新的提交记录
-                // 🔧 优化：首次提交降级为DEBUG，减少用户信息泄露
+
                 log.debug("首次提交任务，子任务ID: {}", subTaskId);
                 
                 submission = TaskSubmission.builder()
@@ -135,12 +135,12 @@ public class TaskSubmissionServiceImpl implements TaskSubmissionService {
                         .submissionTime(LocalDateTime.now())
                         .build();
                 
-                // 🔧 优化：准备插入的对象信息降级为DEBUG
+                // 准备插入的对象信息降级为DEBUG
                 log.debug("准备插入的提交对象: 子任务ID={}", submission.getSubTaskId());
                 
                 taskSubmissionMapper.insert(submission);
                 isNewSubmission = true;
-                // 🔧 优化：创建记录降级为DEBUG
+
                 log.debug("创建新的提交记录，提交ID: {}", submission.getSubmissionId());
             } else {
                 // 更新现有提交记录（重新提交）
@@ -290,7 +290,7 @@ public class TaskSubmissionServiceImpl implements TaskSubmissionService {
         Long currentUserId = UserContextHolder.getCurrentId();
         String userRole = getCurrentUserRole(currentUserId);
         
-        // 🔧 优化：频繁查询，降级为DEBUG，减少用户信息泄露
+
         log.debug("获取待审核提交数量，角色: {}", userRole);
         
         // 调用修改后的方法，传递角色参数
@@ -307,7 +307,7 @@ public class TaskSubmissionServiceImpl implements TaskSubmissionService {
         Long currentUserId = UserContextHolder.getCurrentId();
         String userRole = getCurrentUserRole(currentUserId);
         
-        // 🔧 优化：频繁查询，降级为DEBUG，减少用户信息泄露
+
         log.debug("获取今日已处理任务提交数量，角色: {}", userRole);
         
         // 调用修改后的方法，传递角色参数
@@ -325,7 +325,7 @@ public class TaskSubmissionServiceImpl implements TaskSubmissionService {
         Long currentUserId = UserContextHolder.getCurrentId();
         String userRole = getCurrentUserRole(currentUserId);
         
-        // 🔧 优化：频繁查询，降级为DEBUG，减少用户信息泄露
+
         log.debug("获取已审批的任务提交记录，天数: {}, 角色: {}", days, userRole);
         
         // 调用修改后的方法，传递角色参数
@@ -366,7 +366,7 @@ public class TaskSubmissionServiceImpl implements TaskSubmissionService {
         int total = taskSubmissionMapper.countSubmissions(status);
         log.info("查询到任务提交总数: {}", total);
         
-        // 查询列表数据（直接返回VO）
+        // 查询列表数据
         List<TaskSubmissionVo> submissionVos = taskSubmissionMapper.findSubmissionsByPage(offset, pageSize, status);
         log.info("查询到任务提交数量: {}", submissionVos.size());
         
@@ -577,7 +577,7 @@ public class TaskSubmissionServiceImpl implements TaskSubmissionService {
                 return;
             }
             
-            // 3. 计算新状态（复用现有逻辑）
+            // 3. 计算新状态
             String newStatus = calculateTaskStatus(submissionStatuses, task.getEndTime());
             
             // 4. 仅在状态发生变化时更新
@@ -600,7 +600,7 @@ public class TaskSubmissionServiceImpl implements TaskSubmissionService {
             
         } catch (Exception e) {
             log.error("更新主任务状态失败，子任务ID: {}", subTaskId, e);
-            // 不抛出异常，避免影响审批流程
+
         }
     }
     
@@ -618,7 +618,7 @@ public class TaskSubmissionServiceImpl implements TaskSubmissionService {
     }
     
     /**
-     * 计算主任务状态（优化版）
+     * 计算主任务状态
      * 优先级：被退回 > 待审核 > 已逾期 > 已完成 > 紧急 > 进行中
      */
     private String calculateTaskStatus(List<Integer> submissionStatuses, LocalDateTime endTime) {
@@ -733,7 +733,7 @@ public class TaskSubmissionServiceImpl implements TaskSubmissionService {
                 if (roleId == 2L) {
                     return "teacher"; // 老师
                 } else if (roleId == 3L || roleId == 4L || roleId == 7L) {
-                    return "admin"; // 管理员/超级管理员/工作室管理员
+                    return "admin"; // 管理员/超级管理员
                 }
             }
         } catch (Exception e) {

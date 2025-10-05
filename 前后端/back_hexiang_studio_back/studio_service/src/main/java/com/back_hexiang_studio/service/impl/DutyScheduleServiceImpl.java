@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 /**
- * 简化版值班管理服务 - 核心功能，简单实现
+ * 值班管理服务 - 核心功能，简单实现
  */
 @Slf4j
 @Primary
@@ -46,7 +46,7 @@ public class DutyScheduleServiceImpl implements DutyScheduleService {
      */
     @Override
     public Map<String, Object> getWeeklyDutyTable(LocalDate startDate, LocalDate endDate) {
-        log.info("【简化版】查询值班表: {} 到 {}", startDate, endDate);
+        log.info(" 查询值班表: {} 到 {}", startDate, endDate);
         
         try {
             // 1. 检查并生成数据（如果需要）
@@ -58,11 +58,11 @@ public class DutyScheduleServiceImpl implements DutyScheduleService {
             // 3. 构建返回结果
             Map<String, Object> result = buildWeeklyResponse(dutyData, startDate, endDate);
             
-            log.info("【简化版】返回 {} 条值班记录", dutyData.size());
+            log.info("返回 {} 条值班记录", dutyData.size());
             return result;
             
                 } catch (Exception e) {
-            log.error("【简化版】查询值班表失败", e);
+            log.error("查询值班表失败", e);
             return createEmptyResponse(startDate, endDate);
         }
     }
@@ -76,9 +76,9 @@ public class DutyScheduleServiceImpl implements DutyScheduleService {
             endDate.plusDays(1).atStartOfDay()
         );
         
-        // 🔧 如果查询的周没有数据，且是未来的周，尝试从前一周复制
+        //  如果查询的周没有数据，且是未来的周，尝试从前一周复制
         if (count == 0 && !startDate.isBefore(LocalDate.now())) {
-            log.info("【简化版】未来周无数据，尝试自动复制前一周: {}", startDate);
+            log.info("未来周无数据，尝试自动复制前一周: {}", startDate);
             
             try {
                 // 计算前一周的日期范围
@@ -95,12 +95,12 @@ public class DutyScheduleServiceImpl implements DutyScheduleService {
                     // 有前一周数据，执行复制
                     List<Map<String, Object>> prevWeekData = queryWeeklyDuty(prevWeekStart, prevWeekEnd);
                     int copiedCount = copyWeeklyDutyData(prevWeekData, prevWeekStart, startDate);
-                    log.info("【简化版】自动复制成功: 从 {} 复制 {} 个值班安排到 {}", prevWeekStart, copiedCount, startDate);
+                    log.info("自动复制成功: 从 {} 复制 {} 个值班安排到 {}", prevWeekStart, copiedCount, startDate);
                 } else {
-                    log.info("【简化版】前一周也无数据，跳过自动复制: {}", prevWeekStart);
+                    log.info("前一周也无数据，跳过自动复制: {}", prevWeekStart);
                 }
             } catch (Exception e) {
-                log.error("【简化版】自动复制失败: {}", e.getMessage());
+                log.error("自动复制失败: {}", e.getMessage());
                 // 自动复制失败不影响查询，只记录错误
             }
         }
@@ -116,7 +116,7 @@ public class DutyScheduleServiceImpl implements DutyScheduleService {
             LocalDate currentWeekMonday = today.with(DayOfWeek.MONDAY);
             LocalDate nextWeekMonday = currentWeekMonday.plusWeeks(1);
             
-            log.info("【手动复制】从当前周 {} 复制到下一周 {}", currentWeekMonday, nextWeekMonday);
+            log.info("从当前周 {} 复制到下一周 {}", currentWeekMonday, nextWeekMonday);
             
             // 1. 查询当前周的值班数据
             List<Map<String, Object>> currentWeekData = queryWeeklyDuty(
@@ -146,11 +146,11 @@ public class DutyScheduleServiceImpl implements DutyScheduleService {
             result.put("targetWeek", nextWeekMonday.toString());
             result.put("copiedCount", copiedCount);
             
-            log.info("【手动复制】成功复制 {} 个值班安排", copiedCount);
+            log.info("成功复制 {} 个值班安排", copiedCount);
             return result;
             
         } catch (Exception e) {
-            log.error("【手动复制】复制失败", e);
+            log.error("复制失败", e);
             throw new RuntimeException("复制失败: " + e.getMessage(), e);
         }
     }
@@ -260,10 +260,10 @@ public class DutyScheduleServiceImpl implements DutyScheduleService {
                     
                     // 创建考勤计划（使用独立事务）
                     createNewAttendancePlan(schedule.getScheduleId(), syncData);
-                    log.info("【复制功能】为值班安排 {} 创建了考勤计划", schedule.getScheduleId());
+                    log.info("为值班安排 {} 创建了考勤计划", schedule.getScheduleId());
                     
                             } catch (Exception e) {
-                    log.error("【复制功能】为值班安排 {} 创建考勤计划失败: {}", schedule.getScheduleId(), e.getMessage());
+                    log.error("为值班安排 {} 创建考勤计划失败: {}", schedule.getScheduleId(), e.getMessage());
                     // 不影响值班安排的复制，只记录错误
                 }
             }
@@ -278,7 +278,7 @@ public class DutyScheduleServiceImpl implements DutyScheduleService {
     @Transactional
     public void generateWeeklyDuty(LocalDate weekStart) {
         // 现在暂时不自动生成，改为手动操作
-        log.info("【简化版】不再自动生成，请使用手动复制功能");
+        log.info(" 不再自动生成，请使用手动复制功能");
     }
 
     /**
@@ -292,7 +292,7 @@ public class DutyScheduleServiceImpl implements DutyScheduleService {
             endDate.plusDays(1).atStartOfDay()
         );
         
-        log.info("【简化版】查询到值班安排: {} 个", schedules.size());
+        log.info(" 查询到值班安排: {} 个", schedules.size());
         
         // 2. 为每个值班安排单独查询学生信息
         for (Map<String, Object> schedule : schedules) {
@@ -304,7 +304,7 @@ public class DutyScheduleServiceImpl implements DutyScheduleService {
                 List<Map<String, Object>> students = dutyScheduleStudentMapper.getStudentsByScheduleId(scheduleId);
                 schedule.put("students", students);
                 
-                log.info("【简化版】值班安排 {} 包含 {} 名学生", scheduleId, students.size());
+                log.info(" 值班安排 {} 包含 {} 名学生", scheduleId, students.size());
             } else {
                 schedule.put("students", new ArrayList<>());
             }
@@ -346,7 +346,7 @@ public class DutyScheduleServiceImpl implements DutyScheduleService {
         result.put("weekEnd", endDate.toString());
         
         // 🔍 添加调试日志
-        log.info("【简化版】返回值班数据: {} 条记录", dutyData.size());
+        log.info(" 返回值班数据: {} 条记录", dutyData.size());
         
         return result;
     }
@@ -370,7 +370,7 @@ public class DutyScheduleServiceImpl implements DutyScheduleService {
     @Override
     @Transactional
     public Map<String, Object> batchSyncDutySchedules(List<DutyScheduleSyncDto> syncDataList) {
-        log.info("【简化版】批量同步 {} 条值班安排", syncDataList.size());
+        log.info(" 批量同步 {} 条值班安排", syncDataList.size());
 
         int successCount = 0;
         int skippedCount = 0;
@@ -397,7 +397,7 @@ public class DutyScheduleServiceImpl implements DutyScheduleService {
                         LocalDateTime cutoffTime = now.minusMinutes(15);
                         if (dutyStartTime.isBefore(cutoffTime)) {
                             String reason = String.format("时间段 %s %s 已过期，无法编辑", syncData.getDutyDate(), syncData.getTimeSlot());
-                            log.warn("【简化版】{}", reason);
+                            log.warn(" {}", reason);
                             skippedCount++;
                             skippedReasons.add(reason);
                             continue; // 跳过这条记录
@@ -440,9 +440,9 @@ public class DutyScheduleServiceImpl implements DutyScheduleService {
                 if (syncData.getStudentIds() != null && !syncData.getStudentIds().isEmpty()) {
                     try {
                         ensureAttendancePlanForDuty(scheduleId, syncData, isNewSchedule);
-                        log.info("【简化版】为值班安排 {} 确保了考勤计划，涉及 {} 名学生", scheduleId, syncData.getStudentIds().size());
+                        log.info(" 为值班安排 {} 确保了考勤计划，涉及 {} 名学生", scheduleId, syncData.getStudentIds().size());
                                     } catch (Exception e) {
-                        log.error("【简化版】为值班安排 {} 处理考勤计划失败，但不影响值班安排保存: {}", scheduleId, e.getMessage());
+                        log.error(" 为值班安排 {} 处理考勤计划失败，但不影响值班安排保存: {}", scheduleId, e.getMessage());
                         // 不重新抛出异常，避免影响值班安排的保存
                     }
                 }
@@ -450,7 +450,7 @@ public class DutyScheduleServiceImpl implements DutyScheduleService {
                 successCount++;
                 
             } catch (Exception e) {
-                log.error("【简化版】同步单条数据失败: {}", syncData, e);
+                log.error(" 同步单条数据失败: {}", syncData, e);
             }
         }
 
@@ -560,17 +560,17 @@ public class DutyScheduleServiceImpl implements DutyScheduleService {
             
             if (existingPlanId == null) {
                 // 没有考勤计划，创建新的
-                log.info("【简化版】值班安排 {} 没有考勤计划，开始创建", scheduleId);
+                log.info(" 值班安排 {} 没有考勤计划，开始创建", scheduleId);
                 createNewAttendancePlan(scheduleId, syncData);
             } else {
                 // 已有考勤计划，同步考勤记录（删除多余，添加缺失）
-                log.info("【简化版】值班安排 {} 已有考勤计划 {}，同步考勤记录", scheduleId, existingPlanId);
+                log.info(" 值班安排 {} 已有考勤计划 {}，同步考勤记录", scheduleId, existingPlanId);
                 Map<String, Object> syncResult = attendanceService.syncAttendanceRecordsForDuty(existingPlanId, syncData.getStudentIds());
-                log.info("【简化版】考勤记录同步结果: {}", syncResult.get("message"));
+                log.info(" 考勤记录同步结果: {}", syncResult.get("message"));
             }
             
         } catch (Exception e) {
-            log.error("【简化版】为值班安排 {} 处理考勤计划失败", scheduleId, e);
+            log.error(" 为值班安排 {} 处理考勤计划失败", scheduleId, e);
             // 独立事务，异常不会影响主事务
             throw new RuntimeException("考勤计划处理失败: " + e.getMessage(), e);
         }

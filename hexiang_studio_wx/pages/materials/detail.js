@@ -1,5 +1,7 @@
 // pages/materials/detail.js
 const { BASE_URL } = require('../../config/index');
+const { http } = require('../../utils/request');
+const storage = require('../../utils/storage');
 const { previewFile, downloadFile, getFileTypeIcon, formatFileSize } = require('../../utils/fileHelper');
 
 Page({
@@ -46,9 +48,9 @@ Page({
 
   // 加载用户信息
   loadUserInfo: function() {
-    const userInfo = wx.getStorageSync('userInfo');
-    const roleId = wx.getStorageSync('roleId');
-    const userId = wx.getStorageSync('userId');
+    const userInfo = storage.getUserInfo();
+    const roleId = userInfo && userInfo.positionId ? userInfo.positionId : null;
+    const userId = userInfo && userInfo.userId ? userInfo.userId : null;
     
     this.setData({
       currentUser: userInfo,
@@ -60,70 +62,38 @@ Page({
 
   // 加载分类列表
   loadCategories: function() {
-    wx.request({
-      url: `${BASE_URL}/wx/material/categories`,
-      method: 'GET',
-      header: {
-        'Authorization': 'Bearer ' + wx.getStorageSync('token')
-      },
-      success: (res) => {
-        console.log('详情页分类接口返回:', res.data);
-        if (res.data && (res.data.code === 200 || res.data.code === 1)) {
-          const categories = res.data.data || [];
-          console.log('详情页分类数据:', categories);
-          this.setData({
-            categories
-          });
-        } else {
-          console.error('详情页分类接口返回错误:', res.data);
-        }
-      },
-      fail: (error) => {
+    http.get('/wx/material/categories')
+      .then((res) => {
+        const categories = res.data || [];
+        this.setData({ categories });
+      })
+      .catch((error) => {
         console.error('详情页加载分类失败:', error);
-      }
-    });
+      });
   },
 
   // 加载资料详情
   loadMaterialDetail: function() {
     this.setData({ loading: true, error: false });
     
-    wx.request({
-      url: `${BASE_URL}/wx/material/detail/${this.materialId}`,
-      method: 'GET',
-      header: {
-        'Authorization': 'Bearer ' + wx.getStorageSync('token')
-      },
-      success: (res) => {
-        if (res.data && (res.data.code === 200 || res.data.code === 1)) {
-          const material = this.processMaterialData(res.data.data);
-          
-          this.setData({
-            material,
-            canEdit: this.data.isAdmin || (material.uploaderId === this.currentUserId)
-          });
-          
-          // 设置页面标题
-          wx.setNavigationBarTitle({
-            title: material.fileName
-          });
-          
-          // 加载相关资料
-          this.loadRelatedMaterials();
-          
-        } else {
-          this.showError('加载失败', res.data.msg || '资料不存在或无权限访问');
-        }
-      },
-      fail: (error) => {
+    http.get('/wx/material/detail/' + this.materialId)
+      .then((res) => {
+        const material = this.processMaterialData(res.data);
+        this.setData({
+          material,
+          canEdit: this.data.isAdmin || (material.uploaderId === this.currentUserId)
+        });
+        wx.setNavigationBarTitle({ title: material.fileName });
+        this.loadRelatedMaterials();
+      })
+      .catch((error) => {
         console.error('加载资料详情失败:', error);
         this.showError('网络错误', '请检查网络连接后重试');
-      },
-      complete: () => {
+      })
+      .finally(() => {
         this.setData({ loading: false });
         wx.stopPullDownRefresh();
-      }
-    });
+      });
   },
 
   // 处理资料数据
@@ -179,31 +149,21 @@ Page({
     
     console.log('加载相关资料，参数:', params);
     
-    wx.request({
-      url: `${BASE_URL}/wx/material/related`,
-      method: 'GET',
-      data: params,
-      header: {
-        'Authorization': 'Bearer ' + wx.getStorageSync('token')
-      },
-      success: (res) => {
-        if (res.data && (res.data.code === 200 || res.data.code === 1)) {
-          const relatedMaterials = (res.data.data.records || []).map(item => ({
-            ...item,
-            fileTypeIcon: getFileTypeIcon(item.fileType),
-            formattedSize: formatFileSize(item.fileSize)
-          }));
-          
-          this.setData({ relatedMaterials });
-        }
-      },
-      fail: (error) => {
+    http.get('/wx/material/related', params, { showLoading: false })
+      .then((res) => {
+        const relatedMaterials = (res.data.records || []).map(item => ({
+          ...item,
+          fileTypeIcon: getFileTypeIcon(item.fileType),
+          formattedSize: formatFileSize(item.fileSize)
+        }));
+        this.setData({ relatedMaterials });
+      })
+      .catch((error) => {
         console.error('加载相关资料失败:', error);
-      },
-      complete: () => {
+      })
+      .finally(() => {
         this.setData({ loadingRelated: false });
-      }
-    });
+      });
   },
 
   // 预览资料
@@ -285,13 +245,8 @@ Page({
       title: '删除中...'
     });
     
-    wx.request({
-      url: `${BASE_URL}/wx/material/delete/${this.materialId}`,
-      method: 'DELETE',
-      header: {
-        'Authorization': 'Bearer ' + wx.getStorageSync('token')
-      },
-      success: (res) => {
+    http.delete('/wx/material/delete/' + this.materialId, { showLoading: false })
+      .then((res) => {
         if (res.data && (res.data.code === 200 || res.data.code === 1)) {
           wx.showToast({
             title: '删除成功',
@@ -308,18 +263,17 @@ Page({
             icon: 'none'
           });
         }
-      },
-      fail: (error) => {
+      })
+      .catch((error) => {
         console.error('删除资料失败:', error);
         wx.showToast({
           title: '网络错误',
           icon: 'none'
         });
-      },
-      complete: () => {
+      })
+      .finally(() => {
         wx.hideLoading();
-      }
-    });
+      });
   },
 
   // 查看相关资料
@@ -356,33 +310,20 @@ Page({
 
   // 记录资料查看
   recordMaterialView: function() {
-    wx.request({
-      url: `${BASE_URL}/wx/material/view/${this.materialId}`,
-      method: 'POST',
-      header: {
-        'Authorization': 'Bearer ' + wx.getStorageSync('token')
-      },
-      success: (res) => {
-        console.log('记录查看成功:', res.data);
-      },
-      fail: (error) => {
+    http.post('/wx/material/view/' + this.materialId, {}, { showLoading: false, showError: false })
+      .then((res) => {
+        console.log('记录查看成功:', res);
+      })
+      .catch((error) => {
         console.error('记录查看失败:', error);
-      }
-    });
+      });
   },
 
   // 记录资料下载
   recordMaterialDownload: function() {
-    wx.request({
-      url: `${BASE_URL}/wx/material/download/${this.materialId}`,
-      method: 'POST',
-      header: {
-        'Authorization': 'Bearer ' + wx.getStorageSync('token')
-      },
-      success: (res) => {
-        console.log('记录下载成功:', res.data);
-        
-        // 更新下载次数显示
+    http.post('/wx/material/download/' + this.materialId, {}, { showLoading: false, showError: false })
+      .then((res) => {
+        console.log('记录下载成功:', res);
         const material = this.data.material;
         if (material) {
           this.setData({
@@ -392,11 +333,10 @@ Page({
             }
           });
         }
-      },
-      fail: (error) => {
+      })
+      .catch((error) => {
         console.error('记录下载失败:', error);
-      }
-    });
+      });
   },
 
   // 返回上一页

@@ -110,7 +110,7 @@ public class UserAchievementServiceImpl implements UserAchievementService {
             if (!filePath.isEmpty()) {
                 FileUtils.deleteFile(filePath);
             }
-            log.error("添加用户荣誉时保存文件失败, 回滚文件", e);
+            log.error("添加用户荣誉时保存文件失败", e);
             throw new BusinessException("数据保存失败, 请重试");
         }
     }
@@ -224,7 +224,7 @@ public class UserAchievementServiceImpl implements UserAchievementService {
             if (!filePath.isEmpty()) {
                 FileUtils.deleteFile(filePath);
             }
-            log.error("添加用户证书时保存文件失败, 回滚文件", e);
+            log.error("添加用户证书时保存文件失败", e);
             throw new BusinessException("数据保存失败, 请重试");
         }
     }
@@ -283,7 +283,7 @@ public class UserAchievementServiceImpl implements UserAchievementService {
             if (newFileUploaded) {
                 FileUtils.deleteFile(newImagePath);
             }
-            log.error("更新证书数据失败, 回滚文件", e);
+            log.error("更新证书数据失败", e);
             throw new BusinessException("数据更新失败, 请重试");
         }
     }

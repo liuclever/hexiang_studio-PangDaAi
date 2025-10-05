@@ -8,9 +8,10 @@ import com.back_hexiang_studio.dv.dto.AttendancePlanDto;
 import com.back_hexiang_studio.dv.dto.AttendanceQueryDto;
 import com.back_hexiang_studio.result.PageResult;
 import com.back_hexiang_studio.result.Result;
-import com.back_hexiang_studio.service.AttendanceService;
-import com.back_hexiang_studio.service.ActivityReservationService;
+
 import com.back_hexiang_studio.GlobalException.BusinessException;
+import com.back_hexiang_studio.service.ActivityReservationService;
+import com.back_hexiang_studio.service.AttendanceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 管理员考勤控制器
+ * 考勤控制器
  * 权限：超级管理员或只有副主任、主任可以访问
  */
 @Slf4j
@@ -74,21 +75,11 @@ public class AttendanceController {
             // 设置默认状态值为有效(1)
             if (planDto.getStatus() == null) {
                 planDto.setStatus(1);
-                log.info("设置默认状态值为1");
             }
-            
-            // 检查用户ID并设置默认值
+
             if (planDto.getCreateUser() == null) {
-                // 尝试从UserContextHolder获取
                 Long userId = com.back_hexiang_studio.context.UserContextHolder.getCurrentId();
                 log.info("从UserContextHolder获取用户ID: {}", userId);
-                
-                if (userId == null) {
-                    // 如果无法获取，则设置默认值
-                    userId = 1L;
-                    log.info("设置默认用户ID: {}", userId);
-                }
-                
                 planDto.setCreateUser(userId);
             }
             

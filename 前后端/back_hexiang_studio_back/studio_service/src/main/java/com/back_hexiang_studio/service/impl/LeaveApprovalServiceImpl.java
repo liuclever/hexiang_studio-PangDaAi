@@ -127,7 +127,7 @@ public class LeaveApprovalServiceImpl implements LeaveApprovalService {
             pageInfo.getPages()
         );
 
-        // 🔧 优化：降级为DEBUG，减少频繁查询的日志输出
+
         log.debug("请假申请查询完成: 总数={}, 当前页数据={}", pageInfo.getTotal(), pageInfo.getList().size());
         
         // 暂时注释缓存逻辑

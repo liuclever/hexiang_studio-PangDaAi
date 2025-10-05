@@ -112,6 +112,13 @@
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-spring-boot-starter</artifactId>
+            <exclusions>
+                <!-- 避免HTTP客户端冲突：排除JDK HTTP客户端 -->
+                <exclusion>
+                    <groupId>dev.langchain4j</groupId>
+                    <artifactId>langchain4j-http-client-jdk</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         
         <!-- OpenAI Spring Boot Starter (支持通义千问兼容接口) -->
@@ -146,6 +153,34 @@
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
         </dependency>
+
+
+        <!-- Hutool工具库 - 验证码功能 -->
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-captcha</artifactId>
+        </dependency>
+
+        <!-- Hutool核心包 -->
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-core</artifactId>
+        </dependency>
+
+        <!-- 阿里云邮件推送SDK -->
+        <dependency>
+            <groupId>com.aliyun</groupId>
+            <artifactId>dm20151123</artifactId>
+        </dependency>
+
+        <!-- Spring Boot 邮件支持（自动包含所有Jakarta Mail依赖） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
+
+
     </dependencies>
     
     <build>

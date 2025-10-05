@@ -20,8 +20,8 @@ Page({
     },
     // 图表数据
     chartData: {
-      labels: ['01/01', '01/02', '01/03', '01/04', '01/05'],
-      values: [65, 78, 82, 75, 90]
+      labels: [],
+      values: []
     },
     // 审批统计数据
     approvalStats: {
@@ -42,7 +42,7 @@ Page({
     // 模块导航
     modules: [
       { id: 'course', name: '课程管理', icon: '/images/icons/course.png' },
-      { id: 'user', name: '人员管理', icon: '/images/icons/user.png' },
+      { id: 'user', name: '人员管理', icon: '/images/icons/default-avatar.png' },
       { id: 'task', name: '任务管理', icon: '/images/icons/task.png' },
       { id: 'approval', name: '审批管理', icon: '/images/icons/approval.png' },
       { id: 'achievement', name: '奖章管理', icon: '/images/icons/achievement.png' },
@@ -52,7 +52,11 @@ Page({
       { id: 'schedule', name: '值班表', icon: '/images/icons/schedule.png' }
     ],
     // 页面是否准备就绪
-    isReady: false
+    isReady: false,
+    // 计算说明弹窗
+    showCalculationModal: false,
+    // 是否有图表数据
+    hasChartData: false
   },
 
   /**
@@ -95,8 +99,10 @@ Page({
       }
     }
     
-    // 设置TabBar选中状态为工作台（索引1）
+    // 设置TabBar选中状态为工作台（索引1）并更新角色
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      const currentRole = getUserRole();
+      this.getTabBar().updateRole(currentRole);
       this.getTabBar().updateSelected(1);
     }
   },
@@ -163,27 +169,81 @@ Page({
       .then(res => {
         console.log('活跃度趋势数据:', res.data);
         
-        if (res.data && res.data.labels && res.data.values) {
+        if (res.data && res.data.labels && res.data.values && res.data.labels.length > 0) {
           this.setData({
             'chartData.labels': res.data.labels,
-            'chartData.values': res.data.values
+            'chartData.values': res.data.values,
+            hasChartData: true
+          });
+          // 数据加载完成后绘制图表
+          this.drawLineChart();
+        } else {
+          // 无数据
+          this.setData({
+            hasChartData: false
           });
         }
-        
-        // 数据加载完成后绘制图表
-        this.drawLineChart();
       })
       .catch(err => {
         console.error('获取活跃度趋势失败:', err);
-        // 使用默认数据绘制图表
-        this.drawLineChart();
+        // 不使用假数据，保持空状态
+        this.setData({
+          hasChartData: false
+        });
       });
+  },
+
+  /**
+   * 显示计算说明
+   */
+  showCalculationInfo() {
+    this.setData({
+      showCalculationModal: true
+    });
+  },
+
+  /**
+   * 隐藏计算说明
+   */
+  hideCalculationModal() {
+    this.setData({
+      showCalculationModal: false
+    });
+    // 关闭弹窗后，若有图表数据则重新绘制
+    if (this.data.hasChartData) {
+      setTimeout(() => {
+        this.drawLineChart();
+      }, 50);
+    }
+  },
+
+  /**
+   * 处理弹窗显示状态变化
+   */
+  onCalculationModalChange(e) {
+    const visible = e.detail.visible;
+    this.setData({
+      showCalculationModal: visible
+    });
+    if (!visible && this.data.hasChartData) {
+      // 弹窗关闭后补一次重绘，确保安卓端恢复
+      setTimeout(() => {
+        this.drawLineChart();
+      }, 50);
+    }
   },
 
   /**
    * 绘制折线图（带动画效果）
    */
   drawLineChart() {
+    // 检查是否有数据，无数据时不绘制
+    const { labels, values } = this.data.chartData;
+    if (!labels || !values || labels.length === 0 || values.length === 0) {
+      console.log('没有图表数据，跳过绘制');
+      return;
+    }
+
     const ctx = wx.createCanvasContext('lineChart', this);
     const canvasWidth = 320; // 画布宽度
     const canvasHeight = 150; // 画布高度（增加为X轴标签留空间）
@@ -191,7 +251,6 @@ Page({
     const chartWidth = canvasWidth - padding * 2;
     const chartHeight = canvasHeight - padding * 2;
     
-    const { labels, values } = this.data.chartData;
     const maxValue = Math.max(...values);
     const minValue = Math.min(...values);
     const valueRange = maxValue - minValue || 1;

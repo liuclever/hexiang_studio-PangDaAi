@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 文件验证管理器
+ * 文件验证
  * 集成了配置管理和验证功能
  */
 @Component

@@ -30,8 +30,7 @@ import java.util.Set;
 import java.util.HashSet;
 
 /**
- * 【最终版】用户管理工作流工具
- * 将多步骤的用户管理操作封装成单一、可靠、角色感知的工具。
+ * 用户管理工具
  * AI只需选择正确的工具，无需关心内部执行流程。
  */
 @Service
@@ -66,11 +65,12 @@ public class UserManagementTools {
         keysToDelete.add("user:honors:" + userId);
         keysToDelete.add("user:certificates:" + userId);
         keysToDelete.add("user:activities:" + userId);
-        keysToDelete.add("login:token:" + userId);
+        keysToDelete.add("login:access:" + userId);      // Access Token
+        keysToDelete.add("login:refresh:" + userId);     // Refresh Token
         keysToDelete.add("login:user:" + userId);
 
         redisTemplate.delete(keysToDelete);
-        log.info("🔄 [缓存清理] 清理用户缓存，用户ID: {}, 键数量: {}", userId, keysToDelete.size());
+        log.info("  清理用户缓存，用户ID: {}, 键数量: {}", userId, keysToDelete.size());
     }
 
     /**
@@ -91,12 +91,12 @@ public class UserManagementTools {
             if (keys != null && !keys.isEmpty()) {
                 redisTemplate.delete(keys);
                 totalDeleted += keys.size();
-                log.info("🔄 [缓存清理] 清理用户列表缓存，模式: {}, 键数量: {}", pattern, keys.size());
+                log.info("清理用户列表缓存，模式: {}, 键数量: {}", pattern, keys.size());
             }
         }
 
         if (totalDeleted > 0) {
-            log.info("🔄 [缓存清理] 总共清理了 {} 个用户列表相关缓存键", totalDeleted);
+            log.info(" 总共清理了 {} 个用户列表相关缓存", totalDeleted);
         }
     }
 
@@ -114,7 +114,7 @@ public class UserManagementTools {
             Set<String> keys = redisTemplate.keys(pattern);
             if (keys != null && !keys.isEmpty()) {
                 redisTemplate.delete(keys);
-                log.info("🔄 [缓存清理] 清理全局缓存，模式: {}, 键数量: {}", pattern, keys.size());
+                log.info(" 清理全局缓存，模式: {}, 键数量: {}", pattern, keys.size());
             }
         }
     }
@@ -128,23 +128,23 @@ public class UserManagementTools {
         }
         clearUserListCache();
         clearGlobalUserCache();
-        log.info("🔄 [缓存清理] 完成用户相关缓存清理");
+        log.info(" 完成用户相关缓存清理");
     }
 
     // ====================================================================================
-    // 1. 信息收集与查询工具 (Read-Only)
+    // 1. 信息收集与查询工具
     // ====================================================================================
 
     @Tool("获取创建一个特定角色用户所需的字段列表。当你需要添加一个新用户但不知道需要哪些信息时，首先调用此工具。")
     public String getRequiredFieldsForUser(@P("要查询的角色名称，例如 '学员', '老师', '访客'") String roleName) {
-        log.info("🤖 AI Workflow Tool: 查询角色 '{}' 的必填字段", roleName);
+        log.info(" AI Workflow Tool: 查询角色 '{}' 的必填字段", roleName);
         if (roleName == null || roleName.trim().isEmpty()) {
-            return "❌ 角色名称不能为空。请输入 '学员', '老师', 或 '访客'。";
+            return " 角色名称不能为空。请输入 '学员', '老师', 或 '访客'。";
         }
 
         switch (roleName.trim()) {
             case "学员":
-                return "📝 要创建一个新的【学员】，你需要提供以下信息：\n" +
+                return " 要创建一个新的【学员】，你需要提供以下信息：\n" +
                         "【基本信息】\n" +
                         "- 姓名 (必填)\n" +
                         "- 性别 (必填: '男' 或 '女')\n" +
@@ -156,7 +156,7 @@ public class UserManagementTools {
                         "- 专业班级 (例如 '软件工程2201')\n" +
                         "- 辅导员姓名 (可选)";
             case "老师":
-                return "📝 要创建一个新的【老师】，你需要提供以下信息：\n" +
+                return " 要创建一个新的【老师】，你需要提供以下信息：\n" +
                         "【基本信息】\n" +
                         "- 姓名 (必填)\n" +
                         "- 性别 (必填: '男' 或 '女')\n" +
@@ -166,20 +166,20 @@ public class UserManagementTools {
                         "- 职称 (例如 '教授', '讲师', 可选)\n" +
                         "- 研究方向 (可选)";
             case "访客":
-                return "📝 要创建一个新的【访客】，你需要提供以下基本信息：\n" +
+                return " 要创建一个新的【访客】，你需要提供以下基本信息：\n" +
                         "【基本信息】\n" +
                         "- 姓名 (必填)\n" +
                         "- 性别 (必填: '男' 或 '女')\n" +
                         "- 手机号 (必填)\n" +
                         "- 邮箱 (必填)";
             default:
-                return "❌ 未知的角色: '" + roleName + "'。目前只支持 '学员', '老师', 和 '访客'。";
+                return " 未知的角色: '" + roleName + "'。目前只支持 '学员', '老师', 和 '访客'。";
         }
     }
 
-    @Tool("查询指定用户的完整档案信息，包括基本信息、角色、职位，以及学籍或教师信息（如果适用）。")
+    @Tool("查询指定用户的完整档案信息，包括基本信息、角色、职位，以及学籍或教师信息。")
     public String findUser(@P("要查询的用户的准确姓名") String userName) {
-        log.info("🤖 AI Workflow Tool: 查询用户 '{}' 的完整档案", userName);
+        log.info(" AI Workflow Tool: 查询用户 '{}' 的完整档案", userName);
         String sql = "SELECT u.user_id, u.name, u.sex, u.phone, u.email, u.create_time, " +
                      "r.role_name, p.position_name, " +
                      "s.student_number, s.grade_year, s.majorClass, s.counselor, d.department_name, " +
@@ -194,7 +194,7 @@ public class UserManagementTools {
         try {
             Map<String, Object> userMap = jdbcTemplate.queryForMap(sql, userName);
 
-            StringBuilder profile = new StringBuilder("👤 用户档案: " + userMap.get("name") + "\n");
+            StringBuilder profile = new StringBuilder(" 用户档案: " + userMap.get("name") + "\n");
             profile.append("------------------------\n");
             profile.append("基本信息:\n");
             profile.append("  - 性别: ").append("1".equals(userMap.get("sex").toString()) ? "男" : "女").append("\n");
@@ -225,37 +225,36 @@ public class UserManagementTools {
             return profile.toString();
 
         } catch (EmptyResultDataAccessException e) {
-            return "❌ 未找到名为 '" + userName + "' 的用户。";
+            return " 未找到名为 '" + userName + "' 的用户。";
         } catch (Exception e) {
-            log.error("❌ 查询用户 '{}' 档案时出错: {}", userName, e.getMessage(), e);
-            return "❌ 查询用户信息时发生内部错误。";
+            log.error(" 查询用户 '{}' 档案时出错: {}", userName, e.getMessage(), e);
+            return " 查询用户信息时发生内部错误。";
         }
     }
 
     @Tool("查询当前登录用户（“我”）的完整个人档案信息。")
     public String getCurrentUserProfile(@P("当前用户的ID，这个ID由系统在后台自动提供，AI需要直接传递它") Long currentUserId) {
         if (currentUserId == null) {
-            log.warn("👤 getCurrentUserProfile: 调用时未提供currentUserId。");
+            log.warn(" getCurrentUserProfile: 调用时未提供currentUserId。");
             return "错误：调用工具时currentUserId为空。请直接回复用户：“抱歉，系统内部错误，我暂时无法获取您的信息。”";
         }
 
-        log.info("👤 正在查询当前用户个人档案, User ID: {}", currentUserId);
+        log.info(" 正在查询当前用户个人档案, User ID: {}", currentUserId);
         try {
             String userName = jdbcTemplate.queryForObject("SELECT name FROM user WHERE user_id = ?", String.class, currentUserId);
-            // 复用findUser逻辑，保持代码 DRY (Don't Repeat Yourself)
             return findUser(userName);
         } catch (EmptyResultDataAccessException e) {
-            log.warn("👤 未找到ID为 {} 的用户。", currentUserId);
+            log.warn(" 未找到ID为 {} 的用户。", currentUserId);
             return "错误：未在数据库中找到您的用户信息。请联系管理员核实您的账户是否正确。";
         } catch (Exception e) {
-            log.error("❌ 查询当前用户档案时发生未知错误, User ID: {}", currentUserId, e);
+            log.error(" 查询当前用户档案时发生未知错误, User ID: {}", currentUserId, e);
             return "错误：查询您的档案时系统出现意外，请稍后再试。";
         }
     }
 
     @Tool("查询并列出工作室所有成员的名单，按角色分组显示。")
     public String listAllUsers() {
-        log.info("🤖 AI Workflow Tool: 列出所有工作室成员");
+        log.info(" 列出所有工作室成员");
         String sql = "SELECT u.name, u.sex, r.role_name " +
                      "FROM user u " +
                      "JOIN role r ON u.role_id = r.role_id " +
@@ -279,8 +278,8 @@ public class UserManagementTools {
 
             return result.toString();
         } catch (Exception e) {
-            log.error("❌ 列出所有用户时出错: {}", e.getMessage(), e);
-            return "❌ 获取成员列表时发生内部错误。";
+            log.error(" 列出所有用户时出错: {}", e.getMessage(), e);
+            return " 获取成员列表时发生内部错误。";
         }
     }
 
@@ -291,17 +290,17 @@ public class UserManagementTools {
 
     @Tool("查询当前可用的培训方向列表，供创建学员和老师时选择")
     public String getAvailableTrainingDirections(@P("当前用户的ID") Long currentUserId) {
-        log.info("🤖 AI Workflow Tool: 查询可用培训方向");
+        log.info("  AI Workflow Tool: 查询可用培训方向");
         
         try {
             String sql = "SELECT direction_id, direction_name, description FROM training_direction ORDER BY direction_id";
             List<Map<String, Object>> directions = jdbcTemplate.queryForList(sql);
             
             if (directions.isEmpty()) {
-                return "❌ 当前系统中没有配置培训方向，请联系管理员添加。";
+                return " 当前系统中没有配置培训方向，请联系管理员添加。";
             }
             
-            StringBuilder result = new StringBuilder("📚 当前可用的培训方向：\n\n");
+            StringBuilder result = new StringBuilder(" 当前可用的培训方向：\n\n");
             for (Map<String, Object> direction : directions) {
                 Long directionId = direction.get("direction_id") instanceof BigInteger ?
                     ((BigInteger) direction.get("direction_id")).longValue() : (Long) direction.get("direction_id");
@@ -314,28 +313,28 @@ public class UserManagementTools {
                       .append("\n");
             }
             
-            result.append("\n💡 在创建学员/老师时，请输入对应的数字编号（如：1）");
+            result.append("\n 在创建学员/老师时，请输入对应的数字编号（如：1）");
             return result.toString();
             
         } catch (Exception e) {
-            log.error("❌ 查询培训方向失败: {}", e.getMessage(), e);
-            return "❌ 查询培训方向时发生错误，请稍后重试。";
+            log.error(" 查询培训方向失败: {}", e.getMessage(), e);
+            return " 查询培训方向时发生错误，请稍后重试。";
         }
     }
 
     @Tool("查询当前可用的职位列表，供创建用户时选择")
     public String getAvailablePositions(@P("当前用户的ID") Long currentUserId) {
-        log.info("🤖 AI Workflow Tool: 查询可用职位");
+        log.info("  AI Workflow Tool: 查询可用职位");
         
         try {
             String sql = "SELECT position_id, role, position_name FROM position ORDER BY position_id";
             List<Map<String, Object>> positions = jdbcTemplate.queryForList(sql);
             
             if (positions.isEmpty()) {
-                return "❌ 当前系统中没有配置职位，请联系管理员添加。";
+                return " 当前系统中没有配置职位，请联系管理员添加。";
             }
             
-            StringBuilder result = new StringBuilder("💼 当前可用的职位：\n\n");
+            StringBuilder result = new StringBuilder(" 当前可用的职位：\n\n");
             
             // 按角色分组显示
             Map<String, List<Map<String, Object>>> positionsByRole = new LinkedHashMap<>();
@@ -368,12 +367,12 @@ public class UserManagementTools {
                 result.append("\n");
             }
             
-            result.append("💡 在创建用户时，请输入对应的数字编号（如：1）");
+            result.append(" 在创建用户时，请输入对应的数字编号（如：1）");
             return result.toString();
             
         } catch (Exception e) {
-            log.error("❌ 查询职位失败: {}", e.getMessage(), e);
-            return "❌ 查询职位时发生错误，请稍后重试。";
+            log.error(" 查询职位失败: {}", e.getMessage(), e);
+            return " 查询职位时发生错误，请稍后重试。";
         }
     }
 
@@ -393,44 +392,44 @@ public class UserManagementTools {
             @P("辅导员姓名 (可选，留空则不设置)") String counselor,
             @P("当前用户的ID，这个ID由系统在后台自动提供，AI需要直接传递它") Long currentUserId
     ) {
-        log.info("🤖 AI Workflow Tool: 开始执行'创建学员'工作流, 学员姓名: {}, 用户名: {}", name, userName);
+        log.info("  AI Workflow Tool: 开始执行'创建学员'工作流, 学员姓名: {}, 用户名: {}", name, userName);
         if (!permissionService.canManageUsers(currentUserId)) {
             return permissionService.getUserManagementPermissionInfo(currentUserId);
         }
         if (!StringUtils.hasText(name) || !StringUtils.hasText(userName) || 
             !StringUtils.hasText(phone) || !StringUtils.hasText(email) || !StringUtils.hasText(studentNumber) || 
             directionId == null || positionId == null) {
-            return "❌ 操作失败: 姓名、用户名、手机号、邮箱、学号、培训方向和职位是必填项。";
+            return " 操作失败: 姓名、用户名、手机号、邮箱、学号、培训方向和职位是必填项。";
         }
         try {
-            // 🔧 验证培训方向ID是否有效
+            //  验证培训方向ID是否有效
             int directionCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM training_direction WHERE direction_id = ?", Integer.class, directionId);
             if (directionCount == 0) {
-                return "❌ 创建失败: 培训方向ID '" + directionId + "' 不存在。请先使用getAvailableTrainingDirections查询有效的培训方向。";
+                return " 创建失败: 培训方向ID '" + directionId + "' 不存在。请先使用getAvailableTrainingDirections查询有效的培训方向。";
             }
             
-            // 🔧 验证职位ID是否有效
+            //  验证职位ID是否有效
             int positionCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM position WHERE position_id = ?", Integer.class, positionId);
             if (positionCount == 0) {
-                return "❌ 创建失败: 职位ID '" + positionId + "' 不存在。请先使用getAvailablePositions查询有效的职位。";
+                return " 创建失败: 职位ID '" + positionId + "' 不存在。请先使用getAvailablePositions查询有效的职位。";
             }
             
-            // 🔧 检查用户名、姓名、手机号、邮箱是否已存在
+            //  检查用户名、姓名、手机号、邮箱是否已存在
             if (jdbcTemplate.queryForObject("SELECT COUNT(*) FROM user WHERE user_name = ?", Integer.class, userName) > 0) {
-                return "❌ 创建失败: 用户名 '" + userName + "' 已被占用。";
+                return " 创建失败: 用户名 '" + userName + "' 已被占用。";
             }
             if (jdbcTemplate.queryForObject("SELECT COUNT(*) FROM user WHERE name = ? OR phone = ? OR email = ?", Integer.class, name, phone, email) > 0) {
-                return "❌ 创建失败: 姓名、手机号或邮箱已被占用。";
+                return " 创建失败: 姓名、手机号或邮箱已被占用。";
             }
             if (jdbcTemplate.queryForObject("SELECT COUNT(*) FROM student WHERE student_number = ?", Integer.class, studentNumber) > 0) {
-                return "❌ 创建失败: 学号 '" + studentNumber + "' 已被占用。";
+                return " 创建失败: 学号 '" + studentNumber + "' 已被占用。";
             }
 
-            // 🔧 使用默认密码123456并进行MD5加密
+            //  使用默认密码123456并进行MD5加密
             String defaultPassword = "123456";
             String encryptedPassword = encryptMD5(defaultPassword);
             
-            // 🔧 修正SQL语句，添加完整字段
+            //  修正SQL语句，添加完整字段
             String insertUserSql = "INSERT INTO user (user_name, name, sex, phone, email, password, role_id, position_id, status, create_time, update_time, createUser, updateUser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, '1', NOW(), NOW(), ?, ?)";
             KeyHolder keyHolder = new GeneratedKeyHolder();
             final String sexValue = "男".equals(sex) ? "1" : "0";
@@ -455,26 +454,26 @@ public class UserManagementTools {
             String insertStudentSql = "INSERT INTO student (user_id, student_number, grade_year, majorClass, direction_id, counselor) VALUES (?, ?, ?, ?, ?, ?)";
             jdbcTemplate.update(insertStudentSql, newUserId, studentNumber, gradeYear, majorClass, directionId, counselor);
 
-            // 🔧 获取培训方向和职位名称用于显示
+            //  获取培训方向和职位名称用于显示
             String directionName = jdbcTemplate.queryForObject("SELECT direction_name FROM training_direction WHERE direction_id = ?", String.class, directionId);
             String positionName = jdbcTemplate.queryForObject("SELECT position_name FROM position WHERE position_id = ?", String.class, positionId);
 
-            log.info("✅ 学员 '{}' (用户名: {}, User ID: {}) 创建成功。", name, userName, newUserId);
+            log.info(" 学员 '{}' (用户名: {}, User ID: {}) 创建成功。", name, userName, newUserId);
             
             // 清理缓存以确保数据一致性
             performCompleteUserCacheClear(newUserId);
             
-            return "✅ 学员 '" + name + "' 的档案已成功创建！\n" +
-                   "📋 账户信息：\n" +
+            return " 学员 '" + name + "' 的档案已成功创建！\n" +
+                   " 账户信息：\n" +
                    "   • 用户名：" + userName + "\n" +
                    "   • 密码：123456（默认密码）\n" +
                    "   • 学号：" + studentNumber + "\n" +
                    "   • 培训方向：" + directionName + "\n" +
                    "   • 职位：" + positionName + "\n" +
-                   "📢 请提醒学员尽快登录并修改密码。";
+                   " 请提醒学员尽快登录并修改密码。";
         } catch (Exception e) {
-            log.error("❌ 执行'创建学员'工作流时发生错误: {}", e.getMessage(), e);
-            return "❌ 创建学员时发生系统内部错误，操作已取消。";
+            log.error(" 执行'创建学员'工作流时发生错误: {}", e.getMessage(), e);
+            return " 创建学员时发生系统内部错误，操作已取消。";
         }
     }
 
@@ -523,40 +522,40 @@ public class UserManagementTools {
             @P("办公室位置 (可选，留空则不设置)") String officeLocation,
             @P("当前用户的ID，这个ID由系统在后台自动提供，AI需要直接传递它") Long currentUserId
     ) {
-        log.info("🤖 AI Workflow Tool: 开始执行'创建老师'工作流, 老师姓名: {}, 用户名: {}", name, userName);
+        log.info("  AI Workflow Tool: 开始执行'创建老师'工作流, 老师姓名: {}, 用户名: {}", name, userName);
         if (!permissionService.canManageUsers(currentUserId)) {
             return permissionService.getUserManagementPermissionInfo(currentUserId);
         }
         if (!StringUtils.hasText(name) || !StringUtils.hasText(userName) || 
             !StringUtils.hasText(phone) || !StringUtils.hasText(email) || directionId == null || positionId == null) {
-            return "❌ 操作失败: 姓名、用户名、手机号、邮箱、培训方向和职位是必填项。";
+            return " 操作失败: 姓名、用户名、手机号、邮箱、培训方向和职位是必填项。";
         }
         try {
-            // 🔧 验证培训方向ID是否有效
+            //  验证培训方向ID是否有效
             int directionCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM training_direction WHERE direction_id = ?", Integer.class, directionId);
             if (directionCount == 0) {
-                return "❌ 创建失败: 培训方向ID '" + directionId + "' 不存在。请先使用getAvailableTrainingDirections查询有效的培训方向。";
+                return " 创建失败: 培训方向ID '" + directionId + "' 不存在。请先使用getAvailableTrainingDirections查询有效的培训方向。";
             }
             
-            // 🔧 验证职位ID是否有效
+            //  验证职位ID是否有效
             int positionCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM position WHERE position_id = ?", Integer.class, positionId);
             if (positionCount == 0) {
-                return "❌ 创建失败: 职位ID '" + positionId + "' 不存在。请先使用getAvailablePositions查询有效的职位。";
+                return " 创建失败: 职位ID '" + positionId + "' 不存在。请先使用getAvailablePositions查询有效的职位。";
             }
             
-            // 🔧 检查用户名、姓名、手机号、邮箱是否已存在
+            //  检查用户名、姓名、手机号、邮箱是否已存在
             if (jdbcTemplate.queryForObject("SELECT COUNT(*) FROM user WHERE user_name = ?", Integer.class, userName) > 0) {
-                return "❌ 创建失败: 用户名 '" + userName + "' 已被占用。";
+                return " 创建失败: 用户名 '" + userName + "' 已被占用。";
             }
             if (jdbcTemplate.queryForObject("SELECT COUNT(*) FROM user WHERE name = ? OR phone = ? OR email = ?", Integer.class, name, phone, email) > 0) {
-                return "❌ 创建失败: 姓名、手机号或邮箱已被占用。";
+                return " 创建失败: 姓名、手机号或邮箱已被占用。";
             }
 
-            // 🔧 使用默认密码123456并进行MD5加密
+            //  使用默认密码123456并进行MD5加密
             String defaultPassword = "123456";
             String encryptedPassword = encryptMD5(defaultPassword);
             
-            // 🔧 修正SQL语句，添加完整字段
+            //  修正SQL语句，添加完整字段
             String insertUserSql = "INSERT INTO user (user_name, name, sex, phone, email, password, role_id, position_id, status, create_time, update_time, createUser, updateUser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, '1', NOW(), NOW(), ?, ?)";
             KeyHolder keyHolder = new GeneratedKeyHolder();
             final String sexValue = "男".equals(sex) ? "1" : "0";
@@ -581,26 +580,26 @@ public class UserManagementTools {
             String insertTeacherSql = "INSERT INTO teacher (user_id, direction_id, title, office_location) VALUES (?, ?, ?, ?)";
             jdbcTemplate.update(insertTeacherSql, newUserId, directionId, title, officeLocation);
 
-            // 🔧 获取培训方向和职位名称用于显示
+            //  获取培训方向和职位名称用于显示
             String directionName = jdbcTemplate.queryForObject("SELECT direction_name FROM training_direction WHERE direction_id = ?", String.class, directionId);
             String positionName = jdbcTemplate.queryForObject("SELECT position_name FROM position WHERE position_id = ?", String.class, positionId);
 
-            log.info("✅ 老师 '{}' (用户名: {}, User ID: {}) 创建成功。", name, userName, newUserId);
+            log.info(" 老师 '{}' (用户名: {}, User ID: {}) 创建成功。", name, userName, newUserId);
             
             // 清理缓存以确保数据一致性
             performCompleteUserCacheClear(newUserId);
             
-            return "✅ 老师 '" + name + "' 的档案已成功创建！\n" +
-                   "📋 账户信息：\n" +
+            return " 老师 '" + name + "' 的档案已成功创建！\n" +
+                   " 账户信息：\n" +
                    "   • 用户名：" + userName + "\n" +
                    "   • 密码：123456（默认密码）\n" +
                    "   • 培训方向：" + directionName + "\n" +
                    "   • 职位：" + positionName + "\n" +
                    "   • 职称：" + (title != null ? title : "未设置") + "\n" +
-                   "📢 请提醒老师尽快登录并修改密码。";
+                   " 请提醒老师尽快登录并修改密码。";
         } catch (Exception e) {
-            log.error("❌ 执行'创建老师'工作流时发生错误: {}", e.getMessage(), e);
-            return "❌ 创建老师时发生系统内部错误，操作已取消。";
+            log.error(" 执行'创建老师'工作流时发生错误: {}", e.getMessage(), e);
+            return " 创建老师时发生系统内部错误，操作已取消。";
         }
     }
 
@@ -615,33 +614,33 @@ public class UserManagementTools {
             @P("职位ID（请先用getAvailablePositions查询可用选项，建议选择访客类职位）") Long positionId,
             @P("当前用户的ID，这个ID由系统在后台自动提供，AI需要直接传递它") Long currentUserId
     ) {
-        log.info("🤖 AI Workflow Tool: 开始执行'创建访客'工作流, 访客姓名: {}, 用户名: {}", name, userName);
+        log.info("  AI Workflow Tool: 开始执行'创建访客'工作流, 访客姓名: {}, 用户名: {}", name, userName);
         if (!permissionService.canManageUsers(currentUserId)) {
             return permissionService.getUserManagementPermissionInfo(currentUserId);
         }
         if (!StringUtils.hasText(name) || !StringUtils.hasText(userName) || !StringUtils.hasText(phone) || !StringUtils.hasText(email) || positionId == null) {
-            return "❌ 操作失败: 姓名、用户名、手机号、邮箱和职位是必填项。";
+            return " 操作失败: 姓名、用户名、手机号、邮箱和职位是必填项。";
         }
         try {
-            // 🔧 验证职位ID是否有效
+            //  验证职位ID是否有效
             int positionCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM position WHERE position_id = ?", Integer.class, positionId);
             if (positionCount == 0) {
-                return "❌ 创建失败: 职位ID '" + positionId + "' 不存在。请先使用getAvailablePositions查询有效的职位。";
+                return " 创建失败: 职位ID '" + positionId + "' 不存在。请先使用getAvailablePositions查询有效的职位。";
             }
             
-            // 🔧 检查用户名、姓名、手机号、邮箱是否已存在
+            //  检查用户名、姓名、手机号、邮箱是否已存在
             if (jdbcTemplate.queryForObject("SELECT COUNT(*) FROM user WHERE user_name = ?", Integer.class, userName) > 0) {
-                return "❌ 创建失败: 用户名 '" + userName + "' 已被占用。";
+                return " 创建失败: 用户名 '" + userName + "' 已被占用。";
             }
             if (jdbcTemplate.queryForObject("SELECT COUNT(*) FROM user WHERE name = ? OR phone = ? OR email = ?", Integer.class, name, phone, email) > 0) {
-                return "❌ 创建失败: 姓名、手机号或邮箱已被占用。";
+                return " 创建失败: 姓名、手机号或邮箱已被占用。";
             }
             
-            // 🔧 使用默认密码123456并进行MD5加密
+            //  使用默认密码123456并进行MD5加密
             String defaultPassword = "123456";
             String encryptedPassword = encryptMD5(defaultPassword);
             
-            // 🔧 修正SQL语句，添加完整字段并获取新用户ID
+            //  修正SQL语句，添加完整字段并获取新用户ID
             String insertUserSql = "INSERT INTO user (user_name, name, sex, phone, email, password, role_id, position_id, status, create_time, update_time, createUser, updateUser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, '1', NOW(), NOW(), ?, ?)";
             final String sexValue = "男".equals(sex) ? "1" : "0";
             final Long visitorRoleId = 0L; // 访客角色ID
@@ -664,23 +663,23 @@ public class UserManagementTools {
             
             Long newUserId = Objects.requireNonNull(keyHolder.getKey()).longValue();
 
-            // 🔧 获取职位名称用于显示
+            //  获取职位名称用于显示
             String positionName = jdbcTemplate.queryForObject("SELECT position_name FROM position WHERE position_id = ?", String.class, positionId);
 
-            log.info("✅ 访客 '{}' (用户名: {}) 创建成功。", name, userName);
+            log.info(" 访客 '{}' (用户名: {}) 创建成功。", name, userName);
             
             // 清理缓存以确保数据一致性
             performCompleteUserCacheClear(newUserId);
             
-            return "✅ 访客 '" + name + "' 的账户已成功创建！\n" +
-                   "📋 账户信息：\n" +
+            return " 访客 '" + name + "' 的账户已成功创建！\n" +
+                   " 账户信息：\n" +
                    "   • 用户名：" + userName + "\n" +
                    "   • 密码：123456（默认密码）\n" +
                    "   • 职位：" + positionName + "\n" +
-                   "📢 请提醒访客尽快登录并修改密码。";
+                   " 请提醒访客尽快登录并修改密码。";
         } catch (Exception e) {
-            log.error("❌ 执行'创建访客'工作流时发生错误: {}", e.getMessage(), e);
-            return "❌ 创建访客时发生系统内部错误，操作已取消。";
+            log.error(" 执行'创建访客'工作流时发生错误: {}", e.getMessage(), e);
+            return " 创建访客时发生系统内部错误，操作已取消。";
         }
     }
 
@@ -696,12 +695,12 @@ public class UserManagementTools {
             @P("新的邮箱 (可选, 不修改则留空)") String newEmail,
             @P("当前用户的ID，这个ID由系统在后台自动提供，AI需要直接传递它") Long currentUserId
     ) {
-        log.info("🤖 AI Workflow Tool: 修改用户 '{}' 的基本信息", userName);
+        log.info("  AI Workflow Tool: 修改用户 '{}' 的基本信息", userName);
         if (!permissionService.canManageUsers(currentUserId)) {
             return permissionService.getUserManagementPermissionInfo(currentUserId);
         }
         if (!StringUtils.hasText(newPhone) && !StringUtils.hasText(newEmail)) {
-            return "🤔 无任何修改内容。请输入新的手机号或邮箱。";
+            return "  无任何修改内容。请输入新的手机号或邮箱。";
         }
         try {
             Long userId = jdbcTemplate.queryForObject("SELECT user_id FROM user WHERE name = ?", Long.class, userName);
@@ -724,15 +723,15 @@ public class UserManagementTools {
             if (result > 0) {
                 // 清理缓存以确保数据一致性
                 performCompleteUserCacheClear(userId);
-                return "✅ 用户 '" + userName + "' 的基本信息已更新。";
+                return " 用户 '" + userName + "' 的基本信息已更新。";
             } else {
-                return "❌ 更新失败: 未找到用户或数据无变化。";
+                return " 更新失败: 未找到用户或数据无变化。";
             }
         } catch (EmptyResultDataAccessException e) {
-            return "❌ 更新失败: 未找到名为 '" + userName + "' 的用户。";
+            return " 更新失败: 未找到名为 '" + userName + "' 的用户。";
         } catch (Exception e) {
-            log.error("❌ 更新用户 '{}' 基本信息时出错: {}", userName, e.getMessage(), e);
-            return "❌ 更新用户基本信息时发生内部错误。";
+            log.error(" 更新用户 '{}' 基本信息时出错: {}", userName, e.getMessage(), e);
+            return " 更新用户基本信息时发生内部错误。";
         }
     }
     
@@ -744,12 +743,12 @@ public class UserManagementTools {
             @P("新的专业班级 (可选, 不修改则留空)") String newMajorClass,
             @P("当前用户的ID，这个ID由系统在后台自动提供，AI需要直接传递它") Long currentUserId
     ) {
-        log.info("🤖 AI Workflow Tool: 修改学员 '{}' 的学籍信息", studentName);
+        log.info("  AI Workflow Tool: 修改学员 '{}' 的学籍信息", studentName);
         if (!permissionService.canManageUsers(currentUserId)) {
             return permissionService.getUserManagementPermissionInfo(currentUserId);
         }
         if (!StringUtils.hasText(newGradeYear) && !StringUtils.hasText(newMajorClass)) {
-            return "🤔 无任何修改内容。请输入新的年级或专业班级。";
+            return "  无任何修改内容。请输入新的年级或专业班级。";
         }
         try {
             Long userId = jdbcTemplate.queryForObject("SELECT user_id FROM user WHERE name = ?", Long.class, studentName);
@@ -772,15 +771,15 @@ public class UserManagementTools {
             if (result > 0) {
                 // 清理缓存以确保数据一致性
                 performCompleteUserCacheClear(userId);
-                return "✅ 学员 '" + studentName + "' 的学籍信息已更新。";
+                return " 学员 '" + studentName + "' 的学籍信息已更新。";
             } else {
-                return "❌ 更新失败: 未找到学员或数据无变化。";
+                return " 更新失败: 未找到学员或数据无变化。";
             }
         } catch (EmptyResultDataAccessException e) {
-            return "❌ 更新失败: 未找到名为 '" + studentName + "' 的学员。";
+            return " 更新失败: 未找到名为 '" + studentName + "' 的学员。";
         } catch (Exception e) {
-            log.error("❌ 更新学员 '{}' 学籍时出错: {}", studentName, e.getMessage(), e);
-            return "❌ 更新学员学籍时发生内部错误。";
+            log.error(" 更新学员 '{}' 学籍时出错: {}", studentName, e.getMessage(), e);
+            return " 更新学员学籍时发生内部错误。";
         }
     }
 
@@ -792,12 +791,12 @@ public class UserManagementTools {
             @P("新的研究方向 (可选, 不修改则留空)") String newResearchDirection,
             @P("当前用户的ID，这个ID由系统在后台自动提供，AI需要直接传递它") Long currentUserId
     ) {
-        log.info("🤖 AI Workflow Tool: 修改老师 '{}' 的信息", teacherName);
+        log.info("  AI Workflow Tool: 修改老师 '{}' 的信息", teacherName);
         if (!permissionService.canManageUsers(currentUserId)) {
             return permissionService.getUserManagementPermissionInfo(currentUserId);
         }
         if (!StringUtils.hasText(newTitle) && !StringUtils.hasText(newResearchDirection)) {
-            return "🤔 无任何修改内容。请输入新的职称或研究方向。";
+            return "  无任何修改内容。请输入新的职称或研究方向。";
         }
         try {
             Long userId = jdbcTemplate.queryForObject("SELECT user_id FROM user WHERE name = ?", Long.class, teacherName);
@@ -820,15 +819,15 @@ public class UserManagementTools {
             if (result > 0) {
                 // 清理缓存以确保数据一致性
                 performCompleteUserCacheClear(userId);
-                return "✅ 老师 '" + teacherName + "' 的信息已更新。";
+                return " 老师 '" + teacherName + "' 的信息已更新。";
             } else {
-                return "❌ 更新失败: 未找到老师或数据无变化。";
+                return " 更新失败: 未找到老师或数据无变化。";
             }
         } catch (EmptyResultDataAccessException e) {
-            return "❌ 更新失败: 未找到名为 '" + teacherName + "' 的老师。";
+            return " 更新失败: 未找到名为 '" + teacherName + "' 的老师。";
         } catch (Exception e) {
-            log.error("❌ 更新老师 '{}' 信息时出错: {}", teacherName, e.getMessage(), e);
-            return "❌ 更新老师信息时发生内部错误。";
+            log.error(" 更新老师 '{}' 信息时出错: {}", teacherName, e.getMessage(), e);
+            return " 更新老师信息时发生内部错误。";
         }
     }
 
@@ -843,7 +842,7 @@ public class UserManagementTools {
             @P("要删除的用户的准确姓名") String userName,
             @P("当前用户的ID，这个ID由系统在后台自动提供，AI需要直接传递它") Long currentUserId
     ) {
-        log.info("🤖 AI Workflow Tool: 请求删除用户 '{}'", userName);
+        log.info("  AI Workflow Tool: 请求删除用户 '{}'", userName);
         if (!permissionService.canManageUsers(currentUserId)) {
             return permissionService.getUserManagementPermissionInfo(currentUserId);
         }
@@ -854,7 +853,7 @@ public class UserManagementTools {
                 ((BigInteger) user.get("user_id")).longValue() : (Long) user.get("user_id");
 
             if (userIdToDelete.equals(currentUserId)) {
-                return "❌ 操作失败：不能删除自己的账户。";
+                return " 操作失败：不能删除自己的账户。";
             }
             
             // 获取要删除用户的角色
@@ -863,10 +862,10 @@ public class UserManagementTools {
                 
             // 不能删除超级管理员
             if (Objects.equals(targetRoleId, 4L)) {
-                return "❌ 操作失败：不能删除超级管理员账户。";
+                return " 操作失败：不能删除超级管理员账户。";
             }
             
-            // 🔒 安全检查：管理员只能被超级管理员删除
+            //   安全检查：管理员只能被超级管理员删除
             if (Objects.equals(targetRoleId, 3L)) { // 目标用户是管理员
                 // 获取当前用户的角色
                 String currentUserRoleSql = "SELECT role_id FROM user WHERE user_id = ?";
@@ -875,20 +874,20 @@ public class UserManagementTools {
                     ((BigInteger) currentUserResult.get("role_id")).longValue() : (Long) currentUserResult.get("role_id");
                     
                 if (!Objects.equals(currentUserRoleId, 4L)) { // 当前用户不是超级管理员
-                    return "❌ 操作失败：管理员账户只能由超级管理员删除。您当前的权限不足以执行此操作。";
+                    return " 操作失败：管理员账户只能由超级管理员删除。您当前的权限不足以执行此操作。";
                 }
             }
 
-            return "⚠️【严重警告】⚠️\n" +
+            return " ️【严重警告】 ️\n" +
                    "您确定要永久删除用户 '" + userName + "' 吗？\n" +
                    "此操作将删除该用户的所有数据（包括学籍、考勤、任务等），且 **无法撤销**。\n" +
                    "要确认删除，请调用 `confirmUserDeletion` 工具并提供用户名。";
 
         } catch (EmptyResultDataAccessException e) {
-            return "❌ 操作失败：找不到名为 '" + userName + "' 的活跃用户。";
+            return " 操作失败：找不到名为 '" + userName + "' 的活跃用户。";
         } catch (Exception e) {
-            log.error("❌ 请求删除用户 '{}' 时出错: {}", userName, e.getMessage(), e);
-            return "❌ 系统内部错误，请联系技术支持。";
+            log.error(" 请求删除用户 '{}' 时出错: {}", userName, e.getMessage(), e);
+            return " 系统内部错误，请联系技术支持。";
         }
     }
 
@@ -898,7 +897,7 @@ public class UserManagementTools {
             @P("要删除的用户的准确姓名") String userName,
             @P("当前用户的ID，这个ID由系统在后台自动提供，AI需要直接传递它") Long currentUserId
             ) {
-        log.info("🤖 AI Workflow Tool: 确认删除用户 '{}'", userName);
+        log.info("  AI Workflow Tool: 确认删除用户 '{}'", userName);
         if (!permissionService.canManageUsers(currentUserId)) {
             return permissionService.getUserManagementPermissionInfo(currentUserId);
         }
@@ -909,7 +908,7 @@ public class UserManagementTools {
             Long userIdToDelete = queryResult.get("user_id") instanceof BigInteger ? 
                 ((BigInteger) queryResult.get("user_id")).longValue() : (Long) queryResult.get("user_id");
                 
-            // 🔒 再次安全检查：管理员只能被超级管理员删除
+            //   再次安全检查：管理员只能被超级管理员删除
             Long targetRoleId = queryResult.get("role_id") instanceof BigInteger ? 
                 ((BigInteger) queryResult.get("role_id")).longValue() : (Long) queryResult.get("role_id");
                 
@@ -921,7 +920,7 @@ public class UserManagementTools {
                     ((BigInteger) currentUserResult.get("role_id")).longValue() : (Long) currentUserResult.get("role_id");
                     
                 if (!Objects.equals(currentUserRoleId, 4L)) { // 当前用户不是超级管理员
-                    return "❌ 删除失败：管理员账户只能由超级管理员删除。权限验证失败。";
+                    return " 删除失败：管理员账户只能由超级管理员删除。权限验证失败。";
                 }
             }
             
@@ -941,61 +940,61 @@ public class UserManagementTools {
             if (studentId != null) {
                 int deletedCourseRecords = jdbcTemplate.update("DELETE FROM student_course WHERE student_id = ?", studentId);
                 if (deletedCourseRecords > 0) {
-                    log.debug("🗑️ 删除选课记录: {} 条", deletedCourseRecords);
+                    log.debug("  删除选课记录: {} 条", deletedCourseRecords);
                 }
                 
                 // 2. 删除活动预约记录 (必须在删除student记录之前，因为有ON DELETE RESTRICT约束)
                 int deletedReservationRecords = jdbcTemplate.update("DELETE FROM activity_reservation WHERE student_id = ?", studentId);
                 if (deletedReservationRecords > 0) {
-                    log.debug("🗑️ 删除活动预约记录: {} 条", deletedReservationRecords);
+                    log.debug("  删除活动预约记录: {} 条", deletedReservationRecords);
                 }
                 
                 // 3. 删除值班安排关联记录
                 int deletedDutyRecords = jdbcTemplate.update("DELETE FROM duty_schedule_student WHERE student_id = ?", studentId);
                 if (deletedDutyRecords > 0) {
-                    log.debug("🗑️ 删除值班安排记录: {} 条", deletedDutyRecords);
+                    log.debug("  删除值班安排记录: {} 条", deletedDutyRecords);
                 }
                 
                 // 4. 删除请假申请记录
                 int deletedLeaveRecords = jdbcTemplate.update("DELETE FROM leave_request WHERE student_id = ?", studentId);
                 if (deletedLeaveRecords > 0) {
-                    log.debug("🗑️ 删除请假申请记录: {} 条", deletedLeaveRecords);
+                    log.debug("  删除请假申请记录: {} 条", deletedLeaveRecords);
                 }
             }
             
             // 5. 现在可以安全地删除学员记录 (student_direction和attendance_record会自动CASCADE删除)
             int deletedStudentRecords = jdbcTemplate.update("DELETE FROM student WHERE user_id = ?", userIdToDelete);
             if (deletedStudentRecords > 0) {
-                log.debug("🗑️ 删除学员记录: {} 条", deletedStudentRecords);
+                log.debug("  删除学员记录: {} 条", deletedStudentRecords);
             }
             
             // 2. 删除教师相关数据  
             int deletedTeacherRecords = jdbcTemplate.update("DELETE FROM teacher WHERE user_id = ?", userIdToDelete);
             if (deletedTeacherRecords > 0) {
-                log.debug("🗑️ 删除教师记录: {} 条", deletedTeacherRecords);
+                log.debug("  删除教师记录: {} 条", deletedTeacherRecords);
             }
             
+            //TODO
             // 3. 删除其他关联数据 (如果有的话)
-            // jdbcTemplate.update("DELETE FROM student_course WHERE user_id = ?", userIdToDelete);
-            // jdbcTemplate.update("DELETE FROM attendance_record WHERE user_id = ?", userIdToDelete);
+  
             
             // 4. 最后删除用户主记录
             int result = jdbcTemplate.update("DELETE FROM user WHERE user_id = ?", userIdToDelete);
             
             if (result > 0) {
-                log.info("✅ 用户 '{}' (ID: {}) 已被用户 {} 永久删除。", userName, userIdToDelete, currentUserId);
+                log.info(" 用户 '{}' (ID: {}) 已被用户 {} 永久删除。", userName, userIdToDelete, currentUserId);
                 
                 // 清理缓存以确保数据一致性
                 performCompleteUserCacheClear(userIdToDelete);
                 
-                return "✅ 用户 '" + userName + "' 已被永久删除。";
+                return " 用户 '" + userName + "' 已被永久删除。";
             }
-            return "❌ 删除失败：数据库操作未影响任何行。";
+            return " 删除失败：数据库操作未影响任何行。";
         } catch (EmptyResultDataAccessException e) {
-            return "❌ 删除失败：在执行删除时找不到用户 '" + userName + "'。";
+            return " 删除失败：在执行删除时找不到用户 '" + userName + "'。";
         } catch (Exception e) {
-            log.error("❌ 确认删除用户 '{}' 时出错: {}", userName, e.getMessage(), e);
-            return "❌ 删除用户时发生严重的内部错误。";
+            log.error(" 确认删除用户 '{}' 时出错: {}", userName, e.getMessage(), e);
+            return " 删除用户时发生严重的内部错误。";
         }
     }
 } 

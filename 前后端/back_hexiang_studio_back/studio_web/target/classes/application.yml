@@ -19,6 +19,9 @@ spring:
     password: 123456789
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+
+
+
   # 文件上传配置 - 设置足够大的限制，让我们的验证管理器来处理具体限制
   servlet:
     multipart:
@@ -34,6 +37,25 @@ spring:
       password: 123456
       port: 6379
       host: 127.0.0.1
+
+  # 邮件服务配置 - 阿里云邮件推送
+  mail:
+    host: smtpdm.aliyun.com
+    port: 80
+    username: # 待配置：您的发信地址
+    password: # 待配置：SMTP密码
+    protocol: smtp
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          socketFactory:
+            class: javax.net.ssl.SSLSocketFactory
+            port: 465
+          starttls:
+            enable: true
+            required: true
 
 # PageHelper 分页插件配置
 pagehelper:
@@ -247,13 +269,29 @@ weather:
 jwt:
   secret: hexiangstidoadminiswenhanhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
   # JWT密钥，生产环境建议使用更复杂的密钥或从环境变量读取
-  expiration: 36000000  # token过期时间，单位：毫秒 (10小时)
-  issuer: hexiang_studio  # 签发人
+  access-expiration: 1800000    # 30分钟
+  refresh-expiration: 604800000 # 7天
+  issuer: hexiang_studio
+
+# 安全配置
+security:
+  login:
+    max-fail-attempts: 5        # 最大失败尝试次数
+    lock-duration: 900          # 账户锁定时长（秒）- 15分钟
+    captcha-threshold: 3        # 显示验证码的失败次数阈值
+  notification:
+    admin-email: your-admin@example.com  # 管理员邮箱
+    from-name: "何湘工作室安全系统"        # 发件人名称
+    enabled: true               # 是否启用邮件通知
 
 # ===================================================================
 # LangChain4j & 胖达 AI 助手配置（使用官方DashScope配置）
 # ===================================================================
 langchain4j:
+  # HTTP客户端配置 - 明确使用Spring RestClient避免冲突
+  http-client:
+    type: spring
+    
   # OpenAI 兼容配置 - 连接通义千问
   open-ai:
     # 聊天模型配置 - 通用默认模型（回退配置）

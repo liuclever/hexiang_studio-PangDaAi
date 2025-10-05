@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 /**
  * AI助手统一入口控制器
  * 接收用户自然语言输入，调用AI助手服务处理
+ * 权限：需要AI_CHAT_BASIC权限，所有认证用户可使用基础AI功能
  * 
  * @author 胖达AI助手开发团队
  * @version 1.0
@@ -19,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/ai-assistant")
 @Slf4j
-@CrossOrigin
+@PreAuthorize("hasAuthority('AI_CHAT_BASIC')")
 public class AssistantController {
 
     @Autowired
@@ -33,13 +34,12 @@ public class AssistantController {
      * @return AI助手回复
      */
     @PostMapping("/chat")
-    @PreAuthorize("isAuthenticated()")
     public Result<String> chat(@RequestBody ChatRequest request) {
         // 获取当前登录用户ID
         Long currentUserId = UserContextHolder.getCurrentId();
         String actualUserId = currentUserId != null ? currentUserId.toString() : request.getUserId();
         
-        log.info("🤖 AI助手接收聊天请求 - 登录用户: {}, 请求用户: {}, 消息: {}", 
+        log.info(" AI助手接收聊天请求 - 登录用户: {}, 请求用户: {}, 消息: {}",
                 currentUserId, request.getUserId(), request.getMessage());
         
         try {
@@ -60,12 +60,12 @@ public class AssistantController {
             // 调用AI智能体（现在会自动保存聊天记录）
             String response = assistantAgent.chat(request.getMessage(), sessionId);
             
-            log.info("🤖 AI助手回复成功 - 用户: {}", actualUserId);
+            log.info(" AI助手回复成功 - 用户: {}", actualUserId);
             
             return Result.success(response);
             
         } catch (Exception e) {
-            log.error("🤖 AI助手处理失败 - 用户: {}, 错误: {}", 
+            log.error(" AI助手处理失败 - 用户: {}, 错误: {}",
                      actualUserId, e.getMessage(), e);
             
             return Result.error("AI助手暂时无法处理您的请求，请稍后再试");

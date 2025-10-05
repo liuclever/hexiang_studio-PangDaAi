@@ -106,3 +106,52 @@ mvn spring-boot:run
 - ✅ 环境快速切换
 - ✅ 消除硬编码地址
 - ✅ 集中化配置维护 
+
+## 🚀 发布时环境切换指南
+
+### 1. 开发环境（当前）
+```javascript
+const currentEnv = 'development';
+```
+- 使用本地IP地址或开发服务器
+- 适用于开发调试
+
+### 2. 发布生产环境
+**发布前必须修改 `config/index.js` 文件：**
+
+```javascript
+// 将这行改为：
+const currentEnv = 'production';
+```
+
+### 3. 生产环境域名配置
+修改 `production` 配置中的域名：
+
+```javascript
+production: {
+  baseUrl: 'https://api.你的域名.com',     // 你的API服务器域名
+  fileUrl: 'https://files.你的域名.com',   // 你的文件服务器域名  
+  wsUrl: 'wss://ws.你的域名.com'          // 你的WebSocket域名
+}
+```
+
+### 4. 微信小程序后台配置
+发布时还需要在微信公众平台配置以下域名：
+
+- **request合法域名**：`https://api.你的域名.com`
+- **uploadFile合法域名**：`https://files.你的域名.com`
+- **downloadFile合法域名**：`https://files.你的域名.com`
+- **socket合法域名**：`wss://ws.你的域名.com`
+
+### 5. 发布检查清单
+- [ ] 修改 `currentEnv` 为 `'production'`
+- [ ] 配置正确的生产域名
+- [ ] 在微信后台添加域名白名单
+- [ ] 测试所有网络请求功能
+- [ ] 上传代码并提交审核
+
+### 6. 快速切换
+如果需要快速切换环境，只需修改 `currentEnv` 变量：
+- `'development'` - 开发环境
+- `'production'` - 生产环境  
+- `'local'` - 本地环境 

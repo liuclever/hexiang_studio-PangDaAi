@@ -19,7 +19,9 @@ import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.util.List;
 
-
+/**
+ *切面类
+ */
 @Aspect //切面
 @Component
 @Slf4j

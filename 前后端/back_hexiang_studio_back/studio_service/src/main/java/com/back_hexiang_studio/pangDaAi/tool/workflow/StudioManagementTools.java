@@ -35,7 +35,7 @@ public class StudioManagementTools {
 
     @Tool("获取何湘技能大师工作室的基本详细信息，包括成立时间、负责人、成员数量等")
     public String getStudioBasicInfo() {
-        log.info("🤖 AI Workflow Tool: 查询工作室基本信息");
+        log.info("  AI Workflow Tool: 查询工作室基本信息");
         
         try {
             String sql = "SELECT name, establish_time, director, member_count, project_count, " +
@@ -45,53 +45,53 @@ public class StudioManagementTools {
             Map<String, Object> studioInfo = jdbcTemplate.queryForMap(sql);
             
             StringBuilder info = new StringBuilder();
-            info.append("🏢 **何湘技能大师工作室** 基本信息：\n\n");
-            info.append("📋 **工作室名称**：").append(studioInfo.get("name")).append("\n");
-            info.append("🗓️ **成立时间**：").append(studioInfo.get("establish_time")).append("\n");
-            info.append("👤 **负责人**：").append(studioInfo.get("director")).append("\n");
-            info.append("👥 **成员数量**：").append(studioInfo.get("member_count")).append(" 人\n");
-            info.append("📊 **项目数量**：").append(studioInfo.get("project_count")).append(" 个\n");
-            info.append("🏆 **获奖情况**：").append(studioInfo.get("awards")).append("\n");
-            info.append("📞 **联系电话**：").append(studioInfo.get("phone")).append("\n");
-            info.append("📧 **邮箱**：").append(studioInfo.get("email")).append("\n");
-            info.append("📍 **地址**：").append(studioInfo.get("address")).append("\n");
-            info.append("🏠 **房间**：").append(studioInfo.get("room"));
+            info.append(" **何湘技能大师工作室** 基本信息：\n\n");
+            info.append(" **工作室名称**：").append(studioInfo.get("name")).append("\n");
+            info.append(" **成立时间**：").append(studioInfo.get("establish_time")).append("\n");
+            info.append(" **负责人**：").append(studioInfo.get("director")).append("\n");
+            info.append(" **成员数量**：").append(studioInfo.get("member_count")).append(" 人\n");
+            info.append(" **项目数量**：").append(studioInfo.get("project_count")).append(" 个\n");
+            info.append(" **获奖情况**：").append(studioInfo.get("awards")).append("\n");
+            info.append(" **联系电话**：").append(studioInfo.get("phone")).append("\n");
+            info.append(" **邮箱**：").append(studioInfo.get("email")).append("\n");
+            info.append(" **地址**：").append(studioInfo.get("address")).append("\n");
+            info.append(" **房间**：").append(studioInfo.get("room"));
             
             return info.toString();
             
         } catch (EmptyResultDataAccessException e) {
-            return "❌ 未找到工作室基本信息，请联系管理员完善信息。";
+            return "  未找到工作室基本信息，请联系管理员完善信息。";
         } catch (Exception e) {
-            log.error("❌ 查询工作室基本信息失败: {}", e.getMessage(), e);
-            return "❌ 查询工作室基本信息时出现系统错误，请稍后重试。";
+            log.error("  查询工作室基本信息失败: {}", e.getMessage(), e);
+            return "  查询工作室基本信息时出现系统错误，请稍后重试。";
         }
     }
 
     @Tool("获取工作室的联系方式和地址信息，用于对外联系和来访指引")
     public String getStudioContactInfo() {
-        log.info("🤖 AI Workflow Tool: 查询工作室联系方式和地址信息");
+        log.info("  AI Workflow Tool: 查询工作室联系方式和地址信息");
         
         try {
             String sql = "SELECT name, director, phone, email, address, room FROM studio_info WHERE id = 1";
             Map<String, Object> contactInfo = jdbcTemplate.queryForMap(sql);
             
             StringBuilder result = new StringBuilder();
-            result.append("📞 **工作室联系方式**：\n\n");
-            result.append("👤 **负责人**：").append(contactInfo.get("director")).append("\n");
-            result.append("☎️ **电话**：").append(contactInfo.get("phone")).append("\n");
-            result.append("📧 **邮箱**：").append(contactInfo.get("email")).append("\n");
-            result.append("📍 **地址**：").append(contactInfo.get("address")).append("\n");
-            result.append("🏠 **房间**：").append(contactInfo.get("room")).append("\n");
-            result.append("⏰ **办公时间**：工作日 8:00-18:00\n\n");
-            result.append("💡 **温馨提示**：建议来访前先电话预约，确保能够得到更好的接待服务！");
+            result.append(" **工作室联系方式**：\n\n");
+            result.append(" **负责人**：").append(contactInfo.get("director")).append("\n");
+            result.append(" **电话**：").append(contactInfo.get("phone")).append("\n");
+            result.append(" **邮箱**：").append(contactInfo.get("email")).append("\n");
+            result.append(" **地址**：").append(contactInfo.get("address")).append("\n");
+            result.append(" **房间**：").append(contactInfo.get("room")).append("\n");
+            result.append(" **办公时间**：工作日 8:00-18:00\n\n");
+            result.append(" **温馨提示**：建议来访前先电话预约，确保能够得到更好的接待服务！");
             
             return result.toString();
             
         } catch (EmptyResultDataAccessException e) {
-            return "❌ 未找到工作室联系信息，请联系管理员完善信息。";
+            return "  未找到工作室联系信息，请联系管理员完善信息。";
         } catch (Exception e) {
-            log.error("❌ 查询工作室联系信息失败: {}", e.getMessage(), e);
-            return "❌ 查询工作室联系信息时出现系统错误，请稍后重试。";
+            log.error("  查询工作室联系信息失败: {}", e.getMessage(), e);
+            return "  查询工作室联系信息时出现系统错误，请稍后重试。";
         }
     }
 
@@ -101,7 +101,7 @@ public class StudioManagementTools {
 
     @Tool("获取工作室的所有部门信息和组织架构")
     public String getAllDepartments() {
-        log.info("🤖 AI Workflow Tool: 查询工作室所有部门信息");
+        log.info("  AI Workflow Tool: 查询工作室所有部门信息");
         
         try {
             String sql = "SELECT department_id, department_name, create_time FROM department ORDER BY department_id ASC";
@@ -109,19 +109,19 @@ public class StudioManagementTools {
             List<Map<String, Object>> departments = jdbcTemplate.queryForList(sql);
             
             if (departments.isEmpty()) {
-                return "📋 工作室暂未设置部门信息。";
+                return " 工作室暂未设置部门信息。";
             }
             
             StringBuilder result = new StringBuilder();
-            result.append("🏛️ **工作室部门架构**（共 ").append(departments.size()).append(" 个部门）：\n\n");
+            result.append("  **工作室部门架构**（共 ").append(departments.size()).append(" 个部门）：\n\n");
             
             for (int i = 0; i < departments.size(); i++) {
                 Map<String, Object> dept = departments.get(i);
                 result.append(String.format("%d. **%s**\n", i + 1, dept.get("department_name")));
-                result.append(String.format("   🆔 部门ID：%s\n", dept.get("department_id")));
+                result.append(String.format("    部门ID：%s\n", dept.get("department_id")));
                 
                 if (dept.get("create_time") != null) {
-                    result.append(String.format("   📅 创建时间：%s\n", dept.get("create_time")));
+                    result.append(String.format("    创建时间：%s\n", dept.get("create_time")));
                 }
                 
                 result.append("\n");
@@ -130,17 +130,17 @@ public class StudioManagementTools {
             return result.toString().trim();
             
         } catch (Exception e) {
-            log.error("❌ 查询部门信息失败: {}", e.getMessage(), e);
-            return "❌ 查询部门信息时出现系统错误，请稍后重试。";
+            log.error("  查询部门信息失败: {}", e.getMessage(), e);
+            return "  查询部门信息时出现系统错误，请稍后重试。";
         }
     }
 
     @Tool("查询指定部门的详细信息，包括部门成员和人员详情")
     public String getDepartmentDetails(@P("部门名称，可以是部分名称") String departmentName) {
-        log.info("🤖 AI Workflow Tool: 查询部门详细信息 - {}", departmentName);
+        log.info("  AI Workflow Tool: 查询部门详细信息 - {}", departmentName);
         
         if (!StringUtils.hasText(departmentName)) {
-            return "❌ 部门名称不能为空。";
+            return "  部门名称不能为空。";
         }
         
         try {
@@ -162,17 +162,17 @@ public class StudioManagementTools {
             List<Map<String, Object>> members = jdbcTemplate.queryForList(memberSql, departmentId);
             
             StringBuilder result = new StringBuilder();
-            result.append("🏛️ **").append(deptInfo.get("department_name")).append("** 部门详情：\n\n");
-            result.append("👥 **成员数量**：").append(members.size()).append(" 人\n");
+            result.append("  **").append(deptInfo.get("department_name")).append("** 部门详情：\n\n");
+            result.append(" **成员数量**：").append(members.size()).append(" 人\n");
             
             if (deptInfo.get("create_time") != null) {
-                result.append("📅 **创建时间**：").append(deptInfo.get("create_time")).append("\n");
+                result.append(" **创建时间**：").append(deptInfo.get("create_time")).append("\n");
             }
             
             result.append("\n");
             
             if (!members.isEmpty()) {
-                result.append("### 👨‍🎓 部门成员名单\n\n");
+                result.append("###  部门成员名单\n\n");
                 
                 // 按年级分组显示
                 String currentGrade = "";
@@ -191,30 +191,30 @@ public class StudioManagementTools {
                     }
                     
                     result.append(String.format("%d. **%s**\n", i + 1, member.get("name")));
-                    result.append(String.format("   🎓 学号：%s\n", member.get("student_number")));
-                    result.append(String.format("   📚 班级：%s\n", member.get("majorClass")));
+                    result.append(String.format("    学号：%s\n", member.get("student_number")));
+                    result.append(String.format("    班级：%s\n", member.get("majorClass")));
                     
                     if (member.get("phone") != null) {
-                        result.append(String.format("   📞 电话：%s\n", member.get("phone")));
+                        result.append(String.format("    电话：%s\n", member.get("phone")));
                     }
                     
                     if (member.get("counselor") != null) {
-                        result.append(String.format("   👨‍🏫 辅导员：%s\n", member.get("counselor")));
+                        result.append(String.format("    辅导员：%s\n", member.get("counselor")));
                     }
                     
                     result.append("\n");
                 }
             } else {
-                result.append("📋 该部门暂无成员。\n");
+                result.append(" 该部门暂无成员。\n");
             }
             
             return result.toString().trim();
             
         } catch (EmptyResultDataAccessException e) {
-            return "❌ 未找到名为 '" + departmentName + "' 的部门，请检查部门名称是否正确。";
+            return "  未找到名为 '" + departmentName + "' 的部门，请检查部门名称是否正确。";
         } catch (Exception e) {
-            log.error("❌ 查询部门详情失败: {}", e.getMessage(), e);
-            return "❌ 查询部门详情时出现系统错误，请稍后重试。";
+            log.error("  查询部门详情失败: {}", e.getMessage(), e);
+            return "  查询部门详情时出现系统错误，请稍后重试。";
         }
     }
 
@@ -224,7 +224,7 @@ public class StudioManagementTools {
 
     @Tool("获取工作室成员的统计信息，包括角色分布、部门分布、培训方向分布等")
     public String getStudioMemberStatistics() {
-        log.info("🤖 AI Workflow Tool: 查询工作室成员统计信息");
+        log.info("  AI Workflow Tool: 查询工作室成员统计信息");
         
         try {
             // 查询各角色成员数量
@@ -258,10 +258,10 @@ public class StudioManagementTools {
             List<Map<String, Object>> directionStats = jdbcTemplate.queryForList(directionSql);
             
             StringBuilder result = new StringBuilder();
-            result.append("📊 **工作室成员统计报告**：\n\n");
+            result.append("  **工作室成员统计报告**：\n\n");
             
             // 角色分布统计
-            result.append("### 👥 角色分布\n");
+            result.append("###  角色分布\n");
             int totalMembers = 0;
             for (Map<String, Object> role : roleStats) {
                 Object countObj = role.get("count");
@@ -270,11 +270,11 @@ public class StudioManagementTools {
                 totalMembers += count;
                 result.append(String.format("- **%s**：%d 人\n", role.get("role_name"), count));
             }
-            result.append(String.format("\n📈 **总计**：%d 人\n\n", totalMembers));
+            result.append(String.format("\n **总计**：%d 人\n\n", totalMembers));
             
             // 部门分布统计
             if (!deptStats.isEmpty()) {
-                result.append("### 🏛️ 部门分布\n");
+                result.append("###   部门分布\n");
                 for (Map<String, Object> dept : deptStats) {
                     Object countObj = dept.get("student_count");
                     int count = countObj instanceof BigInteger ? 
@@ -286,7 +286,7 @@ public class StudioManagementTools {
             
             // 培训方向分布统计
             if (!directionStats.isEmpty()) {
-                result.append("### 🎯 培训方向分布\n");
+                result.append("###  培训方向分布\n");
                 for (Map<String, Object> direction : directionStats) {
                     Object countObj = direction.get("student_count");
                     int count = countObj instanceof BigInteger ? 
@@ -300,14 +300,14 @@ public class StudioManagementTools {
             return result.toString().trim();
             
         } catch (Exception e) {
-            log.error("❌ 查询成员统计失败: {}", e.getMessage(), e);
-            return "❌ 查询成员统计时出现系统错误，请稍后重试。";
+            log.error("  查询成员统计失败: {}", e.getMessage(), e);
+            return "  查询成员统计时出现系统错误，请稍后重试。";
         }
     }
 
     @Tool("查询工作室所有成员名单，包括师资团队和学生团队的详细信息")
     public String getAllStudioMembers() {
-        log.info("🤖 AI Workflow Tool: 查询工作室所有成员名单");
+        log.info("  AI Workflow Tool: 查询工作室所有成员名单");
         
         try {
             // 查询教师信息
@@ -334,11 +334,11 @@ public class StudioManagementTools {
             List<Map<String, Object>> students = jdbcTemplate.queryForList(studentSql);
             
             StringBuilder result = new StringBuilder();
-            result.append("👥 **何湘技能大师工作室成员名单**：\n\n");
+            result.append(" **何湘技能大师工作室成员名单**：\n\n");
             
             // 显示师资团队
             if (!teachers.isEmpty()) {
-                result.append("### 🧑‍🏫 师资团队\n\n");
+                result.append("###  师资团队\n\n");
                 for (int i = 0; i < teachers.size(); i++) {
                     Map<String, Object> teacher = teachers.get(i);
                     String name = (String) teacher.get("name");
@@ -355,7 +355,7 @@ public class StudioManagementTools {
                     }
                     
                     if (StringUtils.hasText(office)) {
-                        result.append("（📍 ").append(office).append("）");
+                        result.append("（ ").append(office).append("）");
                     }
                     
                     result.append("\n");
@@ -365,7 +365,7 @@ public class StudioManagementTools {
             
             // 显示学生团队
             if (!students.isEmpty()) {
-                result.append("### 🎓 学生团队\n\n");
+                result.append("###  学生团队\n\n");
                 
                 // 按部门分组显示
                 String currentDept = "";
@@ -405,7 +405,7 @@ public class StudioManagementTools {
                     
                     // 添加培训方向
                     if (StringUtils.hasText(direction)) {
-                        result.append(" - 🎯 ").append(direction);
+                        result.append(" -  ").append(direction);
                     }
                     
                     result.append("\n");
@@ -415,7 +415,7 @@ public class StudioManagementTools {
             // 统计信息
             int totalMembers = teachers.size() + students.size();
             result.append("\n---\n");
-            result.append("📊 **团队概况**：");
+            result.append("  **团队概况**：");
             if (!teachers.isEmpty()) {
                 result.append("师资 ").append(teachers.size()).append(" 人");
             }
@@ -426,14 +426,14 @@ public class StudioManagementTools {
             result.append("，共计 **").append(totalMembers).append("** 人");
             
             if (totalMembers == 0) {
-                return "📋 工作室暂时没有公开的成员信息。";
+                return " 工作室暂时没有公开的成员信息。";
             }
             
             return result.toString();
             
         } catch (Exception e) {
-            log.error("❌ 查询工作室成员失败: {}", e.getMessage(), e);
-            return "❌ 查询工作室成员信息时出现系统错误，请稍后重试。";
+            log.error("  查询工作室成员失败: {}", e.getMessage(), e);
+            return "  查询工作室成员信息时出现系统错误，请稍后重试。";
         }
     }
 } 

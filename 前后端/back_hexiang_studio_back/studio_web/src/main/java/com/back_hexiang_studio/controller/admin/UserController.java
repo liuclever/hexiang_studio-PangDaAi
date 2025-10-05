@@ -8,21 +8,23 @@ import com.back_hexiang_studio.entity.User;
 import com.back_hexiang_studio.mapper.UserMapper;
 import com.back_hexiang_studio.result.PageResult;
 import com.back_hexiang_studio.result.Result;
-import com.back_hexiang_studio.service.PositionService;
-import com.back_hexiang_studio.service.TrainingDirectionService;
-import com.back_hexiang_studio.service.DepartmentService;
+import com.back_hexiang_studio.service.*;
+
 import java.util.List;
 import java.util.regex.Pattern;
 
+
 import com.back_hexiang_studio.context.UserContextHolder;
-import com.back_hexiang_studio.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import  com.back_hexiang_studio.securuty.TokenService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -49,10 +51,15 @@ public class UserController {
     @Autowired
     private PositionService positionService;
 
+    @Autowired
+    private LoginSecurityService loginSecurityService;
+    @Autowired
+    private CaptchaService captchaService;
+
+
+
     private final UserMapper userMapper;
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
 
     public UserController(UserMapper userMapper) {
         this.userMapper = userMapper;
@@ -76,22 +83,144 @@ public class UserController {
 
     /**
      * 用户登录
-     * @param userLoginDto
-     * @return
+     *
+     * 安全特性：
+     * 1. 账户锁定检查
+     * 2. 智能验证码要求
+     * 3. 登录失败统计
+     * 4. 记住我支持
+     * 5. 邮件安全通知
      */
     @PostMapping("/login")
-    public Result login(@RequestBody UserLoginDto userLoginDto) {
-        log.info("用户登录{}", userLoginDto.toString());
+    public Result login(@RequestBody UserLoginDto userLoginDto, HttpServletRequest request, HttpServletResponse response) {
+        String username = userLoginDto.getUserName();
+        String clientIp = getClientIpAddress(request);
+
+        log.info("用户登录请求 - Username: {}, IP: {}", username, clientIp);
+
         try {
+            //  第1步：检查账户是否被锁定
+            Result<Boolean> lockResult = loginSecurityService.checkAccountLocked(username);
+            if (lockResult.getCode() != 200) {
+                log.warn("账户已锁定，拒绝登录 - Username: {}, IP: {}", username, clientIp);
+                return lockResult;
+            }
+
+            //  第2步：验证码校验（如果前端提供了验证码参数，就必须验证）
+            boolean hasCaptchaParams = userLoginDto.getCaptchaSessionId() != null && userLoginDto.getCaptchaCode() != null;
+            boolean needsCaptcha = loginSecurityService.requiresCaptcha(username);
+            
+            log.info("验证码检查 - Username: {}, needsCaptcha: {}, hasCaptchaParams: {}, sessionId: {}, inputCode: {}", 
+                    username, needsCaptcha, hasCaptchaParams, userLoginDto.getCaptchaSessionId(), userLoginDto.getCaptchaCode());
+            
+            // 如果前端发送了验证码参数，就必须验证
+            if (hasCaptchaParams) {
+                log.info("前端提供了验证码参数，开始验证 - Username: {}, IP: {}", username, clientIp);
+
+                // 验证码校验
+                Result<Boolean> captchaResult = captchaService.validateCaptcha(
+                        userLoginDto.getCaptchaSessionId(),
+                        userLoginDto.getCaptchaCode()
+                );
+
+                if (captchaResult.getCode() != 200 || !captchaResult.getData()) {
+                    log.warn("验证码验证失败 - Username: {}, IP: {}, Reason: {}",
+                            username, clientIp, captchaResult.getMsg());
+                    
+                    //  验证码错误也要记录登录失败
+                    Result<String> failResult = loginSecurityService.recordLoginFailure(username, clientIp);
+                    return Result.error("验证码错误，请重新输入");
+                }
+
+                log.info("验证码验证通过 - Username: {}, IP: {}", username, clientIp);
+            } else if (needsCaptcha) {
+                // 后端认为需要验证码但前端没提供
+                log.warn("需要验证码但前端未提供 - Username: {}, IP: {}", username, clientIp);
+                return Result.error("请输入验证码");
+            }
+
+            //  第3步：进行用户名密码验证
             UserLoginVo loginUser = userService.login(userLoginDto);
 
-            String token = tokenService.createToken(loginUser.getUserId(), loginUser.getUserName());
-        loginUser.setToken(token);
-            
+            //  第4步：登录成功处理
+            log.info("用户密码验证成功 - Username: {}, IP: {}", username, clientIp);
+
+            // 清除登录失败记录
+            loginSecurityService.clearLoginFailures(username);
+
+            //  第5步：Token生成（支持记住我）
+            String accessToken;
+            if (Boolean.TRUE.equals(userLoginDto.getRememberMe())) {
+                // 记住我：使用长期Token
+                log.info("用户选择记住我 - Username: {}", username);
+                accessToken = tokenService.createLongTermTokenPair(loginUser.getUserId(), loginUser.getUserName(), response);
+            } else {
+                // 标准Token
+                accessToken = tokenService.createTokenPair(loginUser.getUserId(), loginUser.getUserName(), response);
+            }
+
+            loginUser.setToken(accessToken);
+
+            log.info("登录成功 - Username: {}, IP: {}, RememberMe: {}",
+                    username, clientIp, userLoginDto.getRememberMe());
+
             return Result.success(loginUser);
+
         } catch (BusinessException e) {
-            log.warn("登录失败: {}", e.getMessage());
-            return Result.error(e.getMessage());
+            // ❌ 登录失败处理
+            log.warn("登录失败 - Username: {}, IP: {}, Reason: {}", username, clientIp, e.getMessage());
+
+            // 记录登录失败（会自动处理锁定和邮件通知）
+            Result<String> failResult = loginSecurityService.recordLoginFailure(username, clientIp);
+
+            // 返回安全友好的错误信息
+            return Result.error(failResult.getMsg());
+
+        } catch (Exception e) {
+            log.error("登录系统异常 - Username: {}, IP: {}", username, clientIp, e);
+            return Result.error("系统繁忙，请稍后重试");
+        }
+    }
+
+    /**
+     * 获取客户端真实IP地址
+     */
+    private String getClientIpAddress(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty() && !"unknown".equalsIgnoreCase(xForwardedFor)) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+
+        String xRealIp = request.getHeader("X-Real-IP");
+        if (xRealIp != null && !xRealIp.isEmpty() && !"unknown".equalsIgnoreCase(xRealIp)) {
+            return xRealIp;
+        }
+
+        return request.getRemoteAddr();
+    }
+
+    /**
+     * 刷新Access Token接口
+     */
+    @PostMapping("/refresh") 
+    public Result refresh(HttpServletRequest request) {
+        try {
+            String refreshToken = tokenService.getRefreshTokenFromCookie(request);
+            if (refreshToken == null) {
+                return Result.error("未登录或登录已过期，请重新登录");
+            }
+            
+            String newAccessToken = tokenService.refreshAccessToken(refreshToken);
+            if (newAccessToken == null) {
+                return Result.error("登录已过期，请重新登录");
+            }
+            
+            Map<String, Object> data = new HashMap<>();
+            data.put("accessToken", newAccessToken);
+            return Result.success(data);
+        } catch (Exception e) {
+            log.error("Token刷新异常", e);
+            return Result.error("系统异常，请稍后重试");
         }
     }
 

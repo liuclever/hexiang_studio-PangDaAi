@@ -37,10 +37,10 @@ public class LeaveManagementTools {
     public String getPendingLeaveRequests(
             @P("当前用户的ID，这个ID由系统在后台自动提供，AI需要直接传递它") Long currentUserId
     ) {
-        log.info("🤖 AI Workflow Tool: 查询待审批的请假申请");
+        log.info("  AI Workflow Tool: 查询待审批的请假申请");
         
         if (currentUserId == null) {
-            return "❌ 用户未登录，无法查询待审批请假申请。";
+            return "  用户未登录，无法查询待审批请假申请。";
         }
         
         // 权限检查
@@ -48,7 +48,7 @@ public class LeaveManagementTools {
             Map<String, Object> userInfo = permissionService.getUserInfo(currentUserId);
             String roleName = userInfo != null ? 
                 permissionService.getRoleName((Long) userInfo.get("role_id")) : "未知";
-            return String.format("⚠️ 权限不足：您当前是【%s】身份，无权查看请假审批信息。只有老师、管理员和超级管理员可以查看。", roleName);
+            return String.format("  权限不足：您当前是【%s】身份，无权查看请假审批信息。只有老师、管理员和超级管理员可以查看。", roleName);
         }
         
         try {
@@ -63,11 +63,11 @@ public class LeaveManagementTools {
             List<Map<String, Object>> requests = jdbcTemplate.queryForList(sql);
             
             if (requests.isEmpty()) {
-                return "📋 当前没有待审批的请假申请。";
+                return "  当前没有待审批的请假申请。";
             }
             
             StringBuilder result = new StringBuilder();
-            result.append("📋 **待审批的请假申请**：\n\n");
+            result.append("  **待审批的请假申请**：\n\n");
             result.append("共有 ").append(requests.size()).append(" 条待审批申请\n\n");
             
             for (int i = 0; i < requests.size(); i++) {
@@ -89,7 +89,7 @@ public class LeaveManagementTools {
             return result.toString().trim();
             
         } catch (Exception e) {
-            log.error("❌ 查询待审批请假申请失败: {}", e.getMessage(), e);
+            log.error("  查询待审批请假申请失败: {}", e.getMessage(), e);
             return "抱歉，当前网络不佳，请稍后重试。";
         }
     }
@@ -99,14 +99,14 @@ public class LeaveManagementTools {
             @P("用户姓名") String userName,
             @P("当前用户的ID，这个ID由系统在后台自动提供，AI需要直接传递它") Long currentUserId
     ) {
-        log.info("🤖 AI Workflow Tool: 查询用户 '{}' 的请假历史", userName);
+        log.info("  AI Workflow Tool: 查询用户 '{}' 的请假历史", userName);
         
         if (currentUserId == null) {
-            return "❌ 用户未登录，无法查询请假历史。";
+            return "  用户未登录，无法查询请假历史。";
         }
         
         if (!StringUtils.hasText(userName)) {
-            return "❌ 用户姓名不能为空。";
+            return "  用户姓名不能为空。";
         }
         
         // 权限检查
@@ -114,7 +114,7 @@ public class LeaveManagementTools {
             Map<String, Object> userInfo = permissionService.getUserInfo(currentUserId);
             String roleName = userInfo != null ? 
                 permissionService.getRoleName((Long) userInfo.get("role_id")) : "未知";
-            return String.format("⚠️ 权限不足：您当前是【%s】身份，无权查看请假记录。只有老师、管理员和超级管理员可以查看。", roleName);
+            return String.format("  权限不足：您当前是【%s】身份，无权查看请假记录。只有老师、管理员和超级管理员可以查看。", roleName);
         }
         
         try {
@@ -129,11 +129,11 @@ public class LeaveManagementTools {
             List<Map<String, Object>> records = jdbcTemplate.queryForList(sql, userName);
             
             if (records.isEmpty()) {
-                return "📋 用户 '" + userName + "' 暂无请假记录。";
+                return "  用户 '" + userName + "' 暂无请假记录。";
             }
             
             StringBuilder result = new StringBuilder();
-            result.append("📋 **").append(userName).append("** 的请假记录：\n\n");
+            result.append("  **").append(userName).append("** 的请假记录：\n\n");
             result.append("最近 ").append(records.size()).append(" 条记录\n\n");
             
             for (int i = 0; i < records.size(); i++) {
@@ -157,7 +157,7 @@ public class LeaveManagementTools {
             return result.toString().trim();
             
         } catch (Exception e) {
-            log.error("❌ 查询用户请假历史失败: {}", e.getMessage(), e);
+            log.error("  查询用户请假历史失败: {}", e.getMessage(), e);
             return "抱歉，当前网络不佳，请稍后重试。";
         }
     }
@@ -167,14 +167,14 @@ public class LeaveManagementTools {
             @P("学生姓名") String studentName,
             @P("当前用户的ID，这个ID由系统在后台自动提供，AI需要直接传递它") Long currentUserId
     ) {
-        log.info("🤖 AI Workflow Tool: 查询学生 '{}' 的请假情况", studentName);
+        log.info("  AI Workflow Tool: 查询学生 '{}' 的请假情况", studentName);
         
         if (currentUserId == null) {
-            return "❌ 用户未登录，无法查询学生请假情况。";
+            return "  用户未登录，无法查询学生请假情况。";
         }
         
         if (!StringUtils.hasText(studentName)) {
-            return "❌ 学生姓名不能为空。";
+            return "  学生姓名不能为空。";
         }
         
         // 权限检查
@@ -182,7 +182,7 @@ public class LeaveManagementTools {
             Map<String, Object> userInfo = permissionService.getUserInfo(currentUserId);
             String roleName = userInfo != null ? 
                 permissionService.getRoleName((Long) userInfo.get("role_id")) : "未知";
-            return String.format("⚠️ 权限不足：您当前是【%s】身份，无权查看学生请假情况。只有老师、管理员和超级管理员可以查看。", roleName);
+            return String.format("  权限不足：您当前是【%s】身份，无权查看学生请假情况。只有老师、管理员和超级管理员可以查看。", roleName);
         }
         
         try {
@@ -197,15 +197,15 @@ public class LeaveManagementTools {
             List<Map<String, Object>> records = jdbcTemplate.queryForList(sql, studentName);
             
             if (records.isEmpty()) {
-                return "📋 学生 '" + studentName + "' 暂无请假记录，或该用户不是学生。";
+                return "  学生 '" + studentName + "' 暂无请假记录，或该用户不是学生。";
             }
             
             Map<String, Object> firstRecord = records.get(0);
             StringBuilder result = new StringBuilder();
-            result.append("🎓 **学生信息**：").append(studentName)
+            result.append("  **学生信息**：").append(studentName)
                   .append(" (学号: ").append(firstRecord.get("student_number"))
                   .append(", 班级: ").append(firstRecord.get("majorClass")).append(")\n\n");
-            result.append("📋 **请假情况**：\n\n");
+            result.append("  **请假情况**：\n\n");
             
             for (int i = 0; i < records.size(); i++) {
                 Map<String, Object> record = records.get(i);
@@ -223,7 +223,7 @@ public class LeaveManagementTools {
             return result.toString().trim();
             
         } catch (Exception e) {
-            log.error("❌ 查询学生请假情况失败: {}", e.getMessage(), e);
+            log.error("  查询学生请假情况失败: {}", e.getMessage(), e);
             return "抱歉，当前网络不佳，请稍后重试。";
         }
     }
@@ -232,10 +232,10 @@ public class LeaveManagementTools {
     public String getLeaveStatistics(
             @P("当前用户的ID，这个ID由系统在后台自动提供，AI需要直接传递它") Long currentUserId
     ) {
-        log.info("🤖 AI Workflow Tool: 统计请假申请状态分布");
+        log.info("  AI Workflow Tool: 统计请假申请状态分布");
         
         if (currentUserId == null) {
-            return "❌ 用户未登录，无法查询请假统计。";
+            return "  用户未登录，无法查询请假统计。";
         }
         
         // 权限检查
@@ -243,7 +243,7 @@ public class LeaveManagementTools {
             Map<String, Object> userInfo = permissionService.getUserInfo(currentUserId);
             String roleName = userInfo != null ? 
                 permissionService.getRoleName((Long) userInfo.get("role_id")) : "未知";
-            return String.format("⚠️ 权限不足：您当前是【%s】身份，无权查看请假统计。只有管理员和超级管理员可以查看统计信息。", roleName);
+            return String.format("  权限不足：您当前是【%s】身份，无权查看请假统计。只有管理员和超级管理员可以查看统计信息。", roleName);
         }
         
         try {
@@ -256,15 +256,15 @@ public class LeaveManagementTools {
             List<Map<String, Object>> typeStats = jdbcTemplate.queryForList(typeSql);
             
             if (statusStats.isEmpty() && typeStats.isEmpty()) {
-                return "📊 暂无请假申请数据。";
+                return "  暂无请假申请数据。";
             }
             
             StringBuilder result = new StringBuilder();
-            result.append("📊 **请假申请统计报告**\n\n");
+            result.append("  **请假申请统计报告**\n\n");
             
             // 状态分布
             if (!statusStats.isEmpty()) {
-                result.append("### 📈 审批状态分布\n");
+                result.append("###   审批状态分布\n");
                 int totalStatus = 0;
                 for (Map<String, Object> stat : statusStats) {
                     String status = (String) stat.get("status");
@@ -282,7 +282,7 @@ public class LeaveManagementTools {
             
             // 类型分布
             if (!typeStats.isEmpty()) {
-                result.append("### 📋 请假类型分布\n");
+                result.append("###   请假类型分布\n");
                 for (Map<String, Object> stat : typeStats) {
                     String type = (String) stat.get("leave_type");
                     Object countObj = stat.get("count");
@@ -298,7 +298,7 @@ public class LeaveManagementTools {
             return result.toString().trim();
             
         } catch (Exception e) {
-            log.error("❌ 查询请假统计失败: {}", e.getMessage(), e);
+            log.error("  查询请假统计失败: {}", e.getMessage(), e);
             return "抱歉，当前网络不佳，请稍后重试。";
         }
     }
@@ -321,7 +321,7 @@ public class LeaveManagementTools {
     }
 
     private String getLeaveTypeIcon(String leaveType) {
-        if (leaveType == null) return "❓";
+        if (leaveType == null) return "";
         switch (leaveType.toUpperCase()) {
             case "SICK": return "🤒";
             case "PERSONAL": return "📝";
@@ -349,7 +349,7 @@ public class LeaveManagementTools {
         switch (status.toUpperCase()) {
             case "PENDING": return "⏳";
             case "APPROVED": return "✅";
-            case "REJECTED": return "❌";
+            case "REJECTED": return " ";
             case "CANCELLED": return "🚫";
             default: return "❓";
         }

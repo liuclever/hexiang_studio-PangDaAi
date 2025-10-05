@@ -138,11 +138,11 @@
       <view class="form-row">
         <view class="form-item half">
           <text class="form-label">纬度</text>
-          <view class="form-display">{{createForm.locationLat || '请先选择地点'}}</view>
+          <view class="form-display">{{createForm.locationLat ? tools.formatCoordinate(createForm.locationLat) : '请先选择地点'}}</view>
         </view>
         <view class="form-item half">
           <text class="form-label">经度</text>
-          <view class="form-display">{{createForm.locationLng || '请先选择地点'}}</view>
+          <view class="form-display">{{createForm.locationLng ? tools.formatCoordinate(createForm.locationLng) : '请先选择地点'}}</view>
         </view>
       </view>
       
@@ -307,11 +307,19 @@
     return '未设置';
   }
   
+  // 格式化坐标，保留6位小数
+  function formatCoordinate(coordinate) {
+    if (!coordinate) return '';
+    var num = parseFloat(coordinate);
+    return num.toFixed(6);
+  }
+  
   module.exports = {
     formatDateTime: formatDateTime,
     truncateText: truncateText,
     isStudentSelected: isStudentSelected,
-    formatLocation: formatLocation
+    formatLocation: formatLocation,
+    formatCoordinate: formatCoordinate
   };
 </wxs>
 
@@ -328,4 +336,6 @@
   module.exports = {
     getFilterText: getFilterText
   };
-</wxs> 
+</wxs>
+
+ 

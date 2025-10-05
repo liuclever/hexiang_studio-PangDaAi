@@ -1,5 +1,7 @@
 // pages/materials/index.js
 const { BASE_URL } = require('../../config/index');
+const { http } = require('../../utils/request');
+const storage = require('../../utils/storage');
 const { previewFile, downloadFile, getFileTypeIcon, formatFileSize } = require('../../utils/fileHelper');
 
 Page({
@@ -77,8 +79,8 @@ Page({
 
   // 加载用户信息
   loadUserInfo: function() {
-    const userInfo = wx.getStorageSync('userInfo');
-    const roleId = wx.getStorageSync('roleId');
+    const userInfo = storage.getUserInfo();
+    const roleId = userInfo && userInfo.positionId ? userInfo.positionId : null;
     
     this.setData({
       currentUser: userInfo,
@@ -88,41 +90,22 @@ Page({
 
   // 加载分类列表
   loadCategories: function() {
-    wx.request({
-      url: `${BASE_URL}/wx/material/categories`,
-      method: 'GET',
-      header: {
-        'Authorization': 'Bearer ' + wx.getStorageSync('token')
-      },
-      success: (res) => {
-        console.log('分类接口返回:', res.data);
-        if (res.data && (res.data.code === 200 || res.data.code === 1)) {
-          const rawCategories = res.data.data || [];
-          console.log('原始分类数据:', rawCategories);
-          
-          // 为选择器格式化数据：添加"全部分类"选项
-          const categories = [
-            { id: null, name: '全部分类', label: '全部分类', value: 0 },
-            ...rawCategories.map((item, index) => ({
-              ...item,
-              label: item.name,
-              value: index + 1
-            }))
-          ];
-          
-          console.log('格式化后的分类数据:', categories);
-          
-          this.setData({
-            categories
-          });
-        } else {
-          console.error('分类接口返回错误:', res.data);
-        }
-      },
-      fail: (error) => {
+    http.get('/wx/material/categories')
+      .then((res) => {
+        const rawCategories = res.data || [];
+        const categories = [
+          { id: null, name: '全部分类', label: '全部分类', value: 0 },
+          ...rawCategories.map((item, index) => ({
+            ...item,
+            label: item.name,
+            value: index + 1
+          }))
+        ];
+        this.setData({ categories });
+      })
+      .catch((error) => {
         console.error('加载分类失败:', error);
-      }
-    });
+      });
   },
 
   // 加载资料列表
@@ -133,43 +116,26 @@ Page({
     
     console.log('发送资料列表请求，参数:', params);
     
-    wx.request({
-      url: `${BASE_URL}/wx/material/list`,
-      method: 'POST',
-      data: params,
-      header: {
-        'Authorization': 'Bearer ' + wx.getStorageSync('token'),
-        'Content-Type': 'application/json'
-      },
-      success: (res) => {
-        console.log('资料列表接口返回:', res.data);
-        if (res.data && (res.data.code === 200 || res.data.code === 1)) {
-          const data = res.data.data;
-          const materials = this.processMaterialsData(data.records || []);
-          
-          console.log('处理后的资料数据:', materials);
-          
-          this.setData({
-            materials,
-            total: data.total || 0,
-            currentPage: 1,
-            hasMore: materials.length < (data.total || 0),
-            showSearchResult: !!this.data.searchQuery
-          });
-        } else {
-          console.error('资料列表接口返回错误:', res.data);
-          this.showError('加载资料失败', res.data.msg);
-        }
-      },
-      fail: (error) => {
+    http.post('/wx/material/list', params)
+      .then((res) => {
+        const data = res.data;
+        const materials = this.processMaterialsData(data.records || []);
+        this.setData({
+          materials,
+          total: data.total || 0,
+          currentPage: 1,
+          hasMore: materials.length < (data.total || 0),
+          showSearchResult: !!this.data.searchQuery
+        });
+      })
+      .catch((error) => {
         console.error('加载资料失败:', error);
         this.showError('网络错误', '请检查网络连接后重试');
-      },
-      complete: () => {
+      })
+      .finally(() => {
         this.setData({ loading: false });
         wx.stopPullDownRefresh();
-      }
-    });
+      });
   },
 
   // 加载更多资料
@@ -181,41 +147,25 @@ Page({
     const params = this.buildQueryParams();
     params.page = this.data.currentPage + 1;
     
-    wx.request({
-      url: `${BASE_URL}/wx/material/list`,
-      method: 'POST',
-      data: params,
-      header: {
-        'Authorization': 'Bearer ' + wx.getStorageSync('token'),
-        'Content-Type': 'application/json'
-      },
-      success: (res) => {
-        if (res.data && (res.data.code === 200 || res.data.code === 1)) {
-          const data = res.data.data;
-          const newMaterials = this.processMaterialsData(data.records || []);
-          
-          // 去重：过滤掉已存在的材料
-          const existingIds = this.data.materials.map(item => item.id);
-          const uniqueNewMaterials = newMaterials.filter(item => !existingIds.includes(item.id));
-          
-          this.setData({
-            materials: [...this.data.materials, ...uniqueNewMaterials],
-            currentPage: params.page,
-            hasMore: (this.data.materials.length + uniqueNewMaterials.length) < (data.total || 0)
-          });
-        }
-      },
-      fail: (error) => {
-        console.error('加载更多资料失败:', error);
-        wx.showToast({
-          title: '加载失败',
-          icon: 'none'
+    http.post('/wx/material/list', params, { showLoading: false })
+      .then((res) => {
+        const data = res.data;
+        const newMaterials = this.processMaterialsData(data.records || []);
+        const existingIds = this.data.materials.map(item => item.id);
+        const uniqueNewMaterials = newMaterials.filter(item => !existingIds.includes(item.id));
+        this.setData({
+          materials: [...this.data.materials, ...uniqueNewMaterials],
+          currentPage: params.page,
+          hasMore: (this.data.materials.length + uniqueNewMaterials.length) < (data.total || 0)
         });
-      },
-      complete: () => {
+      })
+      .catch((error) => {
+        console.error('加载更多资料失败:', error);
+        wx.showToast({ title: '加载失败', icon: 'none' });
+      })
+      .finally(() => {
         this.setData({ loadingMore: false });
-      }
-    });
+      });
   },
 
   // 将分类名称转换为文件类型列表
@@ -499,32 +449,21 @@ Page({
   recordMaterialView: function(materialId) {
     if (!materialId) return;
     
-    wx.request({
-      url: `${BASE_URL}/wx/material/view/${materialId}`,
-      method: 'POST',
-      header: {
-        'Authorization': 'Bearer ' + wx.getStorageSync('token')
-      },
-      success: (res) => {
-        console.log('记录查看成功:', res.data);
-      },
-      fail: (error) => {
-        console.error('记录查看失败:', error);
-      }
-    });
+         http.post('/wx/material/view/' + materialId)
+       .then((res) => {
+         console.log('记录查看成功:', res.data);
+       })
+       .catch((error) => {
+         console.error('记录查看失败:', error);
+       });
   },
 
   // 记录资料下载
   recordMaterialDownload: function(materialId) {
     if (!materialId) return;
     
-    wx.request({
-      url: `${BASE_URL}/wx/material/download/${materialId}`,
-      method: 'POST',
-      header: {
-        'Authorization': 'Bearer ' + wx.getStorageSync('token')
-      },
-      success: (res) => {
+    http.post('/wx/material/download/' + materialId)
+      .then((res) => {
         console.log('记录下载成功:', res.data);
         
         // 更新下载次数显示
@@ -536,11 +475,10 @@ Page({
         });
         
         this.setData({ materials });
-      },
-      fail: (error) => {
+      })
+      .catch((error) => {
         console.error('记录下载失败:', error);
-      }
-    });
+      });
   },
 
   // 查看资料详情

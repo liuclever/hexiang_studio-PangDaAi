@@ -4,6 +4,8 @@ import com.back_hexiang_studio.dv.dto.NotificationQueryDto;
 import com.back_hexiang_studio.entity.SystemNotification;
 import com.back_hexiang_studio.result.PageResult;
 
+import java.util.List;
+
 /**
  * 通知服务接口
  */
@@ -56,4 +58,12 @@ public interface NotificationService {
      * @return 通知对象
      */
     SystemNotification getNotificationById(Long id);
+    
+    /**
+     * 批量删除用户通知
+     * @param userId 用户ID
+     * @param notificationIds 通知ID列表
+     * @return 是否成功
+     */
+    boolean deleteNotifications(Long userId, List<Long> notificationIds);
 } 

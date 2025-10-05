@@ -3,10 +3,22 @@ Component({
     selected: 1, // 默认选中工作台
     color: "#909399",
     selectedColor: "#1890FF",
-    list: []
+    list: [],
+    role: 'student' // 添加角色字段
+  },
+
+  // 监听角色变化
+  observers: {
+    'role': function(newRole) {
+      this.initTabBarList();
+    }
   },
 
   attached() {
+    // 获取初始角色
+    const role = wx.getStorageSync('role') || 'student';
+    this.setData({ role });
+    
     // 初始化TabBar列表
     this.initTabBarList();
     // 获取当前页面路径，设置选中状态
@@ -15,8 +27,8 @@ Component({
 
   methods: {
     initTabBarList() {
-      // 获取用户角色
-      const role = wx.getStorageSync('role') || 'student';
+      // 使用组件内的role数据
+      const role = this.data.role;
       
       let tabBarList = [
       {
@@ -33,7 +45,7 @@ Component({
         }
       ];
 
-      // 根据角色添加签到页面
+      // 根据角色添加签到页面 - 只有非管理员才显示
       if (role !== 'admin') {
         tabBarList.push({
         pagePath: "pages/attendance/check-in",
@@ -62,7 +74,12 @@ Component({
       this.setData({
         list: tabBarList
       });
-  },
+    },
+
+    // 更新角色方法
+    updateRole(role) {
+      this.setData({ role });
+    },
 
     switchTab(e) {
       const data = e.currentTarget.dataset;

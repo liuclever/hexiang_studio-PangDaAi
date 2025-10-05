@@ -41,7 +41,8 @@
   
   <!-- 管理员特有内容 -->
   <block wx:if="{{role === 'admin'}}">
-    <view class="section-title">管理员工作台
+    <view class="section-title">
+      <text class="section-title-text">管理员工作台</text>
       <text class="more-text" bindtap="goToApprovalHistory">审批记录 ></text>
     </view>
     <view class="overview-card card" hover-class="card-hover" hover-stay-time="200" bindtap="goToApprovalRecords">
@@ -106,11 +107,20 @@
   <view class="overview-card card">
     <view class="overview-title">
       <text>工作室活跃度趋势</text>
-      <text class="chart-period-title">近5天</text>
+      <view class="title-right">
+        <text class="chart-period-title">近5天</text>
+        <view class="info-icon" bindtap="showCalculationInfo">
+          <t-icon name="help" size="32rpx" color="#999"></t-icon>
+        </view>
+      </view>
     </view>
     
     <view class="chart-area">
-      <canvas canvas-id="lineChart" disable-scroll="true" class="chart-canvas" bindtouchstart="onTouchStart" bindtouchmove="onTouchMove" bindtouchend="onTouchEnd"></canvas>
+      <canvas wx:if="{{hasChartData && !showCalculationModal}}" canvas-id="lineChart" disable-scroll="true" class="chart-canvas" bindtouchstart="onTouchStart" bindtouchmove="onTouchMove" bindtouchend="onTouchEnd"></canvas>
+      <view wx:else class="chart-empty">
+        <t-icon name="chart-line" size="80rpx" color="#ddd"></t-icon>
+        <text class="empty-text">暂无活跃度数据</text>
+      </view>
     </view>
   </view>
   
@@ -206,5 +216,56 @@
     </block>
   </view>
 </view>
+
+<!-- 计算说明弹窗 -->
+<t-popup visible="{{showCalculationModal}}" placement="bottom" z-index="99999" prevent-scroll-through="true" show-overlay="true" bind:visible-change="onCalculationModalChange">
+  <view class="calculation-modal-bottom">
+    <view class="modal-header">
+      <text class="modal-title">活跃度计算说明</text>
+      <view class="modal-close" bindtap="hideCalculationModal">
+        <t-icon name="close" size="40rpx" color="#999"></t-icon>
+      </view>
+    </view>
+    
+    <scroll-view class="modal-body" scroll-y="true" enable-flex="true">
+      <view class="calculation-section">
+        <text class="section-title">活跃度指标</text>
+        <text class="section-content">工作室活跃度由以下几个维度综合计算：</text>
+        
+        <view class="metric-item">
+          <text class="metric-name">• 签到活跃度 (40%)</text>
+          <text class="metric-desc">基于每日签到人数占总人数的比例</text>
+        </view>
+        
+        <view class="metric-item">
+          <text class="metric-name">• 任务参与度 (30%)</text>
+          <text class="metric-desc">当日提交任务和完成任务的人数比例</text>
+        </view>
+        
+        <view class="metric-item">
+          <text class="metric-name">• 课程互动度 (20%)</text>
+          <text class="metric-desc">课程讨论、资料下载等互动行为频次</text>
+        </view>
+        
+        <view class="metric-item">
+          <text class="metric-name">• 系统使用度 (10%)</text>
+          <text class="metric-desc">小程序日活跃用户占比</text>
+        </view>
+      </view>
+      
+      <view class="calculation-section">
+        <text class="section-title"> 计算公式</text>
+        <view class="formula-box">
+          <text class="formula">活跃度 = 签到率×0.4 + 任务参与率×0.3 + 课程互动率×0.2 + 系统使用率×0.1</text>
+        </view>
+      </view>
+      
+      <view class="calculation-section">
+        <text class="section-title"> 更新频率</text>
+        <text class="section-content">数据每日凌晨2点自动更新，图表展示近5天的趋势变化。</text>
+      </view>
+    </scroll-view>
+  </view>
+</t-popup>
 
  

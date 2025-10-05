@@ -88,7 +88,7 @@ public class TaskServiceImpl implements TaskService {
             User currentUser = userMapper.getUserById(currentUserId);
             if (currentUser != null && currentUser.getPositionId() != null) {
                 Long positionId = currentUser.getPositionId();
-                // 根据职位ID判断角色 - 与CourseServiceImpl和其他Service保持一致
+                // 根据职位ID判断角色 -
                 if (positionId == 8L) {
                     userRole = "admin"; // 超级管理员
                 } else if (positionId == 6L || positionId == 7L) {

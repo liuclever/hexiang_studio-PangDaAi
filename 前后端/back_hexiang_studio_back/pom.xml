@@ -29,6 +29,10 @@
         <volcengine.version>0.2.25</volcengine.version>
         <netty.version>4.1.86.Final</netty.version>
         <langchain4j.version>1.4.0</langchain4j.version>
+        <hutool.version>5.8.40</hutool.version>
+        <aliyun.core.version>4.5.10</aliyun.core.version>
+        <aliyun.dm.version>3.3.1</aliyun.dm.version>
+        <aliyun-dm.version>1.0.3</aliyun-dm.version>
     </properties>
 
     <dependencyManagement>
@@ -103,7 +107,34 @@
                 <version>${netty.version}</version>
             </dependency>
 
-            <!-- 移除手动指定的 langchain4j 依赖，由 BOM 统一管理 -->
+            <!-- 图形验证码生成库 -->
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <version>${hutool.version}</version>  <!-- 修正属性引用 -->
+            </dependency>
+
+         
+            <!-- Hutool 版本管理 -->
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-bom</artifactId>
+                <version>${hutool.version}</version>  <!-- 使用Properties统一版本 -->
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+                        <!-- 阿里云邮件推送SDK -->
+            <dependency>
+                <groupId>com.aliyun</groupId>
+                <artifactId>dm20151123</artifactId>
+                <version>${aliyun-dm.version}</version>
+            </dependency>
+
+
+
+            
+
             
         </dependencies>
     </dependencyManagement>
@@ -121,6 +152,7 @@
                 <enabled>false</enabled>
             </snapshots>
         </repository>
+
     </repositories>
 
     <pluginRepositories>

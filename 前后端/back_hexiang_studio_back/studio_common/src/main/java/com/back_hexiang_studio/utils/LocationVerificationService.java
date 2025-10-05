@@ -3,7 +3,7 @@ package com.back_hexiang_studio.utils;
 import org.springframework.stereotype.Component;
 
 /**
- * 位置验证服务
+ * 位置验证
  * 用于验证签到位置是否在有效范围内
  */
 @Component

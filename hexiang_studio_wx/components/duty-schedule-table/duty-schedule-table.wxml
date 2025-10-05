@@ -113,8 +113,8 @@
       <text>我的值班</text>
     </button>
     
-    <button class="action-btn secondary" bindtap="refreshData">
-      <t-icon name="refresh" size="32rpx" color="#007aff"></t-icon>
+    <button class="action-btn primary" bindtap="refreshData">
+      <t-icon name="refresh" size="32rpx" color="#ffffff"></t-icon>
       <text>刷新</text>
     </button>
   </view>

@@ -4,13 +4,14 @@
  */
 
 const { http } = require('./request');
+const storage = require('./storage');
 
 /**
  * 检查是否已登录
  * @returns {boolean} 是否已登录
  */
 const isLoggedIn = () => {
-  const token = wx.getStorageSync('token');
+  const token = storage.getToken();
   return !!token;
 };
 
@@ -19,7 +20,7 @@ const isLoggedIn = () => {
  * @returns {Object|null} 用户信息，未登录时返回null
  */
 const getUserInfo = () => {
-  return wx.getStorageSync('userInfo') || null;
+  return storage.getUserInfo() || null;
 };
 
 /**
@@ -27,7 +28,7 @@ const getUserInfo = () => {
  * @returns {string} 角色类型，默认为'student'
  */
 const getUserRole = () => {
-  return wx.getStorageSync('role') || 'student';
+  return storage.getRole() || 'student';
 };
 
 /**
@@ -52,27 +53,32 @@ const isTeacher = () => {
  * 登录
  * @param {string} username 用户名
  * @param {string} password 密码
- * @returns {Promise} 登录结果
+ * @returns {Promise} 登录结果N
  */
-const login = (username, password) => {
+const login = (userName, password) => {
   return new Promise((resolve, reject) => {
-    // 使用微信小程序的登录API
-          http.post('/wx/user/login', { 
-      userName: username, 
+    // 使用统一请求工具
+    http.post('/wx/user/login', { 
+      userName: userName, 
       password: password 
     })
       .then(res => {
         if (res.code === 200 && res.data) {
           const userData = res.data;
-          // 保存登录信息到本地，匹配后端返回格式
-          wx.setStorageSync('token', userData.token);
+          
+          // 🚀 双Token存储
+          storage.setAccessToken(userData.token); // Access Token
+          // 注意：后端需要返回refreshToken字段
+          if (userData.refreshToken) {
+            storage.setRefreshToken(userData.refreshToken);
+          }
+          
+          // 兼容旧版本
+          storage.setToken(userData.token);
           
           // 根据positionId判断角色
           let userRole = 'student'; // 默认学生
           const positionId = userData.positionId || userData.position_id || userData.position?.positionId;
-          
-          console.log('登录用户数据:', userData);
-          console.log('获取到的positionId:', positionId);
           
           if (positionId) {
             switch (parseInt(positionId)) {
@@ -90,16 +96,14 @@ const login = (username, password) => {
             }
           }
           
-          console.log('最终判定角色:', userRole);
-          
-          wx.setStorageSync('userInfo', {
+          storage.setUserInfo({
             userId: userData.userId,  // 修改为 userId
             name: userData.name,
             avatar: userData.avatar,
             role: userRole,
             positionId: positionId
           });
-          wx.setStorageSync('role', userRole);
+          storage.setRole(userRole);
         
           resolve(userData);
         } else {
@@ -107,7 +111,6 @@ const login = (username, password) => {
         }
       })
       .catch(err => {
-        // 如果错误对象包含业务错误信息，则显示具体错误
         if (err && err.msg) {
           reject(new Error(err.msg));
         } else {
@@ -123,12 +126,12 @@ const login = (username, password) => {
  */
 const logout = (callback) => {
   // 清除登录信息
-  wx.removeStorageSync('token');
-  wx.removeStorageSync('userInfo');
-  wx.removeStorageSync('role');
+  storage.removeToken();
+  storage.removeUserInfo();
+  storage.removeRole();
   
   // 可选：向服务器发送登出请求
-      http.post('/wx/user/logout', {}, { showError: false, showLoading: false })
+  http.post('/wx/user/logout', {}, { showError: false, showLoading: false })
     .finally(() => {
       callback && callback();
     });

@@ -114,7 +114,7 @@ public class ModelRouterService {
      */
     public AIModel selectModel(String userMessage, Long userId, String sessionId) {
         try {
-            log.info("🤖 智能模型选择开始 - 用户ID: {}, 会话: {}", userId, sessionId);
+            log.info(" 智能模型选择开始 - 用户ID: {}, 会话: {}", userId, sessionId);
             
             // 1. 获取或创建会话状态
             SessionState sessionState = getSessionState(sessionId);
@@ -127,7 +127,7 @@ public class ModelRouterService {
             int messageLength = userMessage.length();
             int contextComplexity = analyzeContextComplexity(userMessage, userId, sessionId);
             
-            log.debug("📏 消息长度: {} 字符, 🏷️ 问题类型: {}, 🧠 复杂度: {}", 
+            log.debug("  消息长度: {} 字符,   问题类型: {},  复杂度: {}", 
                      messageLength, currentQuestionType, contextComplexity);
             
             // 4. 判断是否需要切换模型
@@ -144,14 +144,14 @@ public class ModelRouterService {
             // 7. 记录选择结果
             recordModelSelection(userId, sessionId, userMessage, selectedModel, currentQuestionType, sessionState);
             
-            log.info("✅ 选择模型: {} ({}) - 会话轮次: {}, 模型锁定: {}", 
+            log.info("  选择模型: {} ({}) - 会话轮次: {}, 模型锁定: {}", 
                     selectedModel.getModelName(), selectedModel.getDescription(),
                     sessionState.getTurnCount(), sessionState.isModelLocked());
                     
             return selectedModel;
             
         } catch (Exception e) {
-            log.error("❌ 模型选择失败，使用默认模型: {}", e.getMessage(), e);
+            log.error("  模型选择失败，使用默认模型: {}", e.getMessage(), e);
             return createAIModel("qwen-plus"); // 默认模型
         }
     }
@@ -163,7 +163,7 @@ public class ModelRouterService {
         SessionState state = sessionStateCache.get(sessionId);
         
         if (state == null || isSessionExpired(state)) {
-            log.debug("🆕 创建新的会话状态: {}", sessionId);
+            log.debug("  创建新的会话状态: {}", sessionId);
             // 创建新会话状态，使用默认模型
             state = new SessionState("qwen-plus", "CASUAL");
             sessionStateCache.put(sessionId, state);
@@ -195,7 +195,7 @@ public class ModelRouterService {
         }
         
         if (cleanedCount > 0) {
-            log.debug("🧹 清理过期会话: {} 个", cleanedCount);
+            log.debug("  清理过期会话: {} 个", cleanedCount);
         }
     }
     
@@ -207,14 +207,14 @@ public class ModelRouterService {
         
         // 1. 如果模型被锁定，继续使用当前模型
         if (sessionState.isModelLocked()) {
-            log.debug("🔒 模型已锁定: {} (原因: {})", sessionState.getCurrentModel(), sessionState.getLockReason());
+            log.debug("  模型已锁定: {} (原因: {})", sessionState.getCurrentModel(), sessionState.getLockReason());
             return sessionState.getCurrentModel();
         }
         
         // 2. 检查是否需要强制切换模型
         String forceModel = checkForceModelSwitch(questionType, messageLength, contextComplexity);
         if (forceModel != null) {
-            log.info("⚡ 强制切换模型: {} → {}", sessionState.getCurrentModel(), forceModel);
+            log.info(" 强制切换模型: {} → {}", sessionState.getCurrentModel(), forceModel);
             return forceModel;
         }
         
@@ -223,13 +223,13 @@ public class ModelRouterService {
         
         if (!shouldSwitchModel) {
             // 保持当前模型
-            log.debug("🔗 保持当前模型: {} (会话粘性)", sessionState.getCurrentModel());
+            log.debug(" 保持当前模型: {} (会话粘性)", sessionState.getCurrentModel());
             return sessionState.getCurrentModel();
         }
         
         // 4. 需要切换时，选择新模型
         String newModel = intelligentModelSelection(questionType, messageLength, contextComplexity);
-        log.info("🔄 切换模型: {} → {} (问题类型: {})", 
+        log.info(" 切换模型: {} → {} (问题类型: {})",
                 sessionState.getCurrentModel(), newModel, questionType);
         
         return newModel;
@@ -265,19 +265,19 @@ public class ModelRouterService {
         
         // 2. 检查用户是否明确要求切换话题
         if (isExplicitTopicSwitch(userMessage)) {
-            log.debug("🔀 用户明确切换话题");
+            log.debug(" 用户明确切换话题");
             return true;
         }
         
         // 3. 问题类型发生重大变化
         if (isMajorQuestionTypeChange(sessionState, questionType)) {
-            log.debug("📊 问题类型发生重大变化");
+            log.debug(" 问题类型发生重大变化");
             return true;
         }
         
         // 4. 复杂度显著提升，需要更强模型
         if (needsStrongerModel(sessionState.getCurrentModel(), questionType, contextComplexity)) {
-            log.debug("⬆️ 需要更强的模型");
+            log.debug("️ 需要更强的模型");
             return true;
         }
         
@@ -374,7 +374,7 @@ public class ModelRouterService {
                 .skip(Math.max(0, sessionState.getRecentQuestionTypes().size() - 3))
                 .allMatch(type -> type.equals(questionType))) {
             sessionState.lockModel("连续相同类型问题");
-            log.debug("🔒 锁定模型 {} (连续相同类型: {})", selectedModel, questionType);
+            log.debug("  锁定模型 {} (连续相同类型: {})", selectedModel, questionType);
         }
     }
     
@@ -571,7 +571,7 @@ public class ModelRouterService {
      */
     public void resetSession(String sessionId) {
         SessionState oldState = sessionStateCache.remove(sessionId);
-        log.info("🔄 手动重置会话状态: {} (之前模型: {})", 
+        log.info("手动重置会话状态: {} (之前模型: {})",
                 sessionId, oldState != null ? oldState.getCurrentModel() : "无");
     }
     

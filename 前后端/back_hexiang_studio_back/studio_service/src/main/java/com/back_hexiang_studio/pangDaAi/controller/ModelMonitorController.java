@@ -229,7 +229,7 @@ public class ModelMonitorController {
                 "LEFT JOIN user u ON mul.user_id = u.user_id " +
                 "WHERE DATE(mul.create_time) = CURDATE() " +
                 "GROUP BY mul.user_id, u.name " +
-                "HAVING today_cost > 10.0 " +  // 成本超过10的用户
+                "HAVING today_cost > 10.0 " +
                 "ORDER BY today_cost DESC " +
                 "LIMIT 20";
                 

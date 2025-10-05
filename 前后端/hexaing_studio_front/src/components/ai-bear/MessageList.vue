@@ -61,6 +61,23 @@ const formatMessageContent = (content: string) => {
   
   console.log('🎨 开始格式化内容:', JSON.stringify(content))
   
+  // 检查是否是JSON错误响应，如果是则只提取msg字段
+  if (typeof content === 'string' && content.trim().startsWith('{') && content.includes('"code"')) {
+    try {
+      const errorObj = JSON.parse(content);
+      if (errorObj.msg) {
+        content = errorObj.msg;
+      } else if (errorObj.message) {
+        content = errorObj.message;
+      } else {
+        content = '服务暂时不可用，请稍后重试';
+      }
+      console.log('🔧 检测到JSON错误响应，提取消息:', content);
+    } catch (e) {
+      console.log('❌ JSON解析失败，使用原内容');
+    }
+  }
+  
   // 简化格式化，只做基本的Markdown处理
   // 1. HTML转义防止XSS
   let formattedContent = content

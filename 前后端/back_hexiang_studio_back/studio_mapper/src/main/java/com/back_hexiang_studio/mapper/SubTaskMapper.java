@@ -3,7 +3,6 @@ package com.back_hexiang_studio.mapper;
 import com.back_hexiang_studio.annotation.AutoFill;
 import com.back_hexiang_studio.dv.vo.task.SubTaskVo;
 import com.back_hexiang_studio.entity.SubTask;
-import com.back_hexiang_studio.enumeration.OperationType;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

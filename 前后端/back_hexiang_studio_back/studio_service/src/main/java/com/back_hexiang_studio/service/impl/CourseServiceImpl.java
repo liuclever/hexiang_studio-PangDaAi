@@ -311,8 +311,10 @@ public class CourseServiceImpl implements CourseService {
             // 清除相关缓存
             String enrolledStudentsCacheKey = "course:enrolled_students:" + addStudentDto.getCourseId();
             String eligibleStudentsCacheKey = "course:eligible_students:" + addStudentDto.getCourseId();
+            String studentListCacheKey = "course:students:" + addStudentDto.getCourseId();
             redisTemplate.delete(enrolledStudentsCacheKey);
             redisTemplate.delete(eligibleStudentsCacheKey);
+            redisTemplate.delete(studentListCacheKey);
 
         }catch (Exception e){
             // 捕获可能由数据库唯一约束（学生已在课程中）等原因导致的异常
@@ -343,8 +345,10 @@ public class CourseServiceImpl implements CourseService {
             // 清除相关缓存
             String enrolledStudentsCacheKey = "course:enrolled_students:" + removeStudentDto.getCourseId();
             String eligibleStudentsCacheKey = "course:eligible_students:" + removeStudentDto.getCourseId();
+            String studentListCacheKey = "course:students:" + removeStudentDto.getCourseId();
             redisTemplate.delete(enrolledStudentsCacheKey);
             redisTemplate.delete(eligibleStudentsCacheKey);
+            redisTemplate.delete(studentListCacheKey);
 
             log.info("成功从课程{}中移出学生{}", removeStudentDto.getCourseId(), removeStudentDto.getStudentId());
         } catch (Exception e) {

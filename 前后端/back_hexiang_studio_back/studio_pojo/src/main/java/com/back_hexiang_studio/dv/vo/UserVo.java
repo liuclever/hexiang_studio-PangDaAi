@@ -45,5 +45,7 @@ public class UserVo {
     private Long departmentId; // 部门ID
     private String departmentName; // 部门名称
 
+    // 在线状态
+    private boolean online;
 
 }

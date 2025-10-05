@@ -84,4 +84,13 @@
         WHERE id = #{id}
     </select>
     
+    <delete id="deleteUserNotifications">
+        DELETE FROM system_notification
+        WHERE (target_user_id = #{userId} OR target_user_id IS NULL)
+        AND id IN
+        <foreach item="id" collection="notificationIds" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
 </mapper> 

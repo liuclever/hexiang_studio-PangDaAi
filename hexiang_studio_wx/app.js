@@ -1,11 +1,14 @@
 // app.js - 何湘技能大师工作室小程序入口文件
+const { BASE_URL } = require('./config/index.js');
+const storage = require('./utils/storage.js');
+
 App({
   // 全局数据
   globalData: {
     userInfo: null,
     role: 'student', // 默认角色: 'student' 或 'admin'
     token: '',
-    baseUrl: 'http://172.20.10.2:8044', // 修改API基础URL为本地开发地址
+    baseUrl: BASE_URL, // 使用配置文件中的API基础URL
     version: '1.0.0'
   },
 
@@ -17,45 +20,24 @@ App({
 
   // 检查登录状态
   checkLogin() {
-    const token = wx.getStorageSync('token');
-    const userInfo = wx.getStorageSync('userInfo');
-    const role = wx.getStorageSync('role') || 'student';
+    const token = storage.getToken();
+    const userInfo = storage.getUserInfo();
+    const role = storage.getRole() || 'student';
     
     if (token && userInfo) {
       this.globalData.token = token;
       this.globalData.userInfo = userInfo;
       this.globalData.role = role;
-      
-      // 验证token有效性
-      this.validateToken();
     }
   },
   
-  // 验证Token有效性
-  validateToken() {
-    const that = this;
-    wx.request({
-      url: `${this.globalData.baseUrl}/api/auth/validate`,
-      method: 'GET',
-      header: {
-        'Authorization': `Bearer ${this.globalData.token}`
-      },
-      success(res) {
-        if (res.data.code !== 200) {
-          that.logout();
-        }
-      },
-      fail() {
-        console.error('Token验证失败');
-      }
-    });
-  },
+
 
   // 登录方法
   login(username, password, callback) {
     const that = this;
     wx.request({
-      url: `${this.globalData.baseUrl}/api/auth/login`,
+      url: `${this.globalData.baseUrl}/wx/user/login`,
       method: 'POST',
       data: {
         username,
@@ -70,10 +52,10 @@ App({
           that.globalData.userInfo = userInfo;
           that.globalData.role = role || 'student';
           
-          // 本地存储
-          wx.setStorageSync('token', token);
-          wx.setStorageSync('userInfo', userInfo);
-          wx.setStorageSync('role', that.globalData.role);
+          // 本地存储（统一storage）
+          storage.setToken(token);
+          storage.setUserInfo(userInfo);
+          storage.setRole(that.globalData.role);
           
           callback && callback(true, '登录成功');
         } else {
@@ -94,8 +76,8 @@ App({
     this.globalData.userInfo = null;
     
     // 清除本地存储
-    wx.removeStorageSync('token');
-    wx.removeStorageSync('userInfo');
+    storage.removeToken();
+    storage.removeUserInfo();
     
     // 跳转到登录页
     wx.reLaunch({
@@ -107,7 +89,7 @@ App({
   switchRole(role) {
     if (role === 'student' || role === 'admin') {
       this.globalData.role = role;
-      wx.setStorageSync('role', role);
+      storage.setRole(role);
       
       // 重定向到首页
       wx.reLaunch({

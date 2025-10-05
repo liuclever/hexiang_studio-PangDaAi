@@ -89,7 +89,6 @@ public interface UserService {
     /**
      * 修改密码
      * @param changePasswordDto 包含旧密码和新密码的DTO
-     * @throws BusinessException 如果密码修改失败（如旧密码不正确）
      */
     void changePassword(ChangePasswordDto changePasswordDto);
     

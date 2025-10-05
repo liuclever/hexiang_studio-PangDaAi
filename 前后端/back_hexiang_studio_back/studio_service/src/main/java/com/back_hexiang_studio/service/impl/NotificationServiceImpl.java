@@ -90,4 +90,13 @@ public class NotificationServiceImpl implements NotificationService {
     public SystemNotification getNotificationById(Long id) {
         return notificationMapper.selectById(id);
     }
+    
+    @Override
+    @Transactional
+    public boolean deleteNotifications(Long userId, List<Long> notificationIds) {
+        if (notificationIds == null || notificationIds.isEmpty()) {
+            return false;
+        }
+        return notificationMapper.deleteUserNotifications(userId, notificationIds) > 0;
+    }
 } 

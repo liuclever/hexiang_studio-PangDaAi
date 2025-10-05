@@ -59,4 +59,16 @@ export function getNotificationDetail(id: number) {
     url: `/admin/notification/detail/${id}`,
     method: 'get'
   });
+}
+
+/**
+ * 批量删除通知
+ * @param notificationIds 通知ID列表
+ */
+export function deleteNotifications(notificationIds: number[]) {
+  return request({
+    url: '/admin/notification/delete',
+    method: 'delete',
+    data: notificationIds
+  });
 } 

@@ -9,6 +9,14 @@
         <div class="card-header">
           <span>我的通知</span>
           <div class="header-actions">
+            <el-button 
+              v-if="selectedNotifications.length > 0" 
+              type="danger" 
+              size="small" 
+              @click="handleBatchDelete"
+            >
+              <el-icon><Delete /></el-icon> 删除选中 ({{ selectedNotifications.length }})
+            </el-button>
             <el-button type="primary" size="small" @click="refreshNotifications">
               <el-icon><Refresh /></el-icon> 刷新
             </el-button>
@@ -32,20 +40,40 @@
       
       <el-scrollbar height="calc(100vh - 280px)" v-else>
         <div class="notification-list">
+          <!-- 全选控制栏 -->
+          <div class="select-all-bar" v-if="notifications.length > 0">
+            <el-checkbox 
+              v-model="selectAll" 
+              @change="handleSelectAll"
+              :indeterminate="isIndeterminate"
+            >
+              全选
+            </el-checkbox>
+            <span class="selected-count">
+              已选择 {{ selectedNotifications.length }} / {{ notifications.length }} 个通知
+            </span>
+          </div>
+          
           <div 
             v-for="notification in notifications" 
             :key="notification.id" 
             class="notification-item"
-            :class="{ 'unread': notification.isRead === 0 }"
-            @click="markAsRead(notification)"
+            :class="{ 'unread': notification.isRead === 0, 'selected': selectedNotifications.includes(notification.id) }"
           >
+            <div class="notification-checkbox">
+              <el-checkbox 
+                v-model="selectedNotifications" 
+                :value="notification.id"
+                @change="updateSelectAll"
+              />
+            </div>
             <div class="notification-icon">
               <el-icon v-if="notification.type === 'announcement'"><Bell /></el-icon>
               <el-icon v-else-if="notification.type === 'task'"><Document /></el-icon>
               <el-icon v-else-if="notification.type === 'course'"><School /></el-icon>
               <el-icon v-else><Message /></el-icon>
             </div>
-            <div class="notification-content">
+            <div class="notification-content" @click="markAsRead(notification)">
               <div class="notification-header">
                 <span class="notification-title">{{ notification.title }}</span>
                 <span class="notification-time">{{ formatTime(notification.createTime) }}</span>
@@ -79,9 +107,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { useRouter } from 'vue-router';
-import { Bell, Document, School, Message, Refresh } from '@element-plus/icons-vue';
+import { Bell, Document, School, Message, Refresh, Delete } from '@element-plus/icons-vue';
 
 // 直接在组件内部定义通知类型，避免导入问题
 interface Notification {
@@ -120,6 +148,15 @@ const currentPage = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
 
+// 多选相关状态
+const selectedNotifications = ref<number[]>([]);
+const selectAll = ref(false);
+
+// 计算是否为半选状态
+const isIndeterminate = computed(() => {
+  return selectedNotifications.value.length > 0 && selectedNotifications.value.length < notifications.value.length;
+});
+
 // 路由
 const router = useRouter();
 const goBack = () => router.back();
@@ -139,7 +176,7 @@ onMounted(() => {
 });
 
 // 导入API
-import { getNotificationList, markAsRead as apiMarkAsRead } from '@/api/notification';
+import { getNotificationList, markAsRead as apiMarkAsRead, deleteNotifications } from '@/api/notification';
 
 // 方法
 const fetchNotifications = async () => {
@@ -162,6 +199,10 @@ const fetchNotifications = async () => {
     notifications.value = response.data.records || [];
     total.value = response.data.total || 0;
     
+    // 清空选择状态
+    selectedNotifications.value = [];
+    selectAll.value = false;
+    
   } catch (error) {
     console.error('获取通知出错:', error);
     // 错误消息也由拦截器统一处理，这里可以留空或只做日志记录
@@ -177,16 +218,22 @@ const refreshNotifications = () => {
 
 const handleTabChange = () => {
   currentPage.value = 1;
+  selectedNotifications.value = [];
+  selectAll.value = false;
   fetchNotifications();
 };
 
 const handleSizeChange = (val: number) => {
   pageSize.value = val;
+  selectedNotifications.value = [];
+  selectAll.value = false;
   fetchNotifications();
 };
 
 const handleCurrentChange = (val: number) => {
   currentPage.value = val;
+  selectedNotifications.value = [];
+  selectAll.value = false;
   fetchNotifications();
 };
 
@@ -202,6 +249,53 @@ const markAsRead = async (notification: Notification) => {
   } catch (error) {
     console.error('标记已读出错:', error);
     // 错误消息由拦截器统一处理
+  }
+};
+
+// 全选/反选
+const handleSelectAll = (value: boolean) => {
+  if (value) {
+    selectedNotifications.value = notifications.value.map(n => n.id);
+  } else {
+    selectedNotifications.value = [];
+  }
+};
+
+// 更新全选状态
+const updateSelectAll = () => {
+  selectAll.value = selectedNotifications.value.length === notifications.value.length;
+};
+
+// 批量删除
+const handleBatchDelete = async () => {
+  if (selectedNotifications.value.length === 0) {
+    ElMessage.warning('请选择要删除的通知');
+    return;
+  }
+  
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除选中的 ${selectedNotifications.value.length} 个通知吗？`,
+      '确认删除',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    );
+    
+    await deleteNotifications(selectedNotifications.value);
+    ElMessage.success(`成功删除 ${selectedNotifications.value.length} 个通知`);
+    
+    // 删除成功后刷新列表
+    fetchNotifications();
+    
+  } catch (error: any) {
+    if (error === 'cancel') {
+      return;
+    }
+    console.error('删除通知出错:', error);
+    ElMessage.error('删除失败');
   }
 };
 
@@ -271,12 +365,28 @@ const getTypeName = (type: string) => {
   padding: 10px 0;
 }
 
+.select-all-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 10px 15px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+}
+
+.selected-count {
+  color: #909399;
+  font-size: 14px;
+}
+
 .notification-item {
   display: flex;
   padding: 15px;
   border-bottom: 1px solid #ebeef5;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s;
+  align-items: flex-start;
 }
 
 .notification-item:hover {
@@ -287,16 +397,30 @@ const getTypeName = (type: string) => {
   background-color: #ecf5ff;
 }
 
+.notification-item.selected {
+  background-color: #e1f3d8;
+  border-left: 4px solid #67c23a;
+}
+
+.notification-checkbox {
+  margin-right: 15px;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 2px;
+}
+
 .notification-icon {
   margin-right: 15px;
   font-size: 24px;
   color: #409eff;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  padding-top: 2px;
 }
 
 .notification-content {
   flex: 1;
+  cursor: pointer;
 }
 
 .notification-header {

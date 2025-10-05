@@ -63,11 +63,61 @@
                 </div>
               </div>
         </div>
+
+                 <!-- 验证码输入框（智能显示） -->
+         <transition name="captcha-fade">
+           <div v-if="showCaptcha" class="form-group captcha-group">
+             <label for="captcha" class="input-label">
+               <span>验证码</span>
+               <span class="required-mark">*</span>
+             </label>
+          <div class="captcha-input-wrapper">
+            <div class="input-container captcha-input-container" 
+                 :class="{ 'input-focus': captchaFocused, 'input-filled': !!loginForm.captchaCode }">
+              <el-icon class="input-icon"><Key /></el-icon>
+              <input 
+                id="captcha"
+                v-model="loginForm.captchaCode"
+                type="text"
+                placeholder="请输入验证码"
+                maxlength="4"
+                @focus="captchaFocused = true"
+                @blur="captchaFocused = false"
+                @keyup.enter="handleLogin"
+                autocomplete="off"
+              />
+            </div>
+            <!-- 验证码图片 -->
+            <div class="captcha-image-wrapper" @click="refreshCaptcha">
+              <img 
+                v-if="captchaData?.imageBase64" 
+                :src="captchaData.imageBase64" 
+                alt="验证码"
+                class="captcha-image"
+              />
+                             <div v-else class="captcha-placeholder">
+                 <div class="captcha-loading">
+                   <el-icon class="loading"><Loading /></el-icon>
+                 </div>
+                 <div class="captcha-refresh-hint">
+                   <el-icon><Refresh /></el-icon>
+                   <span>点击刷新</span>
+                 </div>
+               </div>
+            </div>
+          </div>
+                       <!-- 验证码提示 -->
+             <div class="captcha-hint">
+               <el-icon class="info-icon"><InfoFilled /></el-icon>
+               <span>{{ captchaData?.hint || '请输入图中4位数字' }}</span>
+             </div>
+           </div>
+         </transition>
         
             <!-- 记住我和忘记密码 -->
             <div class="form-options">
               <div class="remember-me">
-                <el-checkbox v-model="loginForm.remember">记住我</el-checkbox>
+                <el-checkbox v-model="loginForm.rememberMe">记住我 </el-checkbox>
               </div>
               <a href="#" class="forgot-password" @click.prevent="showResetPassword">忘记密码?</a>
                 </div>
@@ -130,7 +180,7 @@
 import { ref, reactive, onMounted, onUnmounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import { User, Lock, View, Hide, Message } from '@element-plus/icons-vue';
+import { User, Lock, View, Hide, Message, Key, Loading, Refresh, InfoFilled } from '@element-plus/icons-vue';
 import request from '@/utils/request';
 
 const router = useRouter();
@@ -144,12 +194,14 @@ const usernameFocused = ref(false);
 const passwordFocused = ref(false);
 const emailFocused = ref(false);
 const showPassword = ref(false);
+const captchaFocused = ref(false); // 新增验证码输入框焦点状态
 
 // 登录表单
 const loginForm = reactive({
   username: '',
   password: '',
-  remember: false
+  rememberMe: false, // 改为 rememberMe
+  captchaCode: '' // 新增验证码
 });
 
 // 重置密码表单
@@ -159,6 +211,17 @@ const resetForm = reactive({
 
 // 重置密码抽屉
 const resetPasswordVisible = ref(false);
+
+// 验证码数据和状态
+const captchaData = ref<{ 
+  sessionId: string; 
+  imageBase64: string; 
+  hint: string; 
+  expireSeconds: number;
+} | null>(null);
+const showCaptcha = ref(false); // 控制验证码显示
+const loginFailCount = ref(0); // 登录失败次数
+const needsCaptcha = ref(false); // 是否需要验证码
 
 // 粒子效果样式
 const getParticleStyle = (index: number) => {
@@ -237,22 +300,115 @@ const handleResetPassword = async () => {
   }
 };
 
+// 生成验证码
+const generateCaptcha = async () => {
+  try {
+    const resp: any = await request.post('/admin/captcha/generate');
+
+    // 拦截器已返回解包后的 { code, msg, data }
+    const res: any = resp && typeof resp === 'object' && 'code' in resp ? resp : resp?.data;
+
+    // 兼容多种成功标识
+    const isSuccess = (
+      res && (
+        String(res.code) === '200' ||
+        String(res.code) === '1' ||
+        res.success === true ||
+        // 如果直接就是数据对象（没有 code），也视为成功
+        (!('code' in res) && (res.imageBase64 || res.sessionId))
+      )
+    );
+
+    if (isSuccess) {
+      captchaData.value = res.data ? res.data : res;
+      showCaptcha.value = true;
+    } else {
+      throw new Error(res?.msg || '生成验证码失败');
+    }
+  } catch (error) {
+    console.error('生成验证码失败:', error);
+    ElMessage.error('生成验证码失败，请稍后重试');
+  }
+};
+
+// 刷新验证码
+const refreshCaptcha = async () => {
+  if (!captchaData.value?.sessionId) {
+    // 如果没有sessionId，重新生成
+    await generateCaptcha();
+    return;
+  }
+  
+  try {
+    const resp: any = await request.post('/admin/captcha/refresh', {
+      sessionId: captchaData.value.sessionId
+    });
+    
+    const res: any = resp && typeof resp === 'object' && 'code' in resp ? resp : resp?.data;
+    const isSuccess = (
+      res && (
+        String(res.code) === '200' ||
+        String(res.code) === '1' ||
+        res.success === true ||
+        (!('code' in res) && (res.imageBase64 || res.sessionId))
+      )
+    );
+
+    if (isSuccess) {
+      captchaData.value = res.data ? res.data : res;
+    } else {
+      throw new Error(res?.msg || '刷新验证码失败');
+    }
+  } catch (error) {
+    console.error('刷新验证码失败:', error);
+    // 刷新失败时重新生成
+    await generateCaptcha();
+  }
+};
+
+
+
 // 处理登录
 const handleLogin = async () => {
   if (!loginForm.username || !loginForm.password) {
     ElMessage.warning('请输入用户名和密码');
     return;
   }
+
+  // 智能验证码检查
+  if (showCaptcha.value && !loginForm.captchaCode) {
+    ElMessage.warning('请输入验证码');
+    return;
+  }
   
-      loading.value = true;
-      
+  loading.value = true;
+    
   try {
-    const response = await request.post('/admin/user/login', {
-    userName: loginForm.username,
-        password: loginForm.password
-    });
+    // 构建登录请求参数
+    const loginParams: any = {
+      userName: loginForm.username,
+      password: loginForm.password,
+      rememberMe: loginForm.rememberMe
+    };
+    
+    // 如果显示验证码，添加验证码参数
+    if (showCaptcha.value && captchaData.value) {
+      loginParams.captchaSessionId = captchaData.value.sessionId;
+      loginParams.captchaCode = loginForm.captchaCode;
+    }
+    const response: any = await request.post('/admin/user/login', loginParams);
     
           console.log("登录响应:", response);
+          
+          // 🔒 安全检查：验证响应的业务状态码
+          // 拦截器已解包响应，直接检查业务状态
+          const codeStr = String(response?.code || '');
+          if (!response || (codeStr !== '200' && codeStr !== '1' && !response.success)) {
+            const errorMsg = response?.msg || '登录失败';
+            console.error('登录业务逻辑失败:', errorMsg);
+            ElMessage.error(errorMsg);
+            return;
+          }
           
           const responseData = response.data || {};
           const data = responseData.data || responseData;
@@ -287,8 +443,8 @@ const handleLogin = async () => {
           // 记录登录时间
           localStorage.setItem('last_login_time', new Date().toLocaleString());
           
-          if (loginForm.remember) {
-            localStorage.setItem('remember', 'true');
+          if (loginForm.rememberMe) {
+        localStorage.setItem('remember', 'true');
         localStorage.setItem('saved_username', loginForm.username);
           } else {
             localStorage.removeItem('remember');
@@ -297,15 +453,51 @@ const handleLogin = async () => {
           
           ElMessage.success('登录成功');
           
+          // 登录成功后清理状态
+          loginFailCount.value = 0;
+          showCaptcha.value = false;
+          captchaData.value = null;
+          loginForm.captchaCode = '';
+          
       // 动画结束后跳转
       setTimeout(() => {
           router.push('/');
       }, 500);
-  } catch (error) {
-          console.error('登录失败:', error);
-          ElMessage.error('登录失败，请检查用户名和密码');
+  } catch (error: any) {
+    console.error('登录失败:', error);
+    
+    // 登录失败处理
+    loginFailCount.value++;
+    
+    // 检查是否需要显示验证码（失败3次后显示）
+    if (loginFailCount.value >= 3 && !showCaptcha.value) {
+      showCaptcha.value = true;
+      await generateCaptcha();
+      ElMessage.warning('登录失败次数较多，请输入验证码');
+    } else if (showCaptcha.value) {
+      // 如果已显示验证码，刷新验证码
+      await refreshCaptcha();
+      loginForm.captchaCode = ''; // 清空验证码输入
+    }
+    
+    // 处理特定错误信息
+    const errorMsg = error?.response?.data?.msg || error?.message || '登录失败';
+    
+    // 检查是否包含验证码错误
+    if (errorMsg.includes('验证码') && !showCaptcha.value) {
+      showCaptcha.value = true;
+      await generateCaptcha();
+    }
+    
+    // 统一显示错误信息
+    if (errorMsg.includes('网络') || error?.code === 'NETWORK_ERROR') {
+      ElMessage.error('网络连接失败，请检查网络设置');
+    } else {
+      ElMessage.error(errorMsg);
+    }
+    
   } finally {
-          loading.value = false;
+    loading.value = false;
   }
 };
 
@@ -316,8 +508,11 @@ onMounted(() => {
   
   if (remember && savedUsername) {
     loginForm.username = savedUsername;
-    loginForm.remember = true;
+    loginForm.rememberMe = true;
   }
+
+  // 初始化时不显示验证码，根据登录失败情况智能显示
+  showCaptcha.value = false;
   
   // 添加3D卡片效果的事件监听
   window.addEventListener('mousemove', handleMouseMove);
@@ -570,6 +765,122 @@ onUnmounted(() => {
         }
         }
       }
+ }
+
+/* 验证码过渡动画 */
+.captcha-fade-enter-active,
+.captcha-fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.captcha-fade-enter-from {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.captcha-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+/* 验证码输入框 */
+.captcha-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  
+  .input-label {
+    .required-mark {
+      color: #f56c6c;
+      margin-left: 4px;
+    }
+  }
+
+  .captcha-input-wrapper {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .captcha-input-container {
+    flex: 1;
+  }
+
+  .captcha-image-wrapper {
+    width: 100px;
+    height: 50px;
+    border: 1px solid #dcdfe6;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+    background-color: #f5f7fa;
+    transition: border-color 0.3s ease;
+
+    &:hover {
+      border-color: #c0c4cc;
+    }
+
+    .captcha-image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+         .captcha-placeholder {
+       display: flex;
+       flex-direction: column;
+       align-items: center;
+       justify-content: center;
+       width: 100%;
+       height: 100%;
+       gap: 4px;
+     }
+
+     .captcha-loading {
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       color: #909399;
+       
+       .loading {
+         animation: spin 1s linear infinite;
+       }
+     }
+
+     .captcha-refresh-hint {
+       display: flex;
+       align-items: center;
+       gap: 4px;
+       font-size: 12px;
+       color: #909399;
+       cursor: pointer;
+       transition: color 0.3s ease;
+
+       &:hover {
+         color: var(--el-color-primary);
+       }
+       
+       span {
+         white-space: nowrap;
+       }
+     }
+  }
+
+  .captcha-hint {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    color: #909399;
+
+    .info-icon {
+      color: #909399;
+      font-size: 16px;
+    }
+  }
 }
 
 /* 表单选项 */
@@ -781,6 +1092,11 @@ onUnmounted(() => {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* 验证码加载动画 */
+.loading {
+  animation: spin 1s linear infinite;
 }
 
 /* 响应式适配 */

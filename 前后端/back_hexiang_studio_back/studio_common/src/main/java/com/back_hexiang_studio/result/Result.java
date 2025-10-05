@@ -11,6 +11,8 @@ public class Result<T> implements Serializable {
     private String msg;
     private T data;
 
+
+
     //返回为任意数据，接受任意数据,Result<T> 意味着返回的是一个通用的结果封装类。<>中的T表示泛型，可以接受任意类型的数据。
     public static  <T>  Result<T>  success() {
         Result<T> result=new Result<T>();
@@ -36,6 +38,35 @@ public class Result<T> implements Serializable {
         result.setCode(500);
         return  result;
     }
+
+    /**
+     * 成功响应 - 带数据和消息
+     * @param data 响应数据
+     * @param msg 响应消息
+     * @return Result对象
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> Result<T> success(T data, String msg) {
+        Result<T> result = new Result<T>();
+        result.setCode(200);
+        result.setData(data);
+        result.setMsg(msg);
+        return result;
+    }
+
+    /**
+     * 成功响应 - 仅消息
+     * @param msg 响应消息
+     * @return Result对象
+     */
+    public static <T> Result<T> success(String msg) {
+        Result<T> result = new Result<T>();
+        result.setCode(200);
+        result.setMsg(msg);
+        return result;
+    }
+
+
     // 添加 isSuccess 方法
     public boolean isSuccess() {
         return code != null && code == 200;

@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /**
  * 通知控制器
  */
@@ -88,6 +90,25 @@ public class NotificationController {
             return Result.success(notification);
         } else {
             return Result.error("通知不存在");
+        }
+    }
+    
+    /**
+     * 批量删除通知
+     */
+    @DeleteMapping("/delete")
+    public Result deleteNotifications(@RequestBody List<Long> notificationIds) {
+        if (notificationIds == null || notificationIds.isEmpty()) {
+            return Result.error("请选择要删除的通知");
+        }
+        
+        Long userId = UserContextHolder.getCurrentId();
+        boolean success = notificationService.deleteNotifications(userId, notificationIds);
+        if (success) {
+            log.info("用户 {} 删除了 {} 个通知", userId, notificationIds.size());
+            return Result.success("删除成功");
+        } else {
+            return Result.error("删除失败");
         }
     }
 } 

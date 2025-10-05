@@ -206,7 +206,7 @@ export function removeStudentFromCourse(studentId: number, courseId: number) {
  */
 export function searchStudents(keyword: string) {
   return request({
-    url: '/admin/student/search',
+    url: '/admin/students/search',
     method: 'get',
     params: { keyword }
   });

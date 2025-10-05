@@ -25,6 +25,7 @@ public class RedisConfig {
         // 创建RedisTemplate对象
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         // 设置连接工厂
+
         template.setConnectionFactory(factory);
 
         // 创建JSON序列化器
@@ -34,7 +35,10 @@ public class RedisConfig {
         om.activateDefaultTyping(LaissezFaireSubTypeValidator.instance, ObjectMapper.DefaultTyping.NON_FINAL);
         om.registerModule(new JavaTimeModule());
         om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        
+        // 将配置好的ObjectMapper设置到序列化器中
         jacksonSerializer.setObjectMapper(om);
+
 
         // 创建字符串序列化器
         StringRedisSerializer stringSerializer = new StringRedisSerializer();
@@ -52,4 +56,6 @@ public class RedisConfig {
 
         return template;
     }
+
+
 }

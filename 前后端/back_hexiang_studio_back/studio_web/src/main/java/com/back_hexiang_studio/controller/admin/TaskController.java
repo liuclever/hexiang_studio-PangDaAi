@@ -60,7 +60,7 @@ public class TaskController {
         LocalDateTime now = LocalDateTime.now();
         
         // 检查开始时间不能早于当前时间（允许5分钟容差）
-        if (startTime.isBefore(now.minusMinutes(5))) {
+        if (startTime.isBefore(now.minusHours(24))) {
             throw new IllegalArgumentException("开始时间不能早于当前时间");
         }
         

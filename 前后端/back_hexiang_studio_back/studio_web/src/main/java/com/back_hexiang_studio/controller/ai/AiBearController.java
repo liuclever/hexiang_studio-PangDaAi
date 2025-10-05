@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 /**
  * AI熊助手控制器
  * 处理AI熊的聊天消息、历史记录等功能
+ * 权限：需要AI_CHAT_BASIC权限，所有认证用户可使用基础AI功能
  * 
  * @author 胖达AI助手开发团队
  * @version 1.0
@@ -30,7 +31,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/ai-bear")
 @Slf4j
-@CrossOrigin
+@PreAuthorize("hasAuthority('AI_CHAT_BASIC') or hasPermission(null, 'AI_CHAT_BASIC') or hasAuthority('ROLE_ADMIN')")
 public class AiBearController {
 
     @Autowired
@@ -44,7 +45,6 @@ public class AiBearController {
      * 返回当前用户的完整聊天历史（用户消息+AI回复）
      */
     @GetMapping("/history")
-    @PreAuthorize("isAuthenticated()")
     public Result<List<Map<String, Object>>> getChatHistory() {
         try {
             // 获取当前登录用户ID
@@ -75,7 +75,6 @@ public class AiBearController {
      * 清除聊天历史记录
      */
     @DeleteMapping("/history")
-    @PreAuthorize("isAuthenticated()")
     public Result<String> clearChatHistory() {
         try {
             // 获取当前登录用户ID
@@ -85,49 +84,49 @@ public class AiBearController {
                 return Result.error("用户未登录");
             }
 
-            log.info("🧹 开始清理用户会话 - 用户ID: {}", currentUserId);
+            log.info(" 开始清理用户会话 - 用户ID: {}", currentUserId);
             
             // 🔧 Step 1: 强制清空AssistantAgent中的ChatMemory（优先清理，避免状态不一致）
             try {
                 assistantAgent.clearUserAllChatMemories(currentUserId);
-                log.info("✅ 已清空AssistantAgent内存缓存 - 用户ID: {}", currentUserId);
+                log.info(" 已清空AssistantAgent内存缓存 - 用户ID: {}", currentUserId);
             } catch (Exception e) {
-                log.error("❌ 清空AssistantAgent内存缓存失败 - 用户ID: {}, 错误: {}", currentUserId, e.getMessage());
+                log.error(" 清空AssistantAgent内存缓存失败 - 用户ID: {}, 错误: {}", currentUserId, e.getMessage());
                 // 出现异常时使用紧急清理
                 try {
                     assistantAgent.clearAllChatMemories();
-                    log.warn("⚠️ 已执行紧急清理所有ChatMemory");
+                    log.warn("️ 已执行紧急清理所有ChatMemory");
                 } catch (Exception ex) {
-                    log.error("❌ 紧急清理也失败: {}", ex.getMessage());
+                    log.error(" 紧急清理也失败: {}", ex.getMessage());
                 }
             }
 
-            // 🔧 Step 2: 清除会话缓存，重置对话上下文
+            //   2: 清除会话缓存，重置对话上下文
             chatHistoryService.clearUserSessionCache(currentUserId);
             
-            // 🔧 Step 3: 清除用户的聊天记录（数据库层面）
+            //  3: 清除用户的聊天记录（数据库层面）
             int deletedCount = chatHistoryService.clearUserHistory(currentUserId);
             
-            // 🔧 Step 4: 强制生成新的会话ID（确保下次对话是全新会话）
+            //  4: 强制生成新的会话ID（确保下次对话是全新会话）
             String newSessionId = chatHistoryService.generateSessionId(currentUserId);
             
-            log.info("🧹 清除聊天历史成功 - 用户ID: {}, 删除记录数: {}, 新会话ID: {}", 
+            log.info(" 清除聊天历史成功 - 用户ID: {}, 删除记录数: {}, 新会话ID: {}",
                     currentUserId, deletedCount, newSessionId);
             return Result.success("聊天记录已清除，共删除 " + deletedCount + " 条记录。已开启全新会话。");
 
         } catch (Exception e) {
-            log.error("❌ 清除聊天历史失败: {}", e.getMessage(), e);
+            log.error(" 清除聊天历史失败: {}", e.getMessage(), e);
             
-            // 🔧 异常情况下的紧急处理：强制清理所有缓存
+            //  异常情况下的紧急处理：强制清理所有缓存
             try {
                 Long currentUserId = UserContextHolder.getCurrentId();
                 if (currentUserId != null) {
                     assistantAgent.clearAllChatMemories();
                     chatHistoryService.clearUserSessionCache(currentUserId);
-                    log.warn("⚠️ 执行紧急会话清理");
+                    log.warn("️ 执行紧急会话清理");
                 }
             } catch (Exception ex) {
-                log.error("❌ 紧急清理失败: {}", ex.getMessage());
+                log.error(" 紧急清理失败: {}", ex.getMessage());
             }
             
             return Result.error("清除聊天历史失败，但已尝试重置会话状态");
@@ -138,7 +137,6 @@ public class AiBearController {
      * 发送聊天消息（与现有AI助手集成）
      */
     @PostMapping("/chat")
-    @PreAuthorize("isAuthenticated()")
     public Result<String> sendMessage(@RequestBody ChatRequest request) {
         try {
             // 获取当前登录用户ID
@@ -170,7 +168,6 @@ public class AiBearController {
      * 流式聊天接口（支持实时输出）
      */
     @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_PLAIN_VALUE)
-    @PreAuthorize("isAuthenticated()")
     public Flux<String> sendMessageStream(@RequestBody ChatRequest request) {
         // 获取当前登录用户ID
         Long currentUserId = UserContextHolder.getCurrentId();
@@ -226,7 +223,7 @@ public class AiBearController {
     public Result<Map<String, Object>> getBearMessage() {
         try {
             Map<String, Object> bearMessage = new HashMap<>();
-            bearMessage.put("message", "你好！我是你的AI助理胖达🐻，我不仅知道工作室的事情还知道，生活中的很多事情，有什么可以帮助你的吗？");
+            bearMessage.put("message", "你好！我是你的AI助理胖达，我不仅知道工作室的事情还知道，生活中的很多事情，有什么可以帮助你的吗？");
             bearMessage.put("type", "welcome");
             bearMessage.put("timestamp", System.currentTimeMillis());
             
@@ -242,7 +239,6 @@ public class AiBearController {
      * 获取聊天统计信息
      */
     @GetMapping("/stats")
-    @PreAuthorize("isAuthenticated()")
     public Result<Map<String, Object>> getChatStats() {
         try {
             Long currentUserId = UserContextHolder.getCurrentId();

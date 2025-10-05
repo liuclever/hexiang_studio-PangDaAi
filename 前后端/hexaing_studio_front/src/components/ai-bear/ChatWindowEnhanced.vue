@@ -109,18 +109,36 @@ const isLoading = ref(false)
             options: result.data.options || []
           })
     } else {
-          throw new Error(result.message || '请求失败')
+          // 只显示msg内容，不显示整个JSON
+          let errorMessage = '请求失败，请重试'
+          if (result && result.msg) {
+            errorMessage = result.msg
+          } else if (result && result.message) {
+            errorMessage = result.message
+          }
+          
+          // 根据错误码提供更友好的提示
+          if (result && result.code === 4030) {
+            errorMessage = '权限不足，请联系管理员开启AI功能权限'
+          }
+          
+          throw new Error(errorMessage)
     }
     
   } catch (error) {
     console.error('发送消息失败:', error)
         ElMessage.error('发送失败，请重试')
         
-        // 添加错误消息
+        // 添加错误消息 - 显示具体错误而不是通用消息
+        let displayMessage = '抱歉，我暂时无法处理您的请求，请稍后重试。'
+        if (error.message && error.message.length < 100) {
+          displayMessage = error.message
+        }
+        
         messages.value.push({
           id: Date.now() + 1,
           type: 'assistant',
-          content: '抱歉，我暂时无法处理您的请求，请稍后重试。',
+          content: displayMessage,
           options: []
         })
   } finally {

@@ -51,7 +51,7 @@ public class CourseManagementTools {
             redisTemplate.delete("course:students:" + courseId);
             redisTemplate.delete("course:materials:" + courseId);
         }
-        log.info("🔄 [缓存清理] 清理课程详情缓存，课程ID: {}", courseId);
+        log.info("  [缓存清理] 清理课程详情缓存，课程ID: {}", courseId);
     }
 
     /**
@@ -71,12 +71,12 @@ public class CourseManagementTools {
             if (keys != null && !keys.isEmpty()) {
                 redisTemplate.delete(keys);
                 totalDeleted += keys.size();
-                log.info("🔄 [缓存清理] 清理课程列表缓存，模式: {}, 键数量: {}", pattern, keys.size());
+                log.info("  [缓存清理] 清理课程列表缓存，模式: {}, 键数量: {}", pattern, keys.size());
             }
         }
 
         if (totalDeleted > 0) {
-            log.info("🔄 [缓存清理] 总共清理了 {} 个课程列表相关缓存键", totalDeleted);
+            log.info("  [缓存清理] 总共清理了 {} 个课程列表相关缓存键", totalDeleted);
         }
     }
 
@@ -92,7 +92,7 @@ public class CourseManagementTools {
             Set<String> keys = redisTemplate.keys(pattern);
             if (keys != null && !keys.isEmpty()) {
                 redisTemplate.delete(keys);
-                log.info("🔄 [缓存清理] 清理全局课程缓存，模式: {}, 键数量: {}", pattern, keys.size());
+                log.info("  [缓存清理] 清理全局课程缓存，模式: {}, 键数量: {}", pattern, keys.size());
             }
         }
     }
@@ -106,7 +106,7 @@ public class CourseManagementTools {
         }
         clearCourseListCache();
         clearGlobalCourseCache();
-        log.info("🔄 [缓存清理] 完成课程相关缓存清理");
+        log.info("  [缓存清理] 完成课程相关缓存清理");
     }
 
     // ====================================================================================
@@ -115,11 +115,11 @@ public class CourseManagementTools {
 
     @Tool("查询指定课程的详细信息。")
     public String findCourse(@P("要查询的课程的准确名称") String courseName) {
-        log.info("�� AI Workflow Tool: 查询课程 '{}'", courseName);
+        log.info(" AI Workflow Tool: 查询课程 '{}'", courseName);
         
         // 参数验证
         if (!StringUtils.hasText(courseName)) {
-            return "❌ 课程名称不能为空。";
+            return "  课程名称不能为空。";
         }
         
         try {
@@ -149,7 +149,7 @@ public class CourseManagementTools {
             
             // 构建详细信息
             StringBuilder result = new StringBuilder();
-            result.append("📚 课程详细信息\n");
+            result.append(" 课程详细信息\n");
             result.append("════════════════════════════════\n");
             result.append("课程名称：").append(course.get("name")).append("\n");
             result.append("课程描述：").append(course.get("description")).append("\n");
@@ -168,15 +168,15 @@ public class CourseManagementTools {
                 result.append("封面图片：").append(course.get("cover_image")).append("\n");
             }
             
-            log.info("✅ 成功查询课程 '{}' 详细信息，选课学生 {} 人", courseName, studentCount);
+            log.info(" 成功查询课程 '{}' 详细信息，选课学生 {} 人", courseName, studentCount);
             return result.toString();
             
         } catch (EmptyResultDataAccessException e) {
-            log.warn("⚠️ 未找到课程: {}", courseName);
-            return "❌ 未找到名为 '" + courseName + "' 的课程。请检查课程名称是否正确。";
+            log.warn("  未找到课程: {}", courseName);
+            return "  未找到名为 '" + courseName + "' 的课程。请检查课程名称是否正确。";
         } catch (Exception e) {
-            log.error("❌ 查询课程 '{}' 详细信息时发生错误: {}", courseName, e.getMessage(), e);
-            return "❌ 查询课程信息时发生内部错误，请稍后重试。";
+            log.error("  查询课程 '{}' 详细信息时发生错误: {}", courseName, e.getMessage(), e);
+            return "  查询课程信息时发生内部错误，请稍后重试。";
         }
     }
     
@@ -195,7 +195,7 @@ public class CourseManagementTools {
 
     @Tool("列出所有可用的课程，可以按状态筛选。")
     public String listAllCourses(@P("课程状态: '已发布', '草稿', '已下架' (可选，留空则显示所有状态)") String statusFilter) {
-        log.info("🤖 AI Workflow Tool: 列出课程, 筛选条件: {}", statusFilter);
+        log.info("  AI Workflow Tool: 列出课程, 筛选条件: {}", statusFilter);
         
         try {
             // 构建SQL查询
@@ -225,7 +225,7 @@ public class CourseManagementTools {
             
             if (courses.isEmpty()) {
                 String filterMsg = statusCode != null ? "（筛选条件：" + statusFilter + "）" : "";
-                return "📚 当前没有找到课程" + filterMsg + "。";
+                return "  当前没有找到课程" + filterMsg + "。";
             }
             
             // 按状态分组
@@ -233,7 +233,7 @@ public class CourseManagementTools {
                 .collect(Collectors.groupingBy(course -> (Integer) course.get("status")));
             
             StringBuilder result = new StringBuilder();
-            result.append("📚 课程列表");
+            result.append("  课程列表");
             if (statusCode != null) {
                 result.append("（筛选：").append(statusFilter).append("）");
             }
@@ -267,12 +267,12 @@ public class CourseManagementTools {
                 }
             }
             
-            log.info("✅ 成功列出 {} 门课程，筛选条件: {}", courses.size(), statusFilter);
+            log.info("  成功列出 {} 门课程，筛选条件: {}", courses.size(), statusFilter);
             return result.toString();
             
         } catch (Exception e) {
-            log.error("❌ 列出课程时发生错误，筛选条件: {}, 错误: {}", statusFilter, e.getMessage(), e);
-            return "❌ 获取课程列表时发生内部错误，请稍后重试。";
+            log.error("  列出课程时发生错误，筛选条件: {}, 错误: {}", statusFilter, e.getMessage(), e);
+            return "  获取课程列表时发生内部错误，请稍后重试。";
         }
     }
     
@@ -297,14 +297,14 @@ public class CourseManagementTools {
             case "下架":
                 return 2;
             default:
-                log.warn("⚠️ 未识别的状态筛选条件: {}", statusFilter);
+                log.warn("  未识别的状态筛选条件: {}", statusFilter);
                 return null;
         }
     }
 
     @Tool("列出所有可用的培训方向，用于辅助创建或修改课程。")
     public String listTrainingDirections() {
-        log.info("🤖 AI Workflow Tool: 列出所有培训方向");
+        log.info("  AI Workflow Tool: 列出所有培训方向");
         
         try {
             // 查询培训方向及其关联的课程数量
@@ -319,11 +319,11 @@ public class CourseManagementTools {
             List<Map<String, Object>> directions = jdbcTemplate.queryForList(sql);
             
             if (directions.isEmpty()) {
-                return "📂 当前系统中没有设置培训方向。\n请联系管理员添加培训方向后再创建课程。";
+                return "  当前系统中没有设置培训方向。\n请联系管理员添加培训方向后再创建课程。";
             }
             
             StringBuilder result = new StringBuilder();
-            result.append("📂 培训方向列表\n");
+            result.append("  培训方向列表\n");
             result.append("════════════════════════════════\n");
             result.append("共有 ").append(directions.size()).append(" 个培训方向\n\n");
             
@@ -345,14 +345,14 @@ public class CourseManagementTools {
                 result.append("\n\n");
             }
             
-            result.append("💡 提示：创建课程时请使用\"培训方向名称\"而非ID进行指定。");
+            result.append("  提示：创建课程时请使用\"培训方向名称\"而非ID进行指定。");
             
-            log.info("✅ 成功列出 {} 个培训方向", directions.size());
+            log.info("  成功列出 {} 个培训方向", directions.size());
             return result.toString();
             
         } catch (Exception e) {
-            log.error("❌ 查询培训方向时出错: {}", e.getMessage(), e);
-            return "❌ 查询培训方向时发生内部错误，请稍后重试。";
+            log.error("  查询培训方向时出错: {}", e.getMessage(), e);
+            return "  查询培训方向时发生内部错误，请稍后重试。";
         }
     }
     
@@ -372,11 +372,11 @@ public class CourseManagementTools {
                     @P("课程时长 (可选，留空则不设置)") String duration,
         @P("当前用户的ID，这个ID由系统在后台自动提供，AI需要直接传递它") Long currentUserId
     ) {
-        log.info("🤖 AI Workflow Tool: 添加新课程 '{}'，授课老师: {}", name, teacherName);
+        log.info("  AI Workflow Tool: 添加新课程 '{}'，授课老师: {}", name, teacherName);
         
         // 权限检查
         if (currentUserId == null) {
-            return "❌ 用户未登录，无法创建课程。";
+            return "  用户未登录，无法创建课程。";
         }
         
         if (!permissionService.canManageCourses(currentUserId)) {
@@ -385,22 +385,22 @@ public class CourseManagementTools {
         
         // 参数验证
         if (!StringUtils.hasText(name)) {
-            return "❌ 课程名称不能为空。";
+            return "  课程名称不能为空。";
         }
         if (!StringUtils.hasText(description)) {
-            return "❌ 课程描述不能为空。";
+            return "  课程描述不能为空。";
         }
         if (!StringUtils.hasText(teacherName)) {
-            return "❌ 授课老师姓名不能为空。";
+            return "  授课老师姓名不能为空。";
         }
         if (!StringUtils.hasText(directionName)) {
-            return "❌ 培训方向不能为空。";
+            return "  培训方向不能为空。";
         }
         if (!StringUtils.hasText(location)) {
-            return "❌ 上课地点不能为空。";
+            return "  上课地点不能为空。";
         }
         if (!StringUtils.hasText(schedule)) {
-            return "❌ 上课时间不能为空。";
+            return "  上课时间不能为空。";
         }
         
         try {
@@ -408,7 +408,7 @@ public class CourseManagementTools {
             String nameCheckSql = "SELECT COUNT(*) FROM course WHERE name = ?";
             Integer nameCount = jdbcTemplate.queryForObject(nameCheckSql, Integer.class, name.trim());
             if (nameCount > 0) {
-                return "❌ 课程名称 '" + name + "' 已存在，请使用其他名称。";
+                return "  课程名称 '" + name + "' 已存在，请使用其他名称。";
             }
             
             // 查找并验证授课老师
@@ -418,7 +418,7 @@ public class CourseManagementTools {
             
             List<Map<String, Object>> teacherResults = jdbcTemplate.queryForList(teacherSql, teacherName.trim());
             if (teacherResults.isEmpty()) {
-                return "❌ 未找到名为 '" + teacherName + "' 的授课老师，或该用户不具备授课权限。";
+                return "  未找到名为 '" + teacherName + "' 的授课老师，或该用户不具备授课权限。";
             }
             
             Long teacherId = (Long) teacherResults.get(0).get("user_id");
@@ -428,7 +428,7 @@ public class CourseManagementTools {
             String directionSql = "SELECT direction_id, direction_name FROM training_direction WHERE direction_name = ?";
             List<Map<String, Object>> directionResults = jdbcTemplate.queryForList(directionSql, directionName.trim());
             if (directionResults.isEmpty()) {
-                return "❌ 未找到名为 '" + directionName + "' 的培训方向。请先创建培训方向或检查名称是否正确。";
+                return "  未找到名为 '" + directionName + "' 的培训方向。请先创建培训方向或检查名称是否正确。";
             }
             
             Long categoryId = (Long) directionResults.get(0).get("direction_id");
@@ -454,13 +454,13 @@ public class CourseManagementTools {
             String getIdSql = "SELECT LAST_INSERT_ID()";
             Long newCourseId = jdbcTemplate.queryForObject(getIdSql, Long.class);
             
-            log.info("✅ 课程创建成功 - ID: {}, 名称: '{}', 老师: '{}', 方向: '{}'", 
+            log.info("  课程创建成功 - ID: {}, 名称: '{}', 老师: '{}', 方向: '{}'", 
                     newCourseId, name, actualTeacherName, actualDirectionName);
             
             // 清理缓存以确保数据一致性
             performCompleteCourseCacheClear(newCourseId);
             
-            return "✅ 课程创建成功！\n" +
+            return "  课程创建成功！\n" +
                    "══════════════════════════════════\n" +
                    "课程ID：" + newCourseId + "\n" +
                    "课程名称：" + name.trim() + "\n" +
@@ -471,11 +471,11 @@ public class CourseManagementTools {
                    (StringUtils.hasText(duration) ? "课程时长：" + duration.trim() + "\n" : "") +
                    "课程状态：草稿（可通过修改课程将状态改为已发布）\n" +
                    "══════════════════════════════════\n" +
-                   "💡 提示：课程已创建为草稿状态，发布后学生才能看到和选课。";
+                   "  提示：课程已创建为草稿状态，发布后学生才能看到和选课。";
             
         } catch (Exception e) {
-            log.error("❌ 创建课程 '{}' 时发生错误: {}", name, e.getMessage(), e);
-            return "❌ 创建课程时发生内部错误：" + e.getMessage() + "\n请检查输入信息是否正确，或稍后重试。";
+            log.error("  创建课程 '{}' 时发生错误: {}", name, e.getMessage(), e);
+            return "  创建课程时发生内部错误：" + e.getMessage() + "\n请检查输入信息是否正确，或稍后重试。";
         }
     }
 
@@ -493,11 +493,11 @@ public class CourseManagementTools {
         @P("新的课程状态：'草稿', '已发布', '已下架' (可选，不修改则留空)") String newStatus,
         @P("当前用户的ID，这个ID由系统在后台自动提供，AI需要直接传递它") Long currentUserId
     ) {
-        log.info("🤖 AI Workflow Tool: 修改课程 '{}'", courseName);
+        log.info("  AI Workflow Tool: 修改课程 '{}'", courseName);
         
         // 权限检查
         if (currentUserId == null) {
-            return "❌ 用户未登录，无法修改课程。";
+            return "  用户未登录，无法修改课程。";
         }
         
         if (!permissionService.canManageCourses(currentUserId)) {
@@ -506,7 +506,7 @@ public class CourseManagementTools {
         
         // 参数验证
         if (!StringUtils.hasText(courseName)) {
-            return "❌ 课程名称不能为空。";
+            return "  课程名称不能为空。";
         }
         
         try {
@@ -515,7 +515,7 @@ public class CourseManagementTools {
                            "duration, status FROM course WHERE name = ?";
             List<Map<String, Object>> courseResults = jdbcTemplate.queryForList(findSql, courseName.trim());
             if (courseResults.isEmpty()) {
-                return "❌ 未找到名为 '" + courseName + "' 的课程。";
+                return "  未找到名为 '" + courseName + "' 的课程。";
             }
             
             Map<String, Object> currentCourse = courseResults.get(0);
@@ -532,7 +532,7 @@ public class CourseManagementTools {
                 String nameCheckSql = "SELECT COUNT(*) FROM course WHERE name = ? AND course_id != ?";
                 Integer nameCount = jdbcTemplate.queryForObject(nameCheckSql, Integer.class, newName.trim(), courseId);
                 if (nameCount > 0) {
-                    return "❌ 课程名称 '" + newName + "' 已存在，请使用其他名称。";
+                    return "  课程名称 '" + newName + "' 已存在，请使用其他名称。";
                 }
                 updateFields.add("name = ?");
                 updateParams.add(newName.trim());
@@ -553,7 +553,7 @@ public class CourseManagementTools {
                                   "WHERE u.name = ? AND u.status = '1' AND r.role_name IN ('老师', '管理员', '超级管理员')";
                 List<Map<String, Object>> teacherResults = jdbcTemplate.queryForList(teacherSql, newTeacherName.trim());
                 if (teacherResults.isEmpty()) {
-                    return "❌ 未找到名为 '" + newTeacherName + "' 的授课老师，或该用户不具备授课权限。";
+                    return "  未找到名为 '" + newTeacherName + "' 的授课老师，或该用户不具备授课权限。";
                 }
                 
                 Long newTeacherId = (Long) teacherResults.get(0).get("user_id");
@@ -569,7 +569,7 @@ public class CourseManagementTools {
                 String directionSql = "SELECT direction_id, direction_name FROM training_direction WHERE direction_name = ?";
                 List<Map<String, Object>> directionResults = jdbcTemplate.queryForList(directionSql, newDirectionName.trim());
                 if (directionResults.isEmpty()) {
-                    return "❌ 未找到名为 '" + newDirectionName + "' 的培训方向。";
+                    return "  未找到名为 '" + newDirectionName + "' 的培训方向。";
                 }
                 
                 Long newCategoryId = (Long) directionResults.get(0).get("direction_id");
@@ -603,7 +603,7 @@ public class CourseManagementTools {
             if (StringUtils.hasText(newStatus)) {
                 Integer newStatusCode = parseStatusText(newStatus.trim());
                 if (newStatusCode == null) {
-                    return "❌ 无效的课程状态 '" + newStatus + "'。请使用：'草稿'、'已发布' 或 '已下架'。";
+                    return "  无效的课程状态 '" + newStatus + "'。请使用：'草稿'、'已发布' 或 '已下架'。";
                 }
                 
                 if (!newStatusCode.equals(currentCourse.get("status"))) {
@@ -615,7 +615,7 @@ public class CourseManagementTools {
             
             // 检查是否有需要更新的字段
             if (updateFields.isEmpty()) {
-                return "🤔 没有检测到需要更新的内容。请提供要修改的信息。";
+                return "  没有检测到需要更新的内容。请提供要修改的信息。";
             }
             
             // 执行更新
@@ -628,25 +628,25 @@ public class CourseManagementTools {
             int updatedRows = jdbcTemplate.update(updateSql, updateParams.toArray());
             
             if (updatedRows > 0) {
-                log.info("✅ 课程 '{}' (ID: {}) 更新成功，共更新 {} 个字段", courseName, courseId, updateFields.size() - 2);
+                log.info("  课程 '{}' (ID: {}) 更新成功，共更新 {} 个字段", courseName, courseId, updateFields.size() - 2);
                 
                 // 清理缓存以确保数据一致性
                 performCompleteCourseCacheClear(courseId);
                 
-                return "✅ 课程修改成功！\n" +
+                return "  课程修改成功！\n" +
                        "══════════════════════════════════\n" +
                        "课程：" + courseName + "\n" +
                        "变更内容：\n" + changeLog.toString() +
                        "══════════════════════════════════\n" +
                        "修改时间：刚刚\n" +
-                       "💡 提示：如果修改了课程状态，请注意对学生选课的影响。";
+                       "  提示：如果修改了课程状态，请注意对学生选课的影响。";
             } else {
-                return "❌ 课程修改失败，请稍后重试。";
+                return "  课程修改失败，请稍后重试。";
             }
             
         } catch (Exception e) {
-            log.error("❌ 修改课程 '{}' 时发生错误: {}", courseName, e.getMessage(), e);
-            return "❌ 修改课程时发生内部错误：" + e.getMessage() + "\n请检查输入信息是否正确，或稍后重试。";
+            log.error("  修改课程 '{}' 时发生错误: {}", courseName, e.getMessage(), e);
+            return "  修改课程时发生内部错误：" + e.getMessage() + "\n请检查输入信息是否正确，或稍后重试。";
         }
     }
     
@@ -669,11 +669,11 @@ public class CourseManagementTools {
         @P("要删除的课程的准确名称") String courseName,
         @P("当前用户的ID，这个ID由系统在后台自动提供，AI需要直接传递它") Long currentUserId
     ) {
-        log.info("🤖 AI Workflow Tool: 请求删除课程 '{}'", courseName);
+        log.info("  AI Workflow Tool: 请求删除课程 '{}'", courseName);
         
         // 权限检查
         if (currentUserId == null) {
-            return "❌ 用户未登录，无法删除课程。";
+            return "  用户未登录，无法删除课程。";
         }
         
         if (!permissionService.canManageCourses(currentUserId)) {
@@ -682,7 +682,7 @@ public class CourseManagementTools {
         
         // 参数验证
         if (!StringUtils.hasText(courseName)) {
-            return "❌ 课程名称不能为空。";
+            return "  课程名称不能为空。";
         }
         
         try {
@@ -694,7 +694,7 @@ public class CourseManagementTools {
             
             List<Map<String, Object>> courseResults = jdbcTemplate.queryForList(courseSql, courseName.trim());
             if (courseResults.isEmpty()) {
-                return "❌ 请求失败：未找到名为 '" + courseName + "' 的课程。";
+                return "  请求失败：未找到名为 '" + courseName + "' 的课程。";
             }
             
             Map<String, Object> course = courseResults.get(0);
@@ -716,7 +716,7 @@ public class CourseManagementTools {
             
             // 构建详细的影响分析报告
             StringBuilder warning = new StringBuilder();
-            warning.append("⚠️【严重警告 - 课程删除确认】⚠️\n");
+            warning.append("  【严重警告 - 课程删除确认】  \n");
             warning.append("════════════════════════════════════════\n");
             warning.append("课程信息：\n");
             warning.append("  • 课程名称：").append(course.get("name")).append("\n");
@@ -724,28 +724,28 @@ public class CourseManagementTools {
             warning.append("  • 课程状态：").append(getStatusText((Integer) course.get("status"))).append("\n");
             warning.append("  • 创建时间：").append(course.get("create_time")).append("\n\n");
             
-            warning.append("📊 影响范围统计：\n");
+            warning.append("  影响范围统计：\n");
             warning.append("  • 选课学生：").append(studentCount).append(" 人");
             if (studentCount > 0) {
-                warning.append(" ⚠️ 将被退选");
+                warning.append("    将被退选");
             }
             warning.append("\n");
             
             warning.append("  • 课程资料：").append(materialCount).append(" 个");
             if (materialCount > 0) {
-                warning.append(" ⚠️ 将被删除");
+                warning.append("    将被删除");
             }
             warning.append("\n");
             
             warning.append("  • 考勤计划：").append(attendanceCount).append(" 个");
             if (attendanceCount > 0) {
-                warning.append(" ⚠️ 将被删除");
+                warning.append("    将被删除");
             }
             warning.append("\n\n");
             
             // 特殊警告
             if (studentCount > 0) {
-                warning.append("🚨 特别注意：\n");
+                warning.append("  特别注意：\n");
                 warning.append("  该课程有 ").append(studentCount).append(" 名学生已选课，删除课程将:\n");
                 warning.append("  - 自动退选所有学生\n");
                 warning.append("  - 删除相关的考勤记录\n");
@@ -753,7 +753,7 @@ public class CourseManagementTools {
             }
             
             if (materialCount > 0) {
-                warning.append("📁 资料警告：\n");
+                warning.append("  资料警告：\n");
                 warning.append("  该课程包含 ").append(materialCount).append(" 个资料文件，删除后：\n");
                 warning.append("  - 所有课程资料将被永久删除\n");
                 warning.append("  - 物理文件也将从服务器移除\n");
@@ -765,14 +765,14 @@ public class CourseManagementTools {
             warning.append("如果您确定要继续删除，请调用 `confirmCourseDeletion` 工具。\n");
             warning.append("建议：在删除前，可考虑将课程状态改为'已下架'作为替代方案。");
             
-            log.warn("⚠️ 用户 {} 请求删除课程 '{}' (ID: {}), 影响: {}学生, {}资料, {}考勤计划", 
+            log.warn("   用户 {} 请求删除课程 '{}' (ID: {}), 影响: {}学生, {}资料, {}考勤计划", 
                     currentUserId, courseName, courseId, studentCount, materialCount, attendanceCount);
             
             return warning.toString();
             
         } catch (Exception e) {
-            log.error("❌ 处理课程删除请求时出错，课程: {}, 错误: {}", courseName, e.getMessage(), e);
-            return "❌ 处理删除请求时发生内部错误，请稍后重试。";
+            log.error("  处理课程删除请求时出错，课程: {}, 错误: {}", courseName, e.getMessage(), e);
+            return "  处理删除请求时发生内部错误，请稍后重试。";
         }
     }
 
@@ -782,11 +782,11 @@ public class CourseManagementTools {
         @P("要删除的课程的准确名称") String courseName,
         @P("当前用户的ID，这个ID由系统在后台自动提供，AI需要直接传递它") Long currentUserId
     ) {
-        log.info("🤖 AI Workflow Tool: 确认删除课程 '{}'", courseName);
+        log.info("  AI Workflow Tool: 确认删除课程 '{}'", courseName);
         
         // 权限检查
         if (currentUserId == null) {
-            return "❌ 用户未登录，无法删除课程。";
+            return "  用户未登录，无法删除课程。";
         }
         
         if (!permissionService.canManageCourses(currentUserId)) {
@@ -795,7 +795,7 @@ public class CourseManagementTools {
         
         // 参数验证
         if (!StringUtils.hasText(courseName)) {
-            return "❌ 课程名称不能为空。";
+            return "  课程名称不能为空。";
         }
         
         try {
@@ -803,7 +803,7 @@ public class CourseManagementTools {
             String courseSql = "SELECT course_id, name, cover_image FROM course WHERE name = ?";
             List<Map<String, Object>> courseResults = jdbcTemplate.queryForList(courseSql, courseName.trim());
             if (courseResults.isEmpty()) {
-                return "❌ 删除失败：在执行删除时找不到课程 '" + courseName + "'。可能已被其他用户删除。";
+                return "  删除失败：在执行删除时找不到课程 '" + courseName + "'。可能已被其他用户删除。";
             }
             
             Map<String, Object> course = courseResults.get(0);
@@ -817,7 +817,7 @@ public class CourseManagementTools {
             int deletedAttendancePlans = 0;
             int deletedAttendanceRecords = 0;
             
-            log.info("🗑️ 开始级联删除课程 '{}' (ID: {}) 的所有关联数据", courseName, courseId);
+            log.info("🗑  开始级联删除课程 '{}' (ID: {}) 的所有关联数据", courseName, courseId);
             
             // 第1步：删除课程资料的物理文件并删除数据库记录
             String materialsSql = "SELECT file_name, file_path FROM course_material WHERE course_id = ?";
@@ -830,15 +830,15 @@ public class CourseManagementTools {
                 // 删除物理文件（这里应该调用文件服务删除实际文件）
                 // fileService.deleteFile(filePath); // 实际项目中需要实现文件删除逻辑
                 
-                log.debug("🗂️ 准备删除课程资料文件: {}", fileName);
+                log.debug("   准备删除课程资料文件: {}", fileName);
             }
             
             deletedMaterials = jdbcTemplate.update("DELETE FROM course_material WHERE course_id = ?", courseId);
-            log.info("📁 删除课程资料: {} 个", deletedMaterials);
+            log.info("  删除课程资料: {} 个", deletedMaterials);
             
             // 第2步：删除选课记录（学生退选）
             deletedEnrollments = jdbcTemplate.update("DELETE FROM student_course WHERE course_id = ?", courseId);
-            log.info("👥 删除选课记录: {} 条", deletedEnrollments);
+            log.info("  删除选课记录: {} 条", deletedEnrollments);
             
             // 第3步：删除相关的考勤记录
             // 首先获取相关的考勤计划ID
@@ -849,16 +849,16 @@ public class CourseManagementTools {
                 int recordsDeleted = jdbcTemplate.update("DELETE FROM attendance_record WHERE plan_id = ?", planId);
                 deletedAttendanceRecords += recordsDeleted;
             }
-            log.info("📋 删除考勤记录: {} 条", deletedAttendanceRecords);
+            log.info("  删除考勤记录: {} 条", deletedAttendanceRecords);
             
             // 第4步：删除考勤计划
             deletedAttendancePlans = jdbcTemplate.update("DELETE FROM attendance_plan WHERE course_id = ?", courseId);
-            log.info("📅 删除考勤计划: {} 个", deletedAttendancePlans);
+            log.info("  删除考勤计划: {} 个", deletedAttendancePlans);
             
             // 第5步：删除课程封面图片文件
             if (StringUtils.hasText(coverImage)) {
                 // fileService.deleteFile(coverImage); // 实际项目中需要实现文件删除逻辑
-                log.debug("🖼️ 准备删除课程封面: {}", coverImage);
+                log.debug("   准备删除课程封面: {}", coverImage);
             }
             
             // 第6步：最后删除课程主记录
@@ -866,7 +866,7 @@ public class CourseManagementTools {
             
             if (result > 0) {
                 // 记录详细的删除操作日志
-                log.warn("🗑️ 课程删除完成 - 用户: {}, 课程: '{}' (ID: {}), " +
+                log.warn("🗑  课程删除完成 - 用户: {}, 课程: '{}' (ID: {}), " +
                         "资料: {}个, 选课: {}条, 考勤计划: {}个, 考勤记录: {}条", 
                         currentUserId, courseName, courseId, 
                         deletedMaterials, deletedEnrollments, deletedAttendancePlans, deletedAttendanceRecords);
@@ -875,21 +875,21 @@ public class CourseManagementTools {
                 performCompleteCourseCacheClear(courseId);
                 
                 StringBuilder result_msg = new StringBuilder();
-                result_msg.append("✅ 课程删除成功！\n");
+                result_msg.append("  课程删除成功！\n");
                 result_msg.append("════════════════════════════════════════\n");
                 result_msg.append("课程名称：").append(courseName).append("\n");
                 result_msg.append("课程ID：").append(courseId).append("\n\n");
-                result_msg.append("📊 删除统计：\n");
+                result_msg.append("  删除统计：\n");
                 result_msg.append("  • 课程资料：").append(deletedMaterials).append(" 个\n");
                 result_msg.append("  • 选课记录：").append(deletedEnrollments).append(" 条\n");
                 result_msg.append("  • 考勤计划：").append(deletedAttendancePlans).append(" 个\n");
                 result_msg.append("  • 考勤记录：").append(deletedAttendanceRecords).append(" 条\n\n");
                 
                 if (deletedEnrollments > 0) {
-                    result_msg.append("👥 ").append(deletedEnrollments).append(" 名学生已被自动退选\n");
+                    result_msg.append("  ").append(deletedEnrollments).append(" 名学生已被自动退选\n");
                 }
                 if (deletedMaterials > 0) {
-                    result_msg.append("📁 ").append(deletedMaterials).append(" 个课程资料文件已删除\n");
+                    result_msg.append("  ").append(deletedMaterials).append(" 个课程资料文件已删除\n");
                 }
                 
                 result_msg.append("\n⚡ 删除操作已完成且无法撤销\n");
@@ -899,17 +899,17 @@ public class CourseManagementTools {
                 
                 return result_msg.toString();
             } else {
-                log.error("❌ 课程主记录删除失败，course_id: {}", courseId);
-                return "❌ 删除失败：数据库操作未影响任何行，可能数据已被其他操作修改。";
+                log.error("  课程主记录删除失败，course_id: {}", courseId);
+                return "  删除失败：数据库操作未影响任何行，可能数据已被其他操作修改。";
             }
             
         } catch (EmptyResultDataAccessException e) {
-            log.warn("⚠️ 删除时未找到课程: {}", courseName);
-            return "❌ 删除失败：在执行删除时找不到课程 '" + courseName + "'。可能已被其他用户删除。";
+            log.warn("   删除时未找到课程: {}", courseName);
+            return "  删除失败：在执行删除时找不到课程 '" + courseName + "'。可能已被其他用户删除。";
         } catch (Exception e) {
-            log.error("❌ 确认删除课程 '{}' 时发生严重错误: {}", courseName, e.getMessage(), e);
+            log.error("  确认删除课程 '{}' 时发生严重错误: {}", courseName, e.getMessage(), e);
             // 事务会自动回滚
-            return "❌ 删除课程时发生内部错误：" + e.getMessage() + 
+            return "  删除课程时发生内部错误：" + e.getMessage() + 
                    "\n所有操作已回滚，数据保持完整。请稍后重试或联系技术支持。";
         }
     }

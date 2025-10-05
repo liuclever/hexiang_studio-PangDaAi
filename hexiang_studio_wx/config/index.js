@@ -9,7 +9,7 @@ const getNetworkConfig = () => {
   const configs = {
     // 开发环境配置
     development: {
-      // 后端API地址 - 根据实际网络情况选择
+      // 后端API地址 - 使用局域网IP供真机测试
       baseUrl: 'http://172.20.10.2:8044',
       // 文件访问地址
       fileUrl: 'http://172.20.10.2:8044',
@@ -17,11 +17,11 @@ const getNetworkConfig = () => {
       wsUrl: 'ws://172.20.10.2:8001'
     },
     
-    // 生产环境配置
+    // 生产环境配置 - 正式上线环境
     production: {
-      baseUrl: 'https://your-production-domain.com',
-      fileUrl: 'https://your-production-domain.com',
-      wsUrl: 'wss://your-production-domain.com'
+      baseUrl: 'https://api.hxstudio.website', // 生产API域名
+      fileUrl: 'https://files.hxstudio.website', // 文件服务域名
+      wsUrl: 'wss://ws.hxstudio.website' // WebSocket服务域名
     },
     
     // 本地环境配置
@@ -32,8 +32,11 @@ const getNetworkConfig = () => {
     }
   };
   
-  // 当前使用的环境（可以通过这里快速切换）
+  // 当前使用的环境（发布时需要改为 'production'）
+  // TODO: 发布生产版本时，请将此处改为 'production'
   const currentEnv = 'development';
+  
+  console.log(`当前环境: ${currentEnv}, API地址: ${configs[currentEnv].baseUrl}`);
   
   return configs[currentEnv];
 };

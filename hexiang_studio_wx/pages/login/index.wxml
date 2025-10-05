@@ -2,7 +2,7 @@
   <!-- Logo区域 -->
   <view class="logo-area">
     <view class="logo-card" hover-class="logo-card-hover" hover-stay-time="100">
-      <image class="logo" src="/images/logo.svg" mode="aspectFit"></image>
+      <image class="logo" src="/images/icons/logo.jpg" mode="aspectFit"></image>
       <text class="title">何湘技能大师工作室</text>
       <text class="subtitle">高效管理工作室各项业务</text>
     </view>
@@ -13,7 +13,7 @@
     <view class="input-group">
       <view class="input-item">
         <view class="input-icon">
-          <image src="/images/icons/user.png" mode="aspectFit"></image>
+          <t-icon name="user" size="40rpx" color="#666"></t-icon>
         </view>
         <input 
           class="input-field" 
@@ -27,7 +27,7 @@
 
       <view class="input-item">
         <view class="input-icon">
-          <image src="/images/icons/password.png" mode="aspectFit"></image>
+          <t-icon name="lock-on" size="40rpx" color="#666"></t-icon>
         </view>
         <input 
           class="input-field" 

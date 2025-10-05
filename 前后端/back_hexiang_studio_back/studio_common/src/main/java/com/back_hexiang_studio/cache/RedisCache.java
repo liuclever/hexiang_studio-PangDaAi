@@ -17,7 +17,14 @@ public class RedisCache {
     private static final long DEFAULT_TTL = 5 * 60;
 
     /**
-     * 获取缓存，如果不存在则调用supplier获取数据并缓存
+     * 核心逻辑：
+     *
+     * 先从 Redis 获取 key 对应的值
+     *
+     * 如果缓存不存在：
+     * 调用 supplier.get() 获取数据
+     * 把数据写入 Redis，设置过期时间
+     * 返回数据
      */
     public <T> T get(String key, Supplier<T> supplier, long ttlSeconds) {
         T value = (T) redisTemplate.opsForValue().get(key);
@@ -28,10 +35,12 @@ public class RedisCache {
         // 缓存不存在，执行supplier获取数据
         value = supplier.get();
         if (value != null) {
+            //opsForValue() 是拿出来操作 字符串类型数据 的工具
             redisTemplate.opsForValue().set(key, value, ttlSeconds, TimeUnit.SECONDS);
         }
         return value;
     }
+
 
     /**
      * 使用默认过期时间获取缓存

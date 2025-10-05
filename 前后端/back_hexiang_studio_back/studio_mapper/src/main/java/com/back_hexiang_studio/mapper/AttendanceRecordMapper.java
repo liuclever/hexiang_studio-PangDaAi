@@ -16,7 +16,6 @@ import java.util.Map;
 
 /**
  * 考勤记录Mapper接口
- * 最终修复版本：确保所有被调用的方法都有定义，并统一了命名规范
  */
 @Mapper
 public interface AttendanceRecordMapper {

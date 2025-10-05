@@ -49,7 +49,7 @@ public class PersistentChatMemoryStore {
      * @return 聊天消息列表
      */
     public List<ChatMessage> getMessages(Object memoryId) {
-        log.debug("💾 获取对话记忆 - memoryId: {}", memoryId);
+        log.debug("  获取对话记忆 - memoryId: {}", memoryId);
         
         try {
             if (redisTemplate != null) {
@@ -58,7 +58,7 @@ public class PersistentChatMemoryStore {
                 return getMessagesFromMemory(memoryId);
             }
         } catch (Exception e) {
-            log.error("💾 获取对话记忆失败 - memoryId: {}, 错误: {}", memoryId, e.getMessage(), e);
+            log.error("  获取对话记忆失败 - memoryId: {}, 错误: {}", memoryId, e.getMessage(), e);
             return new ArrayList<>();
         }
     }
@@ -70,7 +70,7 @@ public class PersistentChatMemoryStore {
      * @param messages 聊天消息列表
      */
     public void updateMessages(Object memoryId, List<ChatMessage> messages) {
-        log.debug("💾 更新对话记忆 - memoryId: {}, 消息数量: {}", memoryId, messages.size());
+        log.debug("  更新对话记忆 - memoryId: {}, 消息数量: {}", memoryId, messages.size());
         
         try {
             if (redisTemplate != null) {
@@ -79,10 +79,10 @@ public class PersistentChatMemoryStore {
                 updateMessagesInMemory(memoryId, messages);
             }
             
-            log.info("💾 对话记忆更新成功 - memoryId: {}", memoryId);
+            log.info("  对话记忆更新成功 - memoryId: {}", memoryId);
             
         } catch (Exception e) {
-            log.error("💾 更新对话记忆失败 - memoryId: {}, 错误: {}", memoryId, e.getMessage(), e);
+            log.error("  更新对话记忆失败 - memoryId: {}, 错误: {}", memoryId, e.getMessage(), e);
         }
     }
 
@@ -92,7 +92,7 @@ public class PersistentChatMemoryStore {
      * @param memoryId 记忆ID
      */
     public void deleteMessages(Object memoryId) {
-        log.info("💾 删除对话记忆 - memoryId: {}", memoryId);
+        log.info("  删除对话记忆 - memoryId: {}", memoryId);
         
         try {
             if (redisTemplate != null) {
@@ -101,10 +101,10 @@ public class PersistentChatMemoryStore {
                 deleteMessagesFromMemory(memoryId);
             }
             
-            log.info("💾 对话记忆删除成功 - memoryId: {}", memoryId);
+            log.info("  对话记忆删除成功 - memoryId: {}", memoryId);
             
         } catch (Exception e) {
-            log.error("💾 删除对话记忆失败 - memoryId: {}, 错误: {}", memoryId, e.getMessage(), e);
+            log.error("  删除对话记忆失败 - memoryId: {}, 错误: {}", memoryId, e.getMessage(), e);
         }
     }
 
@@ -199,21 +199,21 @@ public class PersistentChatMemoryStore {
      * 清空所有对话记忆
      */
     public void clearAllMemories() {
-        log.warn("🗑️ 清空所有对话记忆");
+        log.warn("🗑 清空所有对话记忆");
         
         if (redisTemplate != null) {
             try {
                 java.util.Set<String> keys = redisTemplate.keys(REDIS_KEY_PREFIX + "*");
                 if (keys != null && !keys.isEmpty()) {
                     redisTemplate.delete(keys);
-                    log.info("🗑️ Redis 中的对话记忆已清空，共删除 {} 个记忆", keys.size());
+                    log.info("️ Redis 中的对话记忆已清空，共删除 {} 个记忆", keys.size());
                 }
             } catch (Exception e) {
                 log.error("清空 Redis 对话记忆失败: {}", e.getMessage(), e);
             }
         } else {
             memoryFallback.clear();
-            log.info("🗑️ 内存中的对话记忆已清空");
+            log.info("🗑 内存中的对话记忆已清空");
         }
     }
 
@@ -224,22 +224,22 @@ public class PersistentChatMemoryStore {
      */
     public String getMemoryStatistics() {
         StringBuilder stats = new StringBuilder();
-        stats.append("💾 对话记忆存储统计：\n\n");
+        stats.append("  对话记忆存储统计：\n\n");
         
         if (redisTemplate != null) {
-            stats.append("🔴 存储模式：Redis 持久化存储\n");
+            stats.append(" 存储模式：Redis 持久化存储\n");
             try {
                 java.util.Set<String> keys = redisTemplate.keys(REDIS_KEY_PREFIX + "*");
                 int keyCount = keys != null ? keys.size() : 0;
-                stats.append("📊 总记忆数量：").append(keyCount).append(" 个\n");
-                stats.append("⏰ 默认过期时间：").append(DEFAULT_TTL.toDays()).append(" 天\n");
+                stats.append(" 总记忆数量：").append(keyCount).append(" 个\n");
+                stats.append(" 默认过期时间：").append(DEFAULT_TTL.toDays()).append(" 天\n");
             } catch (Exception e) {
-                stats.append("❌ 获取统计信息失败：").append(e.getMessage()).append("\n");
+                stats.append(" 获取统计信息失败：").append(e.getMessage()).append("\n");
             }
         } else {
-            stats.append("🟡 存储模式：内存存储（降级模式）\n");
-            stats.append("📊 总记忆数量：").append(memoryFallback.size()).append(" 个\n");
-            stats.append("⚠️ 注意：重启后数据将丢失\n");
+            stats.append(" 存储模式：内存存储（降级模式）\n");
+            stats.append(" 总记忆数量：").append(memoryFallback.size()).append(" 个\n");
+            stats.append(" 注意：重启后数据将丢失\n");
         }
         
         return stats.toString();

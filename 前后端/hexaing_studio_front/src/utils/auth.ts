@@ -76,11 +76,22 @@ export const clearSession = (): void => {
   // 获取当前用户ID，用于清理对应的AI会话缓存
   const currentUserId = getUserId();
   
+  // 🔧 保存记住密码信息（在清理前）
+  const remember = localStorage.getItem('remember');
+  const savedUsername = localStorage.getItem('saved_username');
+  
   // 清理localStorage中的用户信息
   localStorage.removeItem('token');
   localStorage.removeItem('user_id');
   localStorage.removeItem('user_name');
   localStorage.removeItem('user_avatar');
+  
+  // 🔧 恢复记住密码信息（如果之前有的话）
+  if (remember && savedUsername) {
+    localStorage.setItem('remember', remember);
+    localStorage.setItem('saved_username', savedUsername);
+    console.log('💾 保留记住密码信息:', { remember, savedUsername });
+  }
   
   // 🔧 清理AI会话缓存
   if (currentUserId) {
@@ -106,16 +117,7 @@ export const logout = async (): Promise<void> => {
     console.error('后端登出失败:', error);
     // 即使后端登出失败，也要清除本地存储
   } finally {
-    // 无论后端是否成功，都清除本地存储
+    // 无论后端是否成功，都清除本地存储（clearSession已处理记住密码保留）
     clearSession();
-    
-    // 保留记住我设置
-    const remember = localStorage.getItem('remember');
-    const savedUsername = localStorage.getItem('saved_username');
-    
-    if (!remember || !savedUsername) {
-      localStorage.removeItem('remember');
-      localStorage.removeItem('saved_username');
-    }
   }
 }; 

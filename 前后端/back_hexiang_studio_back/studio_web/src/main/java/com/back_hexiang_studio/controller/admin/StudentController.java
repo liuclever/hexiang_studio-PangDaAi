@@ -13,11 +13,12 @@ import java.util.Map;
 
 /**
  * 学生管理控制器
- * 权限：超级管理员或只有副主任、主任可以访问（属于人员管理）
+ * 权限：超级管理员或具有用户管理权限的用户可以访问
+ * 使用动态权限验证系统，基于数据库权限配置
  */
 @RestController
 @RequestMapping("/admin/students")
-@PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('USER_MANAGE')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('USER_MANAGE')")
 public class StudentController {
 
     @Autowired
@@ -45,12 +46,12 @@ public class StudentController {
     
     /**
      * 搜索学生
-     * @param query 搜索关键词（姓名、学号等）
+     * @param keyword 搜索关键词（姓名、学号等）
      * @return 符合条件的学生列表
      */
     @GetMapping("/search")
-    public Result<List<Map<String, Object>>> searchStudents(@RequestParam String query) {
-        List<Map<String, Object>> students = studentService.searchStudents(query);
+    public Result<List<Map<String, Object>>> searchStudents(@RequestParam String keyword) {
+        List<Map<String, Object>> students = studentService.searchStudents(keyword);
         return Result.success(students);
     }
 } 

@@ -4,16 +4,17 @@
  */
 
 const { FILE_URL } = require('../config/index');
+const storage = require('./storage');
 
 /**
  * 显示下载帮助说明
  */
 const showDownloadHelp = () => {
   wx.showModal({
-    title: '📱 文件下载说明',
+    title: ' 文件下载说明',
     content: `微信小程序文件下载机制：
 
-🖼️ 图片文件
+ 图片文件
 • 可直接保存到手机相册
 • 保存路径：相册 > 微信
 
@@ -98,7 +99,7 @@ const previewFile = (url, fileName, options = {}) => {
     return;
   }
   
-  const token = wx.getStorageSync('token') || '';
+  const token = storage.getToken() || '';
   const fileType = options.fileType || 'material'; // 默认为material保持兼容性
   const fileUrl = buildFileUrl(url, fileName, false, fileType);
   
@@ -210,7 +211,7 @@ const downloadFile = (url, fileName, options = {}) => {
     });
   }
   
-  const token = wx.getStorageSync('token') || '';
+  const token = storage.getToken() || '';
   const fileType = options.fileType || 'material'; // 默认为material保持兼容性
   const fileUrl = buildFileUrl(url, fileName, true, fileType);
   

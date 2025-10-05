@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 /**
  * 工具分类服务 - 实现智能工具路由和分类存储
  * 
- * 🎯 核心目标：
+ *  核心目标：
  * - 减少RAG检索范围，提升响应速度
  * - 智能识别用户查询意图，定位到具体工具类别
  * - 支持多级分类和交叉分类检索
@@ -104,10 +104,10 @@ public class ToolClassificationService {
     }
 
     /**
-     * 🧠 智能工具路由 - 根据用户查询分析最可能的工具类别
+     *  智能工具路由 - 根据用户查询分析最可能的工具类别
      */
     public List<ToolClassificationResult> classifyUserQuery(String userQuery) {
-        log.debug("🔍 开始工具分类分析: {}", userQuery);
+        log.debug(" 开始工具分类分析: {}", userQuery);
         
         String normalizedQuery = userQuery.toLowerCase();
         List<ToolClassificationResult> results = new ArrayList<>();
@@ -135,7 +135,7 @@ public class ToolClassificationService {
         // 4. 排序并返回
         results.sort((a, b) -> Double.compare(b.getScore(), a.getScore()));
         
-        log.info("🎯 工具分类完成，匹配到{}个类别", results.size());
+        log.info(" 工具分类完成，匹配到{}个类别", results.size());
         for (ToolClassificationResult result : results) {
             log.debug("- {} (置信度: {:.2f})", result.getCategory().getDisplayName(), result.getScore());
         }
@@ -240,7 +240,7 @@ public class ToolClassificationService {
     }
 
     /**
-     * 🎯 生成分类检索策略
+     *  生成分类检索策略
      */
     public RetrievalStrategy generateRetrievalStrategy(String userQuery) {
         List<ToolClassificationResult> classifications = classifyUserQuery(userQuery);
@@ -252,12 +252,12 @@ public class ToolClassificationService {
             // 兜底策略：全局检索
             strategy.setStrategyType("GLOBAL");
             strategy.setPrioritizedCategories(Arrays.asList(ToolCategory.values()));
-            log.info("🌐 使用全局检索策略");
+            log.info(" 使用全局检索策略");
         } else if (classifications.size() == 1) {
             // 单类别检索
             strategy.setStrategyType("SINGLE_CATEGORY");
             strategy.setPrioritizedCategories(Collections.singletonList(classifications.get(0).getCategory()));
-            log.info("🎯 使用单类别检索策略: {}", classifications.get(0).getCategory().getDisplayName());
+            log.info(" 使用单类别检索策略: {}", classifications.get(0).getCategory().getDisplayName());
         } else {
             // 多类别优先检索
             strategy.setStrategyType("MULTI_CATEGORY");
@@ -267,7 +267,7 @@ public class ToolClassificationService {
                     .map(ToolClassificationResult::getCategory)
                     .collect(java.util.stream.Collectors.toList())
             );
-            log.info("🔄 使用多类别检索策略，优先级类别: {}", 
+            log.info(" 使用多类别检索策略，优先级类别: {}",
                 strategy.getPrioritizedCategories().size());
         }
         

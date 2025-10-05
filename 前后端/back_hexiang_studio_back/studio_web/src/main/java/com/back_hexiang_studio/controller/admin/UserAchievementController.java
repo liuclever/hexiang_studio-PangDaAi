@@ -22,6 +22,10 @@ import com.back_hexiang_studio.dv.dto.UserCertificateDto;
 import com.back_hexiang_studio.dv.dto.UserHonorDto;
 import static com.back_hexiang_studio.utils.PathUtils.DANGEROUS_FILE_EXTENSIONS;
 
+
+/**
+ * 用户成就控制器
+ */
 @RestController
 @RequestMapping("/admin/achievement")
 @Slf4j
@@ -33,8 +37,12 @@ public class UserAchievementController {
     @Autowired
     private FileValidationManager fileValidationManager;
 
-    // --- Honors ---
 
+    /**
+     * 获取用户证书列表
+     * @param userId
+     * @return
+     */
     @GetMapping("/honors")
     public Result<List<UserHonorVo>> getHonorsByUserId(@RequestParam Long userId) {
         List<UserHonorVo> honors = userAchievementService.getHonorsByUserId(userId);

@@ -15,7 +15,7 @@ import java.util.*;
 /**
  * 全量同步服务
  * 
- * 🔄 专门负责向量数据库的全量重建
+ *   专门负责向量数据库的全量重建
  * 用于替代旧的DataSyncService中的全量同步功能
  * 
  * 特性：
@@ -55,33 +55,33 @@ public class FullSyncService {
     @Async
     public void onApplicationReady() {
         if (!autoInit) {
-            log.info("⏭️ 自动初始化已禁用，跳过向量数据库检查");
+            log.info("  自动初始化已禁用，跳过向量数据库检查");
             return;
         }
 
-        log.info("🔍 检查向量数据库是否需要初始化...");
+        log.info("  检查向量数据库是否需要初始化...");
         
         try {
             // 检查向量数据库是否为空
             VectorStoreService.VectorStoreStats stats = vectorStoreService.getStats();
             if (stats.getDocumentCount() == 0) {
-                log.info("📭 向量数据库为空，开始自动初始化...");
+                log.info("  向量数据库为空，开始自动初始化...");
                 
                 // 延迟5秒启动，确保所有服务已准备就绪
                 Thread.sleep(5000);
                 
                 SyncResult result = syncAll();
                 if (result.isSuccess()) {
-                    log.info("✅ 向量数据库自动初始化完成！同步了 {} 条数据", result.getTotalSynced());
+                    log.info("  向量数据库自动初始化完成！同步了 {} 条数据", result.getTotalSynced());
                 } else {
-                    log.warn("⚠️ 向量数据库自动初始化失败：{}", result.getErrorMessage());
+                    log.warn(" 向量数据库自动初始化失败：{}", result.getErrorMessage());
                 }
             } else {
-                log.info("✅ 向量数据库已存在 {} 条数据，跳过初始化", stats.getDocumentCount());
+                log.info("  向量数据库已存在 {} 条数据，跳过初始化", stats.getDocumentCount());
             }
             
         } catch (Exception e) {
-            log.error("❌ 向量数据库自动初始化失败", e);
+            log.error("  向量数据库自动初始化失败", e);
         }
     }
 
@@ -90,7 +90,7 @@ public class FullSyncService {
      * 手动触发的完整重建过程
      */
     public SyncResult syncAll() {
-        log.info("🔄 开始全量数据同步（现代RAG架构）...");
+        log.info("  开始全量数据同步（现代RAG架构）...");
         long startTime = System.currentTimeMillis();
         
         SyncResult result = new SyncResult();
@@ -98,10 +98,10 @@ public class FullSyncService {
         try {
             // 1. 清空现有向量数据
             vectorStoreService.clear();
-            log.info("🗑️ 已清空现有向量数据");
+            log.info("  已清空现有向量数据");
             
             // 2. 同步核心静态知识数据（减少AI工具调用压力）
-            log.info("📚 开始同步核心静态知识数据...");
+            log.info(" 开始同步核心静态知识数据...");
             
             // 2.1 工作室基本信息（静态知识）
             result.addResult("studio_info", syncStudioInfo());
@@ -111,13 +111,12 @@ public class FullSyncService {
             result.addResult("department", syncDepartments());
             result.addResult("training_direction", syncTrainingDirections());
             
-            // 2.3 工具使用指南（RAG核心价值：告诉AI何时用什么工具）
+            // 2.3 工具使用指南（告诉AI何时用什么工具）
             result.addResult("tool_guide", syncToolGuide());
             
-            // 🗑️ 删除冗余同步：AI能力介绍、用户、学生、老师、角色、职位、荣誉、证书等
             
-            log.info("✅ 核心静态知识同步完成");
-            log.info("ℹ️  人员信息、公告、任务、资料等动态数据通过工具实时查询，确保数据准确性");
+            log.info("  核心静态知识同步完成");
+            log.info("   人员信息、公告、任务、资料等动态数据通过工具实时查询，确保数据准确性");
             
             // 5. 如果是内存存储，则持久化到文件
             if (vectorStoreService.getClass().getSimpleName().contains("InMemory")) {
@@ -128,12 +127,12 @@ public class FullSyncService {
             result.setDurationMs(duration);
             result.setSuccess(true);
             
-            log.info("✅ 全量同步完成！耗时: {}ms, 总计: {}条", duration, result.getTotalSynced());
+            log.info("  全量同步完成！耗时: {}ms, 总计: {}条", duration, result.getTotalSynced());
             
             return result;
             
         } catch (Exception e) {
-            log.error("❌ 全量同步失败: {}", e.getMessage(), e);
+            log.error("  全量同步失败: {}", e.getMessage(), e);
             result.setSuccess(false);
             result.setErrorMessage(e.getMessage());
             return result;
@@ -148,7 +147,7 @@ public class FullSyncService {
      * 同步工作室信息
      */
     private int syncStudioInfo() {
-        log.info("🏢 同步工作室信息...");
+        log.info(" 同步工作室信息...");
         
         String sql = "SELECT id, name, establish_time, director, member_count, project_count, awards, " +
                      "phone, email, address, room " +
@@ -157,29 +156,29 @@ public class FullSyncService {
         
         List<Map<String, Object>> studioInfos = jdbcTemplate.queryForList(sql);
         
-        // ✨ 动态计算实际成员数量，确保数据准确性
+        // 动态计算实际成员数量，确保数据准确性
         long actualMemberCount;
         try {
             String countSql = "SELECT COUNT(*) FROM user WHERE status = '1'";
             Long count = jdbcTemplate.queryForObject(countSql, Long.class);
             actualMemberCount = (count != null) ? count : 0;
-            log.info("📊 动态计算工作室成员数量: {}", actualMemberCount);
+            log.info(" 动态计算工作室成员数量: {}", actualMemberCount);
         } catch (Exception e) {
-            log.warn("⚠️ 无法动态计算成员数量，将使用数据库中的值", e);
+            log.warn(" 无法动态计算成员数量，将使用数据库中的值", e);
             actualMemberCount = -1; // -1 表示计算失败
         }
         
         int syncedCount = 0;
         for (Map<String, Object> studioInfo : studioInfos) {
             try {
-                // 创建一个可变副本以修改成员数量
+                // 修改成员数量
                 Map<String, Object> mutableStudioInfo = new HashMap<>(studioInfo);
                 
                 // 如果动态计算成功，则更新成员数量
                 if (actualMemberCount != -1) {
                     Object dbMemberCount = mutableStudioInfo.get("member_count");
                     if (dbMemberCount == null || ((Number)dbMemberCount).longValue() != actualMemberCount) {
-                        log.info("🔄 成员数量已更新: 数据库值 '{}' -> 动态计算值 '{}'", dbMemberCount, actualMemberCount);
+                        log.info("  成员数量已更新: 数据库值 '{}' -> 动态计算值 '{}'", dbMemberCount, actualMemberCount);
                     }
                     mutableStudioInfo.put("member_count", actualMemberCount);
                 }
@@ -192,11 +191,11 @@ public class FullSyncService {
                 syncedCount++;
                 
             } catch (Exception e) {
-                log.warn("⚠️ 同步工作室信息失败 [ID: {}]: {}", studioInfo.get("id"), e.getMessage());
+                log.warn(" 同步工作室信息失败 [ID: {}]: {}", studioInfo.get("id"), e.getMessage());
             }
         }
         
-        log.info("✅ 工作室信息同步完成: {}/{}", syncedCount, studioInfos.size());
+        log.info("  工作室信息同步完成: {}/{}", syncedCount, studioInfos.size());
         return syncedCount;
     }
 
@@ -204,7 +203,7 @@ public class FullSyncService {
      * 同步技术支持联系人
      */
     private int syncSupportContacts() {
-        log.info("📞 同步技术支持联系人...");
+        log.info(" 同步技术支持联系人...");
         
         String sql = "SELECT id, name, phone, email, position " +
                      "FROM support_contact " +
@@ -224,11 +223,11 @@ public class FullSyncService {
                 syncedCount++;
                 
             } catch (Exception e) {
-                log.warn("⚠️ 同步技术支持联系人失败 [ID: {}]: {}", supportContact.get("id"), e.getMessage());
+                log.warn(" 同步技术支持联系人失败 [ID: {}]: {}", supportContact.get("id"), e.getMessage());
             }
         }
         
-        log.info("✅ 技术支持联系人同步完成: {}/{}", syncedCount, supportContacts.size());
+        log.info("  技术支持联系人同步完成: {}/{}", syncedCount, supportContacts.size());
         return syncedCount;
     }
 
@@ -236,7 +235,7 @@ public class FullSyncService {
      * 同步工具使用说明 - RAG核心价值：减少AI工具调用时的困惑
      */
     private int syncToolGuide() {
-        log.info("🔧 同步工具使用说明...");
+        log.info(" 同步工具使用说明...");
         
         try {
             // 构建工具分类和使用说明
@@ -244,42 +243,42 @@ public class FullSyncService {
             toolGuide.append("何湘工作室AI助手工具使用指南\n\n");
             
             // 用户管理工具
-            toolGuide.append("👥 用户管理工具：\n");
+            toolGuide.append("  用户管理工具：\n");
             toolGuide.append("- 查询用户档案：获取当前用户或指定用户的详细信息\n");
             toolGuide.append("- 用户增删改：需要管理员权限，先检查权限再操作\n");
             toolGuide.append("- 获取成员列表：查看工作室所有成员基本信息\n\n");
             
             // 工作室信息工具
-            toolGuide.append("🏢 工作室信息工具：\n");
+            toolGuide.append(" 工作室信息工具：\n");
             toolGuide.append("- 成员统计：查询部门设置和人数分布\n");
             toolGuide.append("- 部门详情：获取特定部门的详细信息和成员列表\n\n");
             
             // 考勤管理工具
-            toolGuide.append("📅 考勤管理工具：\n");
+            toolGuide.append(" 考勤管理工具：\n");
             toolGuide.append("- 考勤统计：查询指定日期的考勤情况\n\n");
             
             // 任务管理工具
-            toolGuide.append("📝 任务管理工具：\n");
+            toolGuide.append(" 任务管理工具：\n");
             toolGuide.append("- 用户任务：查询指定用户的任务列表\n");
             toolGuide.append("- 我的任务：获取当前用户的未完成任务\n\n");
             
             // 公告管理工具
-            toolGuide.append("📢 公告管理工具：\n");
+            toolGuide.append(" 公告管理工具：\n");
             toolGuide.append("- 查询公告：获取最新公告信息\n");
             toolGuide.append("- 公告管理：需要权限验证的增删改操作\n\n");
             
             // 课程管理工具
-            toolGuide.append("📚 课程管理工具：\n");
+            toolGuide.append(" 课程管理工具：\n");
             toolGuide.append("- 课程列表：查询所有可用课程\n");
             toolGuide.append("- 培训方向：查询培训方向列表\n\n");
             
             // 外部API工具
-            toolGuide.append("🌐 外部API工具：\n");
+            toolGuide.append(" 外部API工具：\n");
             toolGuide.append("- 天气查询：获取今日天气或未来几天预报\n");
             toolGuide.append("- 新闻资讯：获取今日新闻或指定日期新闻\n\n");
             
             // 数据处理工具
-            toolGuide.append("📊 数据处理工具：\n");
+            toolGuide.append(" 数据处理工具：\n");
             toolGuide.append("- 表格转换：将文本数据转换为表格JSON格式\n\n");
             
             toolGuide.append("重要提醒：\n");
@@ -289,26 +288,22 @@ public class FullSyncService {
             
             vectorStoreService.upsert("tool_guide", 1L, toolGuide.toString());
             
-            log.info("✅ 工具使用说明同步完成");
+            log.info("  工具使用说明同步完成");
             return 1;
             
         } catch (Exception e) {
-            log.error("❌ 工具使用说明同步失败: {}", e.getMessage(), e);
+            log.error("  工具使用说明同步失败: {}", e.getMessage(), e);
             return 0;
         }
     }
 
-    // 🗑️ 已删除 syncAiCapabilities - 减少冗余代码
 
-    // 🗑️ 已删除 syncUsers - 人员信息通过工具实时查询
-
-    // 🗑️ 已删除 syncStudents - 学生信息通过工具实时查询
 
     /**
      * 同步部门信息
      */
     private int syncDepartments() {
-        log.info("🏢 同步部门信息...");
+        log.info(" 同步部门信息...");
         
         String sql = "SELECT department_id as id, department_name, create_time " +
                      "FROM department " +
@@ -327,11 +322,11 @@ public class FullSyncService {
                 syncedCount++;
                 
             } catch (Exception e) {
-                log.warn("⚠️ 同步部门失败 [ID: {}]: {}", department.get("id"), e.getMessage());
+                log.warn(" 同步部门失败 [ID: {}]: {}", department.get("id"), e.getMessage());
             }
         }
         
-        log.info("✅ 部门同步完成: {}/{}", syncedCount, departments.size());
+        log.info("  部门同步完成: {}/{}", syncedCount, departments.size());
         return syncedCount;
     }
 
@@ -839,11 +834,11 @@ public class FullSyncService {
                 syncedCount++;
                 
             } catch (Exception e) {
-                log.warn("⚠️ 同步荣誉失败 [ID: {}]: {}", honor.get("id"), e.getMessage());
+                log.warn(" 同步荣誉失败 [ID: {}]: {}", honor.get("id"), e.getMessage());
             }
         }
         
-        log.info("✅ 荣誉同步完成: {}/{}", syncedCount, honors.size());
+        log.info("  荣誉同步完成: {}/{}", syncedCount, honors.size());
         return syncedCount;
     }
     
@@ -872,11 +867,11 @@ public class FullSyncService {
                 syncedCount++;
                 
             } catch (Exception e) {
-                log.warn("⚠️ 同步证书失败 [ID: {}]: {}", certificate.get("id"), e.getMessage());
+                log.warn(" 同步证书失败 [ID: {}]: {}", certificate.get("id"), e.getMessage());
             }
         }
         
-        log.info("✅ 证书同步完成: {}/{}", syncedCount, certificates.size());
+        log.info("  证书同步完成: {}/{}", syncedCount, certificates.size());
         return syncedCount;
     }
     
@@ -1016,7 +1011,7 @@ public class FullSyncService {
             }
         }
         
-        log.info("✅ 培训方向同步完成: {}/{}", syncedCount, directions.size());
+        log.info("  培训方向同步完成: {}/{}", syncedCount, directions.size());
         return syncedCount;
     }
     
@@ -1050,7 +1045,7 @@ public class FullSyncService {
             }
         }
         
-        log.info("✅ 教师同步完成: {}/{}", syncedCount, teachers.size());
+        log.info("  教师同步完成: {}/{}", syncedCount, teachers.size());
         return syncedCount;
     }
     
@@ -1080,7 +1075,7 @@ public class FullSyncService {
             }
         }
         
-        log.info("✅ 角色同步完成: {}/{}", syncedCount, roles.size());
+        log.info("  角色同步完成: {}/{}", syncedCount, roles.size());
         return syncedCount;
     }
     
@@ -1110,7 +1105,7 @@ public class FullSyncService {
             }
         }
         
-        log.info("✅ 职位同步完成: {}/{}", syncedCount, positions.size());
+        log.info("  职位同步完成: {}/{}", syncedCount, positions.size());
         return syncedCount;
     }
     

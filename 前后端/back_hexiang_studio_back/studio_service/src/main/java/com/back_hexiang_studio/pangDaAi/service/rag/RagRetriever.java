@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 /**
  * RAG检索器核心服务
  * 
- * 🔍 功能特性：
+ *  功能特性：
  * - 智能语义检索：基于向量相似度匹配最相关内容
  * - 时间权重优化：最新信息获得更高权重
  * - 类型过滤支持：公告、课程、任务等分类检索
@@ -57,20 +57,20 @@ public class RagRetriever {
      * @return 检索结果
      */
     public RetrievalResult retrieve(String query, int maxResults, Long userId) {
-        log.info("🔍 开始RAG检索 - 查询: '{}', 最大结果: {}, 用户: {}", query, maxResults, userId);
+        log.info(" 开始RAG检索 - 查询: '{}', 最大结果: {}, 用户: {}", query, maxResults, userId);
         
         try {
-            // 🎯 优先处理身份查询
+            //  优先处理身份查询
             if (isIdentityQuery(query) && userId != null) {
-                log.info("🔐 检测到身份查询，执行精确用户查询");
+                log.info(" 检测到身份查询，执行精确用户查询");
                 return performUserIdentityQuery(userId, query);
             }
             
-            // 🚀 1. 查询预处理和扩展
+            //  1. 查询预处理和扩展
             String enhancedQuery = enhanceQueryForBetterRetrieval(query);
-            log.debug("🔤 查询增强: '{}' -> '{}'", query, enhancedQuery);
+            log.debug(" 查询增强: '{}' -> '{}'", query, enhancedQuery);
             
-            // 🎯 2. 智能工具分类路由 - 新增优化点
+            //  2. 智能工具分类路由 
             ToolClassificationService.RetrievalStrategy strategy = 
                 toolClassificationService.generateRetrievalStrategy(query);
             
@@ -607,9 +607,7 @@ public class RagRetriever {
         return allResults;
     }
 
-    // 删除原有的复杂过滤逻辑，已替换为simpleQualityFilter
-
-    // 删除原有的复杂语义相关性验证，已替换为简单关键词匹配
+ 
     
     /**
      * 向后兼容的重载方法
@@ -770,12 +768,12 @@ public class RagRetriever {
     }
 
     /**
-     * 简化的质量过滤器
+     * 质量过滤器
      */
     private List<EmbeddingMatch<TextSegment>> simpleQualityFilter(
             List<EmbeddingMatch<TextSegment>> results, String query, Long userId) {
         
-        log.debug("🔍 开始简化质量过滤 - 原始结果数: {}, 查询: '{}'", results.size(), query);
+        log.debug(" 开始简化质量过滤 - 原始结果数: {}, 查询: '{}'", results.size(), query);
         
         return results.stream()
                 .filter(match -> {

@@ -15,7 +15,7 @@
     "minifyWXML": true,
     "ignoreUploadUnusedFiles": true,
     "compileWorklet": false,
-    "uploadWithSourceMap": true,
+    "uploadWithSourceMap": false,
     "packNpmManually": false,
     "minifyWXSS": true,
     "localPlugins": false,
@@ -30,7 +30,7 @@
     "ignore": [],
     "include": []
   },
-  "appid": "wx05b54f1e908f192d",
+  "appid": "wx868c964aae4cc17d",
   "editorSetting": {},
   "libVersion": "3.8.12"
 }

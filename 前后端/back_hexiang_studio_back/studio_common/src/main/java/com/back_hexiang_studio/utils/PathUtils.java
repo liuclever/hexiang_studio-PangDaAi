@@ -153,6 +153,7 @@ public class PathUtils {
             return Result.error("无法识别文件类型");
         }
 
+
         extension = extension.toLowerCase();
 
         // 检查是否是危险文件类型

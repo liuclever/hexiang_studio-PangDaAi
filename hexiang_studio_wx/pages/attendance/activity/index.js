@@ -40,7 +40,7 @@ Page({
       locationIndex: 0,
       locationLat: '',
       locationLng: '',
-      radius: '100',
+      radius: '10',
       status: 1,
       statusIndex: 0,
       note: '',
@@ -460,9 +460,20 @@ Page({
   },
 
   onCreateRadiusInput(e) {
+    const radius = parseFloat(e.detail.value) || 0;
+    
     this.setData({
       'createForm.radius': e.detail.value
     });
+    
+    // 提示用户距离过大
+    if (radius > 10) {
+      wx.showToast({
+        title: '建议签到距离不超过10米，以提高考勤精度',
+        icon: 'none',
+        duration: 3000
+      });
+    }
   },
 
   onCreateNoteInput(e) {

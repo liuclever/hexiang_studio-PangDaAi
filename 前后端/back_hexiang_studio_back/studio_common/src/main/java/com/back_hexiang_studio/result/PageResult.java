@@ -31,7 +31,7 @@ public class PageResult implements Serializable {
         this.records = records;
     }
 
-    // 完整构造函数
+    // 构造函数
     public PageResult(long total, List records, Integer page, Integer pageSize, Integer pages) {
         this.total = (total > 0) ? total : (records != null ? records.size() : 0);
         this.records = records;

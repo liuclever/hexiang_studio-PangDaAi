@@ -363,8 +363,9 @@ const handleSendMessage = async (content: string) => {
         const lastMessage = messages.value[messages.value.length - 1]
         if (lastMessage && lastMessage.type === 'ai') {
           let errorMsg = '抱歉，我暂时无法回复，请稍后再试。'
-          if (error.message) {
-            errorMsg = `❌ 错误：${error.message}`
+          if (error.message && error.message.length < 100 && !error.message.includes('{')) {
+            // 只有当错误消息不是JSON格式且长度合理时才显示
+            errorMsg = error.message
           }
           lastMessage.content = errorMsg
         }

@@ -16,9 +16,11 @@ import com.back_hexiang_studio.enumeration.OperationType;
 import com.back_hexiang_studio.mapper.*;
 import com.back_hexiang_studio.result.PageResult;
 
+
 import com.back_hexiang_studio.service.UserService;
 import com.back_hexiang_studio.service.DepartmentService;
-// import com.back_hexiang_studio.securuty.TokenService;
+import com.back_hexiang_studio.service.PermissionService;
+
 
 
 import com.github.pagehelper.Page;
@@ -29,18 +31,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.context.ApplicationContext;
 import com.back_hexiang_studio.utils.FileUtils;
 import org.springframework.transaction.annotation.Transactional;
 import com.back_hexiang_studio.enumeration.FileType;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
+
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.ArrayList;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -71,8 +75,10 @@ public class userServiceimpl implements UserService {
     private RedisTemplate<String, Object> redisTemplate;
     @Autowired
     private DepartmentService departmentService;
-    // @Autowired
-    // private TokenService tokenService;
+    @Autowired
+    private PermissionService permissionService;
+    @Autowired
+    private ApplicationContext applicationContext;
 
     /**
      * MD5加密工具方法
@@ -107,13 +113,13 @@ public class userServiceimpl implements UserService {
 
     /**
      *登录逻辑
-     * @param userDto
+     * @param userLoginDto
      * @return
      */
     @Override
-    public UserLoginVo login(UserLoginDto userDto) {
-        String userName = userDto.getUserName();
-        String password = userDto.getPassword();
+    public UserLoginVo login(UserLoginDto userLoginDto) {
+        String userName = userLoginDto.getUserName();
+        String password = userLoginDto.getPassword();
         log.info("用户登录: {}", userName);
 
         // 对输入的密码进行MD5加密
@@ -147,63 +153,45 @@ public class userServiceimpl implements UserService {
      */
     @Override
     public PageResult list(PageDto pageDto) {
-        //获取用户列表
-        String cacheKey="user:list"+pageDto.getPage()+":"+pageDto.getPageSize();
+        //传入当前页，长度
+        PageHelper.startPage(pageDto.getPage(),pageDto.getPageSize());
+        //获取用户基本信息
+        Page<basicUserVo> userList = userMapper.selectByPage(pageDto);
 
-        if (pageDto.getName() != null) {
-            cacheKey += ":name:" + pageDto.getName();
-        }
-        if (pageDto.getRoleId() != null) {
-            cacheKey += ":role:" + pageDto.getRoleId();
-        }
-        if (pageDto.getStatus() != null) {
-            cacheKey += ":status:" + pageDto.getStatus();
-        }
-        if (pageDto.getDepartmentId() != null) {
-            cacheKey += ":dept:" + pageDto.getDepartmentId();
-        }
+        // 直接从Redis获取在线用户ID集合
+        Set<Long> onlineUserIds = getOnlineUserIds();
 
-        // 从缓存获取用户基础数据（不包含在线状态）
-        Object cacheResult = redisTemplate.opsForValue().get(cacheKey);
-        PageResult result;
-
-        if (cacheResult != null) {
-            log.debug("从缓存获取用户列表数据");
-            result = (PageResult) cacheResult;
-        } else {
-            log.debug("缓存未命中，从数据库查询用户列表");
-            //传入当前页，长度
-            PageHelper.startPage(pageDto.getPage(),pageDto.getPageSize());
-            //获取用户基本信息
-            Page<basicUserVo> userList = userMapper.selectByPage(pageDto);
-            result = new PageResult(userList.getTotal(), userList.getResult());
-
-            // 保存基础数据到缓存，设置5分钟过期（不包含在线状态）
-            redisTemplate.opsForValue().set(cacheKey, result, 5, TimeUnit.MINUTES);
+        // 遍历用户列表，设置在线状态
+        for (basicUserVo userVo : userList.getResult()) {
+            if (userVo.getUserId() != null) {
+                userVo.setIsOnline(onlineUserIds.contains(userVo.getUserId()));
+            } else {
+                userVo.setIsOnline(false);
+            }
         }
 
-        // 无论是否来自缓存，都重新计算在线状态（实时数据，不缓存）
-        // @SuppressWarnings("unchecked")
-        // List<basicUserVo> userList = (List<basicUserVo>) result.getRecords();
-        // if (userList != null) {
-        //     log.info("开始计算 {} 个用户的在线状态", userList.size());
-        //     int onlineCount = 0;
-        //     for (basicUserVo user : userList) {
-        //         if (user.getUserId() != null) {
-        //             boolean isOnline = tokenService.isUserOnline(user.getUserId());
-        //             user.setIsOnline(isOnline);
-        //             if (isOnline) {
-        //                 onlineCount++;
-        //             }
-        //             log.debug("用户 {} ({}) 在线状态: {}", user.getUserId(), user.getName(), isOnline);
-        //         }
-        //     }
-        //     log.info("在线状态计算完成 - 总用户数: {}, 在线用户数: {}", userList.size(), onlineCount);
-        // }
-
-        return result;
+        return new PageResult(userList.getTotal(), userList.getResult());
     }
 
+    /**
+     * 直接从Redis获取所有在线用户的ID（双Token模式）
+     * @return 在线用户ID的Set集合
+     */
+    private Set<Long> getOnlineUserIds() {
+        try {
+
+            Set<String> keys = redisTemplate.keys("login:access:*");
+            if (keys == null || keys.isEmpty()) {
+                return Collections.emptySet();
+            }
+            return keys.stream()
+                    .map(key -> Long.parseLong(key.substring("login:access:".length())))
+                    .collect(Collectors.toSet());
+        } catch (Exception e) {
+            log.error("获取在线用户ID失败: {}", e.getMessage());
+            return Collections.emptySet();
+        }
+    }
 
     /**
      *根据用户id获取详细信息
@@ -225,14 +213,13 @@ public class userServiceimpl implements UserService {
         if (user == null) {
             return null;
         }
+
         // 创建并填充UserVo对象
         UserVo userVo = new UserVo();
         BeanUtils.copyProperties(user, userVo);
 
-
         // 获取培训方向列表
         List<String> directions = new ArrayList<>();
-
         try {
             // 根据角色获取特有信息
             if (user.getRoleId() != null) {
@@ -266,6 +253,7 @@ public class userServiceimpl implements UserService {
                         }
                     }
                 }
+
                 // 教师角色
                 else if (user.getRoleId() == 2) {
                     Long teacherId = teacherMapper.getTeacherIdByUserId(userId);
@@ -285,9 +273,10 @@ public class userServiceimpl implements UserService {
                         }
                     }
                 }
+
                 // 管理员角色
                 else if (user.getRoleId() == 3) {
-                    // 管理员角色特有处理（如果有的话）
+                    // 管理员角色特有处理
                 }
             }
         } catch (Exception e) {
@@ -323,10 +312,6 @@ public class userServiceimpl implements UserService {
                 userDto.setAvatar(getDefaultAvatarByRole(String.valueOf(userDto.getRoleId())));
                 log.info("未提供头像文件，为用户设置默认头像");
             }
-
-
-
-
             // 2. 对密码进行MD5加密
             if (userDto.getPassword() != null && !userDto.getPassword().isEmpty()) {
                 String encryptedPassword = encryptMD5(userDto.getPassword());
@@ -697,7 +682,8 @@ public class userServiceimpl implements UserService {
 
                     // d. 收集用户相关的缓存键
                     keysToDelete.add("user:info:" + userId);
-                    keysToDelete.add("login:token:" + userId);
+                    keysToDelete.add("login:access:" + userId);    // Access Token
+                    keysToDelete.add("login:refresh:" + userId);   // Refresh Token
                     keysToDelete.add("login:user:" + userId);
                 }
             } catch (Exception e) {
@@ -794,94 +780,22 @@ public class userServiceimpl implements UserService {
 
     @Override
     public List<String> getPermissionsByRole(Long positionId) {
-        // 根据数据库中的职位ID映射到角色权限
-        List<String> permissions = new ArrayList<>();
-
-        if (positionId != null) {
-            switch (positionId.intValue()) {
-                case 8: // admin - 超级管理员
-                    permissions.add("ROLE_ADMIN");
-                    // 保留原有权限
-                    permissions.add("TASK_CREATE");
-                    permissions.add("TASK_APPROVE");
-                    permissions.add("COURSE_CREATE");
-                    permissions.add("COURSE_APPROVE");
-                    permissions.add("COURSE_MANAGE");
-                    permissions.add("COURSE_VIEW");
-                    // 添加新权限 - 超级管理员拥有所有权限
-                    permissions.add("ATTENDANCE_MANAGE");
-                    permissions.add("USER_MANAGE");
-                    permissions.add("TASK_MANAGE");
-                    permissions.add("NOTICE_MANAGE");
-                    permissions.add("MATERIAL_MANAGE");
-                    permissions.add("DASHBOARD_VIEW");
-                    permissions.add("STUDIO_INFO_VIEW");
-                    break;
-                case 6: // manager - 主任
-                case 7: // manager - 副主任  
-                    permissions.add("ROLE_MANAGER");
-                    // 保留原有权限
-                    permissions.add("TASK_CREATE");
-                    permissions.add("TASK_APPROVE");
-                    permissions.add("COURSE_CREATE");
-                    permissions.add("COURSE_APPROVE");
-                    permissions.add("COURSE_MANAGE");
-                    permissions.add("COURSE_VIEW");
-                    // 添加新权限 - 主任和副主任：考勤管理，人员管理，任务管理，课程管理，公告管理，资料管理
-                    permissions.add("ATTENDANCE_MANAGE");
-                    permissions.add("USER_MANAGE");
-                    permissions.add("TASK_MANAGE");
-                    permissions.add("NOTICE_MANAGE");
-                    permissions.add("MATERIAL_MANAGE");
-                    permissions.add("DASHBOARD_VIEW");
-                    permissions.add("STUDIO_INFO_VIEW");
-                    break;
-                case 5: // teacher - 老师
-                    permissions.add("ROLE_TEACHER");
-                    // 保留原有权限
-                    permissions.add("TASK_CREATE");
-                    permissions.add("TASK_APPROVE");
-                    permissions.add("COURSE_CREATE");
-                    permissions.add("COURSE_MANAGE");
-                    permissions.add("COURSE_VIEW");
-                    // 添加新权限 - 老师：课程管理，首页和信息门户
-                    permissions.add("DASHBOARD_VIEW");
-                    permissions.add("STUDIO_INFO_VIEW");
-                    break;
-                case 3: // student - 部长
-                case 4: // student - 副部长
-                    permissions.add("ROLE_STUDENT");
-                    // 保留原有权限
-                    permissions.add("TASK_VIEW");
-                    permissions.add("COURSE_VIEW");
-                    // 添加新权限 - 部长和副部长：公告管理，资料管理，首页和信息门户
-                    permissions.add("NOTICE_MANAGE");
-                    permissions.add("MATERIAL_MANAGE");
-                    permissions.add("DASHBOARD_VIEW");
-                    permissions.add("STUDIO_INFO_VIEW");
-                    break;
-                case 1: // student - 普通学员
-                    permissions.add("ROLE_STUDENT");
-                    // 普通学员不应该有任务查看权限，只保留课程查看
-                    permissions.add("COURSE_VIEW");
-                    // 添加新权限 - 普通学员：首页和信息门户
-                    permissions.add("DASHBOARD_VIEW");
-                    permissions.add("STUDIO_INFO_VIEW");
-                    break;
-                default:
-                    permissions.add("ROLE_STUDENT"); // 默认学生权限
-                    // 默认权限也不包含任务查看权限
-                    permissions.add("COURSE_VIEW");
-                    // 默认权限：首页和信息门户
-                    permissions.add("DASHBOARD_VIEW");
-                    permissions.add("STUDIO_INFO_VIEW");
-                    break;
-            }
+        // 从数据库position表的JSON字段中获取权限
+        if (positionId == null) {
+            return new ArrayList<>();
         }
 
-        // 🔧 优化：权限查询频繁，降级为DEBUG，避免权限信息泄露
-        log.debug("职位ID: {} 对应权限数量: {}", positionId, permissions.size());
-        return permissions;
+        try {
+            // 使用数据库查询获取职位权限
+            return permissionService.getRolePermissions(positionId);
+        } catch (Exception e) {
+            log.error("获取职位权限失败, positionId: {}, error: {}", positionId, e.getMessage());
+            // 如果数据库查询失败，返回基础权限作为后备
+            List<String> fallbackPermissions = new ArrayList<>();
+            fallbackPermissions.add("DASHBOARD_VIEW");
+            fallbackPermissions.add("STUDIO_INFO_VIEW");
+            return fallbackPermissions;
+        }
     }
 
     /**
@@ -982,7 +896,8 @@ public class userServiceimpl implements UserService {
         keysToDelete.add("user:honors:" + userId);
         keysToDelete.add("user:certificates:" + userId);
         keysToDelete.add("user:activities:" + userId);
-        keysToDelete.add("login:token:" + userId);
+        keysToDelete.add("login:access:" + userId);      // Access Token
+        keysToDelete.add("login:refresh:" + userId);     // Refresh Token
         keysToDelete.add("login:user:" + userId);
 
         // 如果有其他与用户相关的特定缓存，也在这里添加
@@ -1068,35 +983,53 @@ public class userServiceimpl implements UserService {
      */
     @Override
     public long countOnlineUsers() {
-        return 0; // 此方法依赖TokenService，暂时禁用
-        // try {
-        //     // 获取所有用户列表
-        //     PageDto pageDto = new PageDto();
-        //     pageDto.setPage(1);
-        //     pageDto.setPageSize(999); // 获取所有用户
-        //     PageResult result = this.list(pageDto);
-        //
-        //     if (result == null || result.getRecords() == null) {
-        //         return 0;
-        //     }
-        //
-        //     @SuppressWarnings("unchecked")
-        //     List<basicUserVo> users = (List<basicUserVo>) result.getRecords();
-        //
-        //     // 统计在线用户数量
-        //     long onlineCount = 0;
-        //     for (basicUserVo user : users) {
-        //         if (user.getUserId() != null && tokenService.isUserOnline(user.getUserId())) {
-        //             onlineCount++;
-        //         }
-        //     }
-        //
-        //     log.info("统计在线用户完成 - 总用户数: {}, 在线用户数: {}", users.size(), onlineCount);
-        //     return onlineCount;
-        // } catch (Exception e) {
-        //     log.error("统计在线用户失败: {}", e.getMessage());
-        //     return 0; // 出错时返回0
-        // }
+        try {
+            // 动态获取TokenService（避免循环依赖）
+            Object tokenServiceBean = null;
+            try {
+                tokenServiceBean = applicationContext.getBean("tokenService");
+            } catch (Exception e) {
+                log.warn("无法获取TokenService，返回0在线用户: {}", e.getMessage());
+                return 0;
+            }
+
+            // 获取所有用户列表
+            PageDto pageDto = new PageDto();
+            pageDto.setPage(1);
+            pageDto.setPageSize(999); // 获取所有用户
+            PageResult result = this.list(pageDto);
+
+            if (result == null || result.getRecords() == null) {
+                return 0;
+            }
+
+            @SuppressWarnings("unchecked")
+            List<basicUserVo> users = (List<basicUserVo>) result.getRecords();
+
+            // 统计在线用户数量
+            long onlineCount = 0;
+            for (basicUserVo user : users) {
+                if (user.getUserId() != null) {
+                    try {
+                        // 使用反射调用isUserOnline方法
+                        Boolean isOnline = (Boolean) tokenServiceBean.getClass()
+                            .getMethod("isUserOnline", Long.class)
+                            .invoke(tokenServiceBean, user.getUserId());
+                        if (Boolean.TRUE.equals(isOnline)) {
+                            onlineCount++;
+                        }
+                    } catch (Exception e) {
+                        log.debug("检查用户{}在线状态失败: {}", user.getUserId(), e.getMessage());
+                    }
+                }
+            }
+
+            log.info("统计在线用户完成 - 总用户数: {}, 在线用户数: {}", users.size(), onlineCount);
+            return onlineCount;
+        } catch (Exception e) {
+            log.error("统计在线用户失败: {}", e.getMessage());
+            return 0; // 出错时返回0
+        }
     }
 
     /**

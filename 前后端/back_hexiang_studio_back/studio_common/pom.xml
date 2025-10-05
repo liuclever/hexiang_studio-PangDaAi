@@ -78,6 +78,12 @@
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-core</artifactId>
         </dependency>
+
+        <!-- Hutool 工具类 -->
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+        </dependency>
         
         <!-- 测试依赖 -->
         <dependency>
@@ -86,6 +92,8 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+
     
     <build>
         <plugins>

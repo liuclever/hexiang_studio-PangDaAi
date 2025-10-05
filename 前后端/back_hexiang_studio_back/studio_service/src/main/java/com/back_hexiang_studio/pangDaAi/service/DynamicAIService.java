@@ -36,7 +36,7 @@ public class DynamicAIService {
     
     @PostConstruct
     public void init() {
-        log.info("🚀 DynamicAIService 正在初始化...");
+        log.info("  DynamicAIService 正在初始化...");
         // 延迟预热，避免启动阻塞
         new Thread(() -> {
             try {
@@ -47,7 +47,7 @@ public class DynamicAIService {
                 log.warn("模型预热线程被中断");
             }
         }).start();
-        log.info("✅ DynamicAIService 初始化完成");
+        log.info("  DynamicAIService 初始化完成");
     }
     
     /**
@@ -70,7 +70,7 @@ public class DynamicAIService {
         ModelRouterService.AIModel selectedModel = modelRouterService.selectModel(userMessage, userId, sessionId);
         String modelName = selectedModel.getModelName();
         
-        log.info("🎯 动态选择模型: {} ({})", modelName, selectedModel.getDescription());
+        log.info("  动态选择模型: {} ({})", modelName, selectedModel.getDescription());
         
         // 从缓存获取或创建新实例
         return streamingChatModelCache.computeIfAbsent(modelName, this::createStreamingChatModel);
@@ -112,7 +112,7 @@ public class DynamicAIService {
                     .build();
                     
         } catch (Exception e) {
-            log.error("❌ 创建聊天模型失败: {}, 使用默认模型", e.getMessage());
+            log.error("  创建聊天模型失败: {}, 使用默认模型", e.getMessage());
             // 回退到默认模型
             return OpenAiChatModel.builder()
                     .apiKey(aiModelProperties.getApiKey())
@@ -147,7 +147,7 @@ public class DynamicAIService {
                     .build();
                     
         } catch (Exception e) {
-            log.error("❌ 创建流式聊天模型失败: {}, 使用默认模型", e.getMessage());
+            log.error("  创建流式聊天模型失败: {}, 使用默认模型", e.getMessage());
             // 回退到默认模型
             return OpenAiStreamingChatModel.builder()
                     .apiKey(aiModelProperties.getApiKey())
@@ -164,7 +164,7 @@ public class DynamicAIService {
      * 预热常用模型（启动时调用）
      */
     public void warmupModels() {
-        log.info("🔥 开始预热常用模型...");
+        log.info("  开始预热常用模型...");
         
         String[] commonModels = {"qwen-flash", "qwen-plus", "qwen-plus-latest", "qwen-max"};
         
@@ -173,14 +173,14 @@ public class DynamicAIService {
                 if (aiModelProperties.isModelExists(modelName)) {
                     getChatModelByName(modelName);
                     getStreamingChatModelByName(modelName);
-                    log.debug("✅ 预热模型: {}", modelName);
+                    log.debug("  预热模型: {}", modelName);
                 }
             } catch (Exception e) {
-                log.warn("⚠️ 预热模型失败: {} - {}", modelName, e.getMessage());
+                log.warn("  预热模型失败: {} - {}", modelName, e.getMessage());
             }
         }
         
-        log.info("🔥 模型预热完成");
+        log.info("  模型预热完成");
     }
     
     /**
@@ -190,7 +190,7 @@ public class DynamicAIService {
         log.info("🧹 清理模型缓存...");
         chatModelCache.clear();
         streamingChatModelCache.clear();
-        log.info("✅ 模型缓存清理完成");
+        log.info("  模型缓存清理完成");
     }
     
     /**

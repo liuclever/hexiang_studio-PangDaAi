@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * AI助手流式输出控制器
  * 支持 Flux<> 流式输出，实现实时AI对话
+ * 权限：需要AI_CHAT_ADVANCED权限，部长级以上可使用流式功能
  * 
  * @author 胖达AI助手开发团队
  * @version 1.0
@@ -33,17 +34,16 @@ import java.util.concurrent.TimeUnit;
 @RestController
 @RequestMapping("/ai-assistant/stream")
 @Slf4j
-@CrossOrigin
 public class StreamingAssistantController {
 
     @Autowired
     private AssistantAgent assistantAgent;
 
-    // 🔧 Redis缓存支持（可选，如果Redis不可用则使用内存缓存）
+    //  Redis缓存支持
     @Autowired(required = false)
     private RedisTemplate<String, String> redisTemplate;
 
-    // 🔧 内存缓存作为备用 - 30分钟内保持相同会话ID
+    //  内存缓存作为备用 - 30分钟内保持相同会话ID
     private static final Map<String, SessionInfo> userSessionCache = new ConcurrentHashMap<>();
     private static final long SESSION_TIMEOUT = 30 * 60 * 1000; // 30分钟
     private static final String REDIS_SESSION_PREFIX = "ai_session:";
@@ -56,16 +56,15 @@ public class StreamingAssistantController {
      * @return 流式响应
      */
     @PostMapping(value = "/chat", produces = MediaType.TEXT_PLAIN_VALUE)
-    @PreAuthorize("isAuthenticated()")
     public Flux<String> streamChat(@RequestBody ChatRequest request) {
         // 获取当前登录用户ID
         Long currentUserId = UserContextHolder.getCurrentId();
         String actualUserId = currentUserId != null ? currentUserId.toString() : request.getUserId();
         
-        log.info("🌊 流式AI助手接收聊天请求 - 登录用户: {}, 请求用户: {}, 消息: {}", 
+        log.info(" 流式AI助手接收聊天请求 - 登录用户: {}, 请求用户: {}, 消息: {}",
                 currentUserId, request.getUserId(), request.getMessage());
 
-        // 🔧 优先使用前端传入的会话ID，否则生成持久化会话ID
+        // 优先使用前端传入的会话ID，否则生成持久化会话ID
         String sessionId = generateOrGetSessionId(actualUserId, request.getSessionId());
         
         // 保存当前的Security上下文，防止异步处理时丢失权限信息
@@ -87,7 +86,7 @@ public class StreamingAssistantController {
                     },
                     () -> {
                         // 处理完成
-                        log.info("🌊 流式对话完成 - 用户: {}", request.getUserId());
+                        log.info(" 流式对话完成 - 用户: {}", request.getUserId());
                         sink.complete();
                         
                         //  清理Security上下文
@@ -113,7 +112,7 @@ public class StreamingAssistantController {
                 SecurityContextHolder.clearContext();
             }
         })
-        .subscribeOn(Schedulers.boundedElastic()) // 🔒 使用支持阻塞操作的调度器
+        .subscribeOn(Schedulers.boundedElastic()) //  使用支持阻塞操作的调度器
         .doOnNext(chunk -> {
             // 调试日志：记录流式输出片段
             log.debug(" 推送流式片段 - 用户: {}, 长度: {}", request.getUserId(), chunk.length());
@@ -128,30 +127,29 @@ public class StreamingAssistantController {
      * @return 结构化流式响应
      */
     @PostMapping(value = "/chat-with-progress", produces = MediaType.APPLICATION_NDJSON_VALUE)
-    @PreAuthorize("isAuthenticated()")
     public Flux<StreamResponse> streamChatWithProgress(@RequestBody ChatRequest request) {
         // 获取当前登录用户ID
         Long currentUserId = UserContextHolder.getCurrentId();
         String actualUserId = currentUserId != null ? currentUserId.toString() : request.getUserId();
         
-        log.info("🌊 带进度的流式AI助手接收请求 - 登录用户: {}, 请求用户: {}, 消息: {}", 
+        log.info(" 带进度的流式AI助手接收请求 - 登录用户: {}, 请求用户: {}, 消息: {}",
                 currentUserId, request.getUserId(), request.getMessage());
         
         String sessionId = generateOrGetSessionId(actualUserId, request.getSessionId());
         
-        // 🔒 保存当前的Security上下文
+        //  保存当前的Security上下文
         SecurityContext securityContext = SecurityContextHolder.getContext();
         
         return Flux.<StreamResponse>create(sink -> {
             try {
-                // 🔒 在异步线程中恢复Security上下文
+                //  在异步线程中恢复Security上下文
                 SecurityContextHolder.setContext(securityContext);
                 
                 // 构建包含用户上下文的消息
                 String contextualMessage = buildUserContextualMessage(request.getMessage(), currentUserId);
                 
                 // 发送开始信息
-                sink.next(StreamResponse.progress("🔍 正在分析您的问题..."));
+                sink.next(StreamResponse.progress(" 正在分析您的问题..."));
                 
                 // 调用简化后的AI助手进行处理
                 assistantAgent.streamChat(contextualMessage, sessionId, currentUserId,
@@ -159,32 +157,32 @@ public class StreamingAssistantController {
                     chunk -> sink.next(StreamResponse.content(chunk)),
                     // 完成回调
                     () -> {
-                        sink.next(StreamResponse.complete("✅ 对话完成"));
+                        sink.next(StreamResponse.complete(" 对话完成"));
                         sink.complete();
                         
-                        // 🔒 清理Security上下文
+                        //  清理Security上下文
                         SecurityContextHolder.clearContext();
                     },
                     // 错误回调
                     error -> {
-                        sink.next(StreamResponse.error("❌ 处理失败: " + error.getMessage()));
+                        sink.next(StreamResponse.error("处理失败: " + error.getMessage()));
                         sink.error(error);
                         
-                        // 🔒 清理Security上下文
+                        // 清理Security上下文
                         SecurityContextHolder.clearContext();
                     }
                 );
                 
             } catch (Exception e) {
-                log.error("🌊 带进度流式处理启动失败: {}", e.getMessage(), e);
-                sink.next(StreamResponse.error("❌ 启动失败: " + e.getMessage()));
+                log.error(" 带进度流式处理启动失败: {}", e.getMessage(), e);
+                sink.next(StreamResponse.error(" 启动失败: " + e.getMessage()));
                 sink.error(e);
                 
-                // 🔒 清理Security上下文
+                //  清理Security上下文
                 SecurityContextHolder.clearContext();
             }
         })
-        .subscribeOn(Schedulers.boundedElastic()); // 🔒 使用支持阻塞操作的调度器
+        .subscribeOn(Schedulers.boundedElastic()); //  使用支持阻塞操作的调度器
     }
 
     /**
@@ -196,30 +194,29 @@ public class StreamingAssistantController {
      * @return SSE 流式响应
      */
     @GetMapping(value = "/chat-sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    @PreAuthorize("isAuthenticated()")
     public Flux<String> streamChatSSE(@RequestParam String userId, @RequestParam String message) {
         // 获取当前登录用户ID
         Long currentUserId = UserContextHolder.getCurrentId();
         String actualUserId = currentUserId != null ? currentUserId.toString() : userId;
         
-        log.info("📡 SSE流式AI助手接收请求 - 登录用户: {}, 请求用户: {}, 消息: {}", 
+        log.info(" SSE流式AI助手接收请求 - 登录用户: {}, 请求用户: {}, 消息: {}",
                 currentUserId, userId, message);
         
         String sessionId = generateOrGetSessionId(actualUserId, null); // SSE没有sessionId参数
         
-        // 🔒 保存当前的Security上下文
+        //  保存当前的Security上下文
         SecurityContext securityContext = SecurityContextHolder.getContext();
         
         return Flux.<String>create(sink -> {
             try {
-                // 🔒 在异步线程中恢复Security上下文
+                //  在异步线程中恢复Security上下文
                 SecurityContextHolder.setContext(securityContext);
                 
                 // 构建包含用户上下文的消息
                 String contextualMessage = buildUserContextualMessage(message, currentUserId);
                 
                 // 发送开始事件
-                sink.next("event: start\ndata: 🌊 开始流式对话\n\n");
+                sink.next("event: start\ndata:  开始流式对话\n\n");
                 
                 assistantAgent.streamChat(contextualMessage, sessionId, currentUserId,
                     chunk -> {
@@ -227,39 +224,39 @@ public class StreamingAssistantController {
                         sink.next("event: message\ndata: " + chunk + "\n\n");
                     },
                     () -> {
-                        sink.next("event: complete\ndata: ✅ 对话完成\n\n");
+                        sink.next("event: complete\ndata:  对话完成\n\n");
                         sink.complete();
                         
-                        // 🔒 清理Security上下文
+                        //  清理Security上下文
                         SecurityContextHolder.clearContext();
                     },
                     error -> {
-                        sink.next("event: error\ndata: ❌ 错误: " + error.getMessage() + "\n\n");
+                        sink.next("event: error\ndata:  错误: " + error.getMessage() + "\n\n");
                         sink.error(error);
                         
-                        // 🔒 清理Security上下文
+                        //  清理Security上下文
                         SecurityContextHolder.clearContext();
                     }
                 );
                 
             } catch (Exception e) {
-                sink.next("event: error\ndata: ❌ 启动失败: " + e.getMessage() + "\n\n");
+                sink.next("event: error\ndata:  启动失败: " + e.getMessage() + "\n\n");
                 sink.error(e);
                 
-                // 🔒 清理Security上下文
+                //  清理Security上下文
                 SecurityContextHolder.clearContext();
             }
         })
-        .subscribeOn(Schedulers.boundedElastic()) // 🔒 使用支持阻塞操作的调度器
+        .subscribeOn(Schedulers.boundedElastic()) //  使用支持阻塞操作的调度器
         .delayElements(Duration.ofMillis(50)); // 控制推送频率
     }
 
     /**
-     * 🧪 测试工具调用功能
+     *  测试工具调用功能
      */
     @PostMapping("/test-tool-call")
     public ResponseEntity<Result<String>> testToolCall(@RequestBody Map<String, String> request) {
-        log.info("🧪 开始测试工具调用功能");
+        log.info(" 开始测试工具调用功能");
         
         try {
             String testMessage = request.getOrDefault("message", "现在几点了？");
@@ -271,17 +268,17 @@ public class StreamingAssistantController {
                 userId = 1L; // 测试用户ID
             }
             
-            log.info("🧪 测试参数 - 用户: {}, 消息: {}, 会话: {}", userId, testMessage, sessionId);
+            log.info(" 测试参数 - 用户: {}, 消息: {}, 会话: {}", userId, testMessage, sessionId);
             
             // 使用AssistantAgent进行同步测试
             String response = assistantAgent.chat(testMessage, sessionId);
             
-            log.info("🧪 测试结果: {}", response);
+            log.info(" 测试结果: {}", response);
             
             return ResponseEntity.ok(Result.success("工具调用测试完成", response));
             
         } catch (Exception e) {
-            log.error("🧪 测试工具调用失败: {}", e.getMessage(), e);
+            log.error(" 测试工具调用失败: {}", e.getMessage(), e);
             return ResponseEntity.ok(Result.error("测试失败: " + e.getMessage()));
         }
     }
@@ -292,18 +289,18 @@ public class StreamingAssistantController {
     @GetMapping("/status")
     public Result<String> getStreamStatus() {
         try {
-            String status = "🌊 流式AI助手服务正常运行！\n\n" +
-                           "📡 支持的流式接口：\n" +
+            String status = " 流式AI助手服务正常运行！\n\n" +
+                           " 支持的流式接口：\n" +
                            "• POST /stream/chat - Flux<String> 流式文本\n" +
                            "• POST /stream/chat-with-progress - 带进度的结构化流式\n" +
                            "• GET /stream/chat-sse - Server-Sent Events\n\n" +
-                           "🎯 特性：\n" +
+                           " 特性：\n" +
                            "• 实时逐字输出\n" +
                            "• 进度状态推送\n" +
                            "• 持久化对话记忆\n" +
                            "• Qwen 模型支持\n" +
                            "• 错误处理和恢复\n\n" +
-                           "💡 推荐使用 chat-with-progress 接口获得最佳体验！";
+                           " 推荐使用 chat-with-progress 接口获得最佳体验！";
                            
             return Result.success(status);
         } catch (Exception e) {
@@ -318,7 +315,7 @@ public class StreamingAssistantController {
 
     /**
      * 构建用户上下文消息
-     * 🔒 保护隐私：不在消息中暴露用户ID，但保持上下文语义
+     *  保护隐私：不在消息中暴露用户ID，但保持上下文语义
      */
     private String buildUserContextualMessage(String originalMessage, Long currentUserId) {
         if (currentUserId == null) {
@@ -343,7 +340,7 @@ public class StreamingAssistantController {
         }
         
         if (isPersonalQuery) {
-            // 🔒 不暴露用户ID，但添加个人查询的上下文标记
+            //  不暴露用户ID，但添加个人查询的上下文标记
             return String.format("当前用户询问：%s", originalMessage);
         }
         
@@ -361,10 +358,10 @@ public class StreamingAssistantController {
 
         String sessionKey = userId + "_stream_session";
         
-        // 🔧 优先从Redis获取（如果可用）
+        //  优先从Redis获取
         SessionInfo sessionInfo = getSessionFromRedis(sessionKey);
         
-        // 🔧 Redis不可用时从内存缓存获取
+        //  Redis不可用时从内存缓存获取
         if (sessionInfo == null) {
             sessionInfo = userSessionCache.get(sessionKey);
         }
@@ -374,15 +371,15 @@ public class StreamingAssistantController {
             return sessionInfo.getSessionId();
         }
 
-        // 🔧 生成新会话ID
+        //  生成新会话ID
         String newSessionId = userId + "_stream_" + System.currentTimeMillis();
         SessionInfo newSession = new SessionInfo(newSessionId);
         
-        // 🔧 同时保存到Redis和内存
+        //  同时保存到Redis和内存
         saveSessionToRedis(sessionKey, newSession);
         userSessionCache.put(sessionKey, newSession);
         
-        log.debug("🔧 生成新的会话ID (持久化): {}", newSessionId);
+        log.debug(" 生成新的会话ID (持久化): {}", newSessionId);
         return newSessionId;
     }
     
@@ -407,7 +404,7 @@ public class StreamingAssistantController {
                 }
             }
         } catch (Exception e) {
-            log.warn("⚠️ 从Redis获取会话失败: {}", e.getMessage());
+            log.warn("️ 从Redis获取会话失败: {}", e.getMessage());
         }
         
         return null;
@@ -427,9 +424,9 @@ public class StreamingAssistantController {
             
             // 设置过期时间为会话超时时间
             redisTemplate.opsForValue().set(redisKey, sessionData, SESSION_TIMEOUT, TimeUnit.MILLISECONDS);
-            log.debug("💾 会话信息已保存到Redis: {}", sessionInfo.getSessionId());
+            log.debug(" 会话信息已保存到Redis: {}", sessionInfo.getSessionId());
         } catch (Exception e) {
-            log.warn("⚠️ 保存会话到Redis失败: {}", e.getMessage());
+            log.warn("保存会话到Redis失败: {}", e.getMessage());
         }
     }
     
@@ -444,15 +441,15 @@ public class StreamingAssistantController {
             try {
                 String redisKey = REDIS_SESSION_PREFIX + sessionKey;
                 redisTemplate.delete(redisKey);
-                log.debug("🗑️ 已从Redis清除用户会话: {}", userId);
+                log.debug(" 已从Redis清除用户会话: {}", userId);
             } catch (Exception e) {
-                log.warn("⚠️ 从Redis清除会话失败: {}", e.getMessage());
+                log.warn(" 从Redis清除会话失败: {}", e.getMessage());
             }
         }
         
         // 清除内存缓存中的会话
         userSessionCache.remove(sessionKey);
-        log.debug("🗑️ 已从内存清除用户会话: {}", userId);
+        log.debug("️ 已从内存清除用户会话: {}", userId);
     }
 
     /**
@@ -546,7 +543,7 @@ public class StreamingAssistantController {
         }
     }
 
-    // 🔧 添加会话信息数据类
+    //  添加会话信息数据类
     private static class SessionInfo {
         private final String sessionId;
         private final long timestamp;

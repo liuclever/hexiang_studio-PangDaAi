@@ -121,7 +121,7 @@ Page({
           // 处理课程数据
           courses = courses.map(course => {
             console.log('处理课程数据:', course.name, 'status:', course.status, 'coverImage:', course.coverImage);
-            const finalCoverImage = course.coverImage ? `${BASE_URL}/wx/file/view/${course.coverImage}` : '/images/logo.svg';
+            const finalCoverImage = course.coverImage ? `${BASE_URL}/wx/file/view/${course.coverImage}` : '/images/icons/logo.jpg';
             console.log('最终图片路径:', finalCoverImage);
             
             return {

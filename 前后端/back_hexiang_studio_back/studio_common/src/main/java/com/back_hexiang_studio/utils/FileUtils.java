@@ -40,12 +40,7 @@ public class FileUtils {
      */
     private static String UPLOAD_BASE_PATH;
 
-    /**
-     * 外部访问文件时的URL前缀。
-     * 从 application.yml 的 `file.access.url` 注入。
-     * 注意：此变量在当前的通用访问接口中已不直接使用，但为保持兼容性而保留。
-     */
-    private static String FILE_ACCESS_URL;
+
 
     // Spring无法直接注入静态变量，因此先注入到实例变量中
     @Value("${file.upload.path:upload}")
@@ -61,17 +56,13 @@ public class FileUtils {
     @PostConstruct
     public void init() {
         UPLOAD_BASE_PATH = uploadBasePath;
-        FILE_ACCESS_URL = fileAccessUrl;
-
         System.out.println("初始化文件上传配置：");
         System.out.println("上传根路径: " + UPLOAD_BASE_PATH);
-        System.out.println("文件访问URL前缀: " + FILE_ACCESS_URL);
-
         createDirectoryIfNotExists(UPLOAD_BASE_PATH);
     }
 
     /**
-     * 私有辅助方法，用于创建目录（如果它不存在）。
+     * 用于创建目录（如果它不存在）。
      * @param dirPath 要创建的目录的完整物理路径。
      */
     private static void createDirectoryIfNotExists(String dirPath) {
@@ -94,7 +85,6 @@ public class FileUtils {
      * @throws IOException 当文件读写发生错误时抛出。
      */
     public static String saveFile(MultipartFile file, FileType fileType) throws IOException {
-
 
         // 从枚举获取业务模块子路径, e.g., "notice/image"
         String modulePath = fileType.getPath();
@@ -257,18 +247,5 @@ public class FileUtils {
         }
     }
 
-    /**
-     * 获取文件的完整可访问URL。
-     * <p>
-     * 仅为兼容旧代码而保留。
-     * </p>
-     * @param filePath 文件的相对路径。
-     * @return 拼接好的完整URL，例如 "/upload/notice/image/file.jpg"。
-     */
-    public static String getFileUrl(String filePath) {
-        if (filePath == null || filePath.isEmpty()) {
-            return null;
-        }
-        return FILE_ACCESS_URL + "/" + filePath;
-    }
+
 } 

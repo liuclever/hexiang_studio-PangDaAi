@@ -35,15 +35,15 @@ public class WeatherToolService {
 
     @Tool("查询今天的天气情况，包括温度、湿度、天气状况、AQI等信息")
     public String getTodayWeather() {
-        log.info("🌤️ AI Tool: 查询今天天气，城市: {}", defaultCity);
+        log.info("🌤 AI Tool: 查询今天天气，城市: {}", defaultCity);
         
         try {
             // 调用60s API获取实时天气信息
             String url = String.format("%s/v2/weather/forecast?query=%s&days=1", baseUrl, defaultCity);
-            log.info("🌐 调用60s天气API: {}", url);
+            log.info(" 调用60s天气API: {}", url);
             
             String response = restTemplate.getForObject(url, String.class);
-            log.info("📡 60s天气API响应: {}", response);
+            log.info(" 60s天气API响应: {}", response);
             
             if (response != null) {
                 JsonNode root = objectMapper.readTree(response);
@@ -83,20 +83,20 @@ public class WeatherToolService {
                     );
                 } else {
                     String errorMsg = root.has("message") ? root.get("message").asText() : "API调用失败";
-                    log.warn("⚠️ 60s天气API调用失败，使用模拟数据: {}", errorMsg);
-                    return getMockWeatherData();
+                    log.warn("️ 60s天气API调用失败");
+                    return errorMsg;
                 }
             } else {
-                log.warn("⚠️ 60s天气API无响应，使用模拟数据");
-                return getMockWeatherData();
+                log.warn(" 60s天气API无响应");
+                return "无法获取天气信息";
             }
             
         } catch (RestClientException e) {
-            log.error("❌ 天气API调用失败，使用模拟数据", e);
-            return getMockWeatherData();
+            log.warn(" 60s天气API无响应");
+            return "无法获取天气信息";
         } catch (Exception e) {
-            log.error("❌ 天气数据解析失败，使用模拟数据", e);
-            return getMockWeatherData();
+            log.warn(" 60s天气API无响应");
+            return "无法获取天气信息";
         }
     }
 
@@ -106,7 +106,7 @@ public class WeatherToolService {
         if (days < 1) days = 1;
         if (days > 7) days = 7;
         
-        log.info("🌤️ AI Tool: 查询{}天天气预报，城市: {}", days, defaultCity);
+        log.info("🌤 AI Tool: 查询{}天天气预报，城市: {}", days, defaultCity);
         
         try {
             // 调用60s API获取指定天数的天气预报
@@ -156,65 +156,18 @@ public class WeatherToolService {
                     return forecast.toString().trim();
                 } else {
                     String errorMsg = root.has("message") ? root.get("message").asText() : "API调用失败";
-                    log.warn("⚠️ 60s天气预报API调用失败，使用模拟数据: {}", errorMsg);
-                    return getMockWeatherForecast(days);
+                    log.warn(" 60s天气API无响应");
+                    return "无法获取天气信息";
                 }
             } else {
-                log.warn("⚠️ 60s天气预报API无响应，使用模拟数据");
-                return getMockWeatherForecast(days);
+                log.warn(" 60s天气API无响应");
+                return "无法获取天气信息";
             }
             
         } catch (Exception e) {
-            log.error("❌ 天气预报查询失败，使用模拟数据", e);
-            return getMockWeatherForecast(days);
+            log.warn(" 60s天气API无响应");
+            return "无法获取天气信息";
         }
     }
 
-    /**
-     * 获取模拟天气数据（当API key无效时使用）
-     */
-    private String getMockWeatherData() {
-        log.info("🎭 使用模拟天气数据");
-        
-        return String.format(
-            "城市：%s\n" +
-            "今天日期：%s\n" +
-            "实时温度：22°C\n" +
-            "天气状况：多云\n" +
-            "湿度：65%%\n" +
-            "风向：东南风\n" +
-            "风力：2级\n" +
-            "空气质量指数：58",
-            defaultCity,
-            LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy年MM月dd日"))
-        );
-    }
-
-    /**
-     * 获取模拟天气预报数据
-     */
-    private String getMockWeatherForecast(int days) {
-        log.info("🎭 使用模拟天气预报数据，天数: {}", days);
-        
-        LocalDate today = LocalDate.now();
-        StringBuilder forecast = new StringBuilder();
-        forecast.append(String.format("【%s】未来%d天天气预报：\n", defaultCity, days));
-        
-        String[] weathers = {"晴", "多云", "阴", "小雨", "晴", "多云", "晴"};
-        String[] tempHighs = {"25", "23", "22", "20", "26", "24", "27"};
-        String[] tempLows = {"18", "16", "15", "14", "19", "17", "20"};
-        String[] winds = {"东南风", "南风", "西风", "北风", "东风", "西南风", "东北风"};
-        
-        for (int i = 0; i < days && i < 7; i++) {
-            LocalDate date = today.plusDays(i);
-            String dateStr = date.format(DateTimeFormatter.ofPattern("MM-dd"));
-            
-            forecast.append(String.format(
-                "%s：%s，%s-%s°C，%s\n",
-                dateStr, weathers[i], tempLows[i], tempHighs[i], winds[i]
-            ));
-        }
-        
-        return forecast.toString().trim();
-    }
 } 

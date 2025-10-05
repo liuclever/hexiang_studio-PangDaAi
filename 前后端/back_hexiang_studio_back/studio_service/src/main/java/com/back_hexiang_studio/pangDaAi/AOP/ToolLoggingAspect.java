@@ -31,8 +31,6 @@ public class ToolLoggingAspect {
      */
     public static void setToolUserContext(Long userId) {
         TOOL_USER_CONTEXT.set(userId);
-        // 使用System.out临时替代log，因为静态方法中无法直接使用实例log
-        // log.debug("🔧 设置工具执行用户上下文: {}", userId);
     }
 
     /**
@@ -40,7 +38,6 @@ public class ToolLoggingAspect {
      */
     public static void clearToolUserContext() {
         TOOL_USER_CONTEXT.remove();
-        // log.debug("🔧 清理工具执行用户上下文");
     }
 
     /**
@@ -58,51 +55,60 @@ public class ToolLoggingAspect {
     }
 
     /**
-     * 环绕通知：拦截AI工具调用，记录详细日志
+     * 拦截AI工具调用，记录详细日志
      */
     @Around("toolMethodPointcut()")
     public Object logToolExecution(ProceedingJoinPoint joinPoint) throws Throwable {
+        // 记录方法开始执行的时间戳（毫秒）
         long startTime = System.currentTimeMillis();
+        // 获取目标对象的类名
         String className = joinPoint.getTarget().getClass().getSimpleName();
+        //获取被调用的方法名
         String methodName = joinPoint.getSignature().getName();
+        //获取方法调用时传入的所有参数
         Object[] args = joinPoint.getArgs();
         
         // 获取工具描述
-        dev.langchain4j.agent.tool.Tool toolAnnotation = 
+        dev.langchain4j.agent.tool.Tool toolAnnotation =
+                //获取注解对象
+                //强制类型转换为MethodSignature
+                // Signature是父接口，没有getMethod()方法
+               // MethodSignature是子接口，有getMethod()方法
             ((org.aspectj.lang.reflect.MethodSignature) joinPoint.getSignature())
                 .getMethod().getAnnotation(dev.langchain4j.agent.tool.Tool.class);
+        //toolAnnotation.value()，获取注解的value属性
         String toolDescription = toolAnnotation != null ? java.util.Arrays.toString(toolAnnotation.value()) : "未知工具";
         
-        log.info("🔧🤖 AI工具调用开始 - 工具: [[{}]] | 类: {} | 方法: {} | 参数: {}", 
+        log.info(" AI工具调用开始 - 工具: [[{}]] | 类: {} | 方法: {} | 参数: {}",
                 toolDescription, className, methodName, java.util.Arrays.toString(args));
 
         try {
-            // 🔧 关键修复：在工具执行前设置用户上下文
+            // 在工具执行前设置用户上下文
             Long toolUserId = TOOL_USER_CONTEXT.get();
             if (toolUserId != null && UserContextHolder.getCurrentId() == null) {
                 UserContextHolder.setCurrentId(toolUserId);
-                log.debug("🔧 在工具执行线程中设置用户上下文: {}", toolUserId);
+                log.debug(" 在工具执行线程中设置用户上下文: {}", toolUserId);
             }
             
             // 执行实际的工具方法
             Object result = joinPoint.proceed();
             
             long duration = System.currentTimeMillis() - startTime;
-            
-            // 限制结果输出长度，避免日志过长
+
+            // 限制结果输出长度
             String resultStr = result != null ? result.toString() : "null";
             if (resultStr.length() > 200) {
                 resultStr = resultStr.substring(0, 200) + "...";
             }
             
-            log.info("✅🤖 AI工具调用成功 - 工具: [[{}]] | 类: {} | 方法: {} | 耗时: {}ms | 结果: {}", 
+            log.info(" AI工具调用成功 - 工具: [[{}]] | 类: {} | 方法: {} | 耗时: {}ms | 结果: {}",
                     toolDescription, className, methodName, duration, resultStr);
             
             return result;
             
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;
-            log.error("❌🤖 AI工具调用失败 - 工具: [[{}]] | 类: {} | 方法: {} | 耗时: {}ms | 错误: {}", 
+            log.error(" AI工具调用失败 - 工具: [[{}]] | 类: {} | 方法: {} | 耗时: {}ms | 错误: {}",
                      toolDescription, className, methodName, duration, e.getMessage(), e);
             throw e;
         }

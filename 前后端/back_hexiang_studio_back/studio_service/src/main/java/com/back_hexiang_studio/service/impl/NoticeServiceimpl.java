@@ -139,14 +139,12 @@ public class NoticeServiceimpl implements NoticeService {
             return;
         }
 
-        // TODO: Step 1 - 准备一个列表，用于收集所有需要删除的文件的【相对路径】
-        // 例如: List<String> filePathsToDelete = new ArrayList<>();
+
         List<String> filePathsToDelete = new ArrayList<>();
 
         for (Long noticeId : ids) {
-            // TODO: Step 2 - 对于每一个公告ID，找出它关联的所有文件
             // a. 查询关联的图片，并将它们的 `filePath` 添加到 `filePathsToDelete` 列表中。
-            //    - 调用 `noticeImageMapper.getByNoticeId(noticeId)`
+
             List<NoticeImageVo> images = noticeImageMapper.getByNoticeId(noticeId);
             if (images != null) {
                 images.forEach(img -> filePathsToDelete.add(img.getFilePath()));
@@ -159,7 +157,7 @@ public class NoticeServiceimpl implements NoticeService {
                 attachments.forEach(att -> filePathsToDelete.add(att.getFilePath()));
             }
 
-            // TODO: Step 3 - 删除数据库中的关联记录
+
             // a. 删除这个公告ID关联的所有图片记录
             //    - 调用 `noticeImageMapper.deleteByNoticeId(noticeId)`
             noticeImageMapper.deleteByNoticeId(noticeId);
@@ -169,11 +167,11 @@ public class NoticeServiceimpl implements NoticeService {
             noticeAttachmentMapper.deleteByNoticeId(noticeId);
         }
 
-        // TODO: Step 4 - 批量删除公告主记录
+
         // 调用 `noticeMapper.delete(ids)` 来一次性删除所有指定的公告。
         noticeMapper.delete(ids);
 
-        // TODO: Step 5 - 从服务器磁盘上删除物理文件
+
         // 遍历 `filePathsToDelete` 列表，对每个文件路径调用 `FileUtils.deleteFile(filePath)`。
         for (String filePath : filePathsToDelete) {
             if (filePath != null && !filePath.isEmpty()) {
@@ -181,8 +179,8 @@ public class NoticeServiceimpl implements NoticeService {
             }
         }
 
-        // TODO: Step 6 - 清理缓存
-        // 删除操作会使缓存失效，调用 `clearNoticeCache()` 来清除所有相关的公告缓存。
+
+        // 删除操作清除所有相关的公告缓存。
         clearNoticeCache();
     }
     
@@ -284,12 +282,12 @@ public class NoticeServiceimpl implements NoticeService {
         // 从缓存获取
         Object cacheResult = redisTemplate.opsForValue().get(cacheKey);
         if (cacheResult != null) {
-            // 🔧 优化：频繁的缓存命中，降级为DEBUG
+            //  频繁的缓存命中，降级为DEBUG
             log.debug("从缓存获取公告详情");
             return (NoticeDetailVo) cacheResult;
         }
         
-        // 🔧 优化：缓存未命中降级为DEBUG，减少日志噪音
+        // 缓存未命中降级为DEBUG，减少日志噪音
         log.debug("缓存未命中，从数据库查询公告详情");
         
         // 获取公告基本信息
@@ -425,7 +423,7 @@ public class NoticeServiceimpl implements NoticeService {
                     publisherName = user.getName();
                 }
             }
-            // 如果获取不到，则使用默认值或保持为null，取决于业务逻辑，这里我们设置为 "系统"
+            // 如果获取不到，则设置为 "系统"
             if (publisherName == null) {
                 publisherName = "系统";
             }

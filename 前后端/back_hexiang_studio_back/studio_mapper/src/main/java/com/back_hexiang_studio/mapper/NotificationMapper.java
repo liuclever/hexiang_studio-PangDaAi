@@ -69,4 +69,12 @@ public interface NotificationMapper {
      * @return 通知对象
      */
     SystemNotification selectById(@Param("id") Long id);
+    
+    /**
+     * 批量删除用户的通知
+     * @param userId 用户ID
+     * @param notificationIds 通知ID列表
+     * @return 影响行数
+     */
+    int deleteUserNotifications(@Param("userId") Long userId, @Param("notificationIds") List<Long> notificationIds);
 } 

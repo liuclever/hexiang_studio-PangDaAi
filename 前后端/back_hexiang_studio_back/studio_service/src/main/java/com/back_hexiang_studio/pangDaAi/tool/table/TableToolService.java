@@ -25,7 +25,7 @@ public class TableToolService {
     @Tool("将文本数据转换为表格JSON格式，前端可直接渲染为表格")
     public String convertToTable(@P("需要转换的文本数据") String textData, 
                                 @P("表格标题") String title) {
-        log.info("🤖 AI Table Tool: 转换文本为表格 - 标题: {}", title);
+        log.info(" AI Table Tool: 转换文本为表格 - 标题: {}", title);
         
         try {
             // 简单解析：按行分割，提取关键信息

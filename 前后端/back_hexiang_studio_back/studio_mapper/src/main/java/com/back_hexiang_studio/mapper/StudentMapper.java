@@ -145,12 +145,12 @@ Student getStudentInfo(Long studentId);
      */
     int deleteStudentByUserIds(@Param("userIds") List<String> userIds);
 
-    List<Long> findStudentIdsByCourseId(Long courseId);
 
-    List<Long> findAllStudentIds();
-
-    List<Long> selectDirectionIdsByStudentId(Long studentId);
-
+    /**
+     * // 获取用户角色信息
+     * @param studentId
+     * @return
+     */
     List<Long> getDirectionIdsByStudentId(Long studentId);
     
     /**

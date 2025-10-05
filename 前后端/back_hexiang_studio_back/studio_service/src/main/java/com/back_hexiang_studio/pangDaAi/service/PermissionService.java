@@ -223,9 +223,9 @@ public class PermissionService {
             String roleName = (String) userInfo.get("role_name");
             
             if (roleId == 3L || roleId == 4L) {
-                return String.format("✅ %s（%s）有用户管理权限", userName, roleName);
+                return String.format("  %s（%s）有用户管理权限", userName, roleName);
             } else {
-                return String.format("❌ %s（%s）没有用户管理权限。只有管理员和超级管理员才能进行用户管理操作", userName, roleName);
+                return String.format("  %s（%s）没有用户管理权限。只有管理员和超级管理员才能进行用户管理操作", userName, roleName);
             }
             
         } catch (Exception e) {
@@ -311,10 +311,10 @@ public class PermissionService {
      */
     public String getMaterialManagementPermissionInfo(Long userId) {
         if (!canManageMaterials(userId)) {
-            return "❌ 权限不足：只有管理员和超级管理员可以管理资料";
+            return "  权限不足：只有管理员和超级管理员可以管理资料";
         }
         
-        return "✅ 权限验证通过：您可以进行资料的增加、修改、删除操作";
+        return "  权限验证通过：您可以进行资料的增加、修改、删除操作";
     }
     
     /**
@@ -322,10 +322,10 @@ public class PermissionService {
      */
     public String getNoticeManagementPermissionInfo(Long userId) {
         if (!canManageNotices(userId)) {
-            return "❌ 权限不足：只有管理员和超级管理员可以管理公告";
+            return "  权限不足：只有管理员和超级管理员可以管理公告";
         }
         
-        return "✅ 权限验证通过：您可以进行公告的增加、修改、删除操作";
+        return "  权限验证通过：您可以进行公告的增加、修改、删除操作";
     }
     
     /**
@@ -333,9 +333,9 @@ public class PermissionService {
      */
     public String getCourseManagementPermissionInfo(Long userId) {
         if (!canManageCourses(userId)) {
-            return "❌ 权限不足：只有老师、管理员和超级管理员可以管理课程";
+            return "  权限不足：只有老师、管理员和超级管理员可以管理课程";
         }
         
-        return "✅ 权限验证通过：您可以进行课程的增加、修改、删除操作";
+        return "  权限验证通过：您可以进行课程的增加、修改、删除操作";
     }
 } 

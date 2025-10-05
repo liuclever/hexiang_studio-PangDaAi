@@ -246,14 +246,27 @@ export function sendChatMessageStream(
       if (!response.ok) {
         // 尝试解析错误响应的详细信息
         return response.text().then(text => {
-          let errorMsg = `HTTP error! status: ${response.status}`;
+          let errorMsg = `服务暂时不可用，请稍后重试`;
           try {
             const errorData = JSON.parse(text);
             if (errorData.msg) {
-              errorMsg = errorData.msg;
+              // 清理错误消息，移除多余的换行符和格式化
+              let cleanMsg = errorData.msg.replace(/\\n/g, '').replace(/\n+/g, ' ').trim();
+              
+              // 根据错误码提供更友好的提示
+              if (errorData.code === 4030) {
+                errorMsg = '权限不足，请联系管理员开启AI功能权限';
+              } else if (errorData.code === 401) {
+                errorMsg = '登录已过期，请重新登录';
+              } else if (errorData.code === 500) {
+                errorMsg = 'AI服务暂时不可用，请稍后重试';
+              } else if (cleanMsg.length > 0 && cleanMsg.length < 100) {
+                // 只有当清理后的消息不超过100字符时才显示
+                errorMsg = cleanMsg;
+              }
             }
           } catch (e) {
-            if (text) {
+            if (text && text.length < 100) {
               errorMsg = text;
             }
           }

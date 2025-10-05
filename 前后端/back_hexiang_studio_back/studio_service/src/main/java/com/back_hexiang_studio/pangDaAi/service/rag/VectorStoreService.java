@@ -77,7 +77,7 @@ public class VectorStoreService {
      */
     @PostConstruct
     public void initialize() {
-        log.info("🚀 初始化向量存储服务...");
+        log.info(" 初始化向量存储服务...");
         
         try {
             // 验证注入的组件
@@ -88,26 +88,26 @@ public class VectorStoreService {
                 throw new IllegalStateException("EmbeddingStore 未正确注入");
             }
             
-            log.info("✅ EmbeddingModel 注入成功: {}", embeddingModel.getClass().getSimpleName());
-            log.info("✅ EmbeddingStore 注入成功: {}", embeddingStore.getClass().getSimpleName());
+            log.info(" EmbeddingModel 注入成功: {}", embeddingModel.getClass().getSimpleName());
+            log.info(" EmbeddingStore 注入成功: {}", embeddingStore.getClass().getSimpleName());
             
             // 创建存储目录（仅用于日志等本地文件）
             createStorageDirectory();
             
             // 注意：不再加载本地持久化向量，因为 Milvus 等外部存储会自己管理持久化
             if (embeddingStore instanceof InMemoryEmbeddingStore) {
-                log.info("📥 使用内存存储，尝试加载本地持久化数据...");
+                log.info(" 使用内存存储，尝试加载本地持久化数据...");
                 loadPersistedVectors();
             } else {
-                log.info("📊 使用外部向量数据库，跳过本地文件加载");
+                log.info(" 使用外部向量数据库，跳过本地文件加载");
             }
             
-            log.info("✅ 向量存储服务初始化完成！");
-            log.info("📊 配置信息：存储路径={}, 最大结果数={}, 最小相似度={}", 
+            log.info(" 向量存储服务初始化完成！");
+            log.info(" 配置信息：存储路径={}, 最大结果数={}, 最小相似度={}", 
                     storagePath, maxResults, minScore);
                     
         } catch (Exception e) {
-            log.error("❌ 向量存储服务初始化失败", e);
+            log.error(" 向量存储服务初始化失败", e);
             throw new RuntimeException("向量存储服务启动失败", e);
         }
     }
@@ -121,7 +121,7 @@ public class VectorStoreService {
      */
     public void addDocument(String id, String text, Map<String, Object> metadata) {
         try {
-            log.debug("📝 添加文档到向量存储: ID={}, 文本长度={}", id, text.length());
+            log.debug(" 添加文档到向量存储: ID={}, 文本长度={}", id, text.length());
             
             // 1. 创建文本段
             Metadata docMetadata = Metadata.from(metadata);
@@ -141,13 +141,13 @@ public class VectorStoreService {
             if (log.isInfoEnabled()) {
                 String type = metadata != null && metadata.get("type") != null ? metadata.get("type").toString() : "unknown";
                 String snippet = text.length() > 120 ? text.substring(0, 120) + "..." : text;
-                log.info("📥 向量入库: type={}, id={}, textPreview='{}'", type, id, snippet.replaceAll("\n", " "));
+                log.info(" 向量入库: type={}, id={}, textPreview='{}'", type, id, snippet.replaceAll("\n", " "));
             }
             
-            log.debug("✅ 文档添加成功: ID={}", id);
+            log.debug(" 文档添加成功: ID={}", id);
             
         } catch (Exception e) {
-            log.error("❌ 添加文档失败: ID={}, 错误: {}", id, e.getMessage(), e);
+            log.error(" 添加文档失败: ID={}, 错误: {}", id, e.getMessage(), e);
         }
     }
 
@@ -157,7 +157,7 @@ public class VectorStoreService {
      * @param documents 文档列表
      */
     public void addDocuments(List<DocumentData> documents) {
-        log.info("📦 批量添加 {} 个文档到向量存储", documents.size());
+        log.info(" 批量添加 {} 个文档到向量存储", documents.size());
         
         int successCount = 0;
         for (DocumentData doc : documents) {
@@ -165,11 +165,11 @@ public class VectorStoreService {
                 addDocument(doc.getId(), doc.getText(), doc.getMetadata());
                 successCount++;
             } catch (Exception e) {
-                log.warn("⚠️ 批量添加文档失败: ID={}, 错误: {}", doc.getId(), e.getMessage());
+                log.warn(" 批量添加文档失败: ID={}, 错误: {}", doc.getId(), e.getMessage());
             }
         }
         
-        log.info("✅ 批量添加完成：成功 {}/{} 个文档", successCount, documents.size());
+        log.info(" 批量添加完成：成功 {}/{} 个文档", successCount, documents.size());
     }
 
     /**
@@ -191,14 +191,14 @@ public class VectorStoreService {
      */
     public List<EmbeddingMatch<TextSegment>> search(String query, int maxResults) {
         try {
-            log.debug("🔍 执行语义搜索: 查询=\"{}\", 最大结果数={}", query, maxResults);
+            log.debug(" 执行语义搜索: 查询=\"{}\", 最大结果数={}", query, maxResults);
             
             // 1. 查询向量化
             Embedding queryEmbedding = embeddingModel.embed(query).content();
             
-            // 2. 向量相似度搜索 - 使用新版本 API
+            // 2. 向量相似度搜索 
             try {
-                // 使用 EmbeddingSearchRequest - 移除minScore限制，让RagRetriever来过滤
+                // 使用 EmbeddingSearchRequest 
                 EmbeddingSearchRequest searchRequest = EmbeddingSearchRequest.builder()
                         .queryEmbedding(queryEmbedding)
                         .maxResults(maxResults * 2)  // 获取更多原始结果
@@ -207,7 +207,7 @@ public class VectorStoreService {
                 EmbeddingSearchResult<TextSegment> searchResult = embeddingStore.search(searchRequest);
                 List<EmbeddingMatch<TextSegment>> results = searchResult.matches();
                 
-                log.debug("🎯 搜索完成：找到 {} 个相关结果", results.size());
+                log.debug(" 搜索完成：找到 {} 个相关结果", results.size());
                 return results;
             } catch (Exception e1) {
                 // 如果搜索失败，返回空列表
@@ -216,13 +216,13 @@ public class VectorStoreService {
             }
             
         } catch (Exception e) {
-            log.error("❌ 语义搜索失败: 查询=\"{}\", 错误: {}", query, e.getMessage(), e);
+            log.error(" 语义搜索失败: 查询=\"{}\", 错误: {}", query, e.getMessage(), e);
             return Collections.emptyList();
         }
     }
 
     /**
-     * 🎯 分类检索 - 根据工具类别进行优化检索
+     *  分类检索 - 根据工具类别进行优化检索
      * 这是性能优化的核心方法，可以显著减少向量比对次数
      * 
      * @param query 查询文本
@@ -232,7 +232,7 @@ public class VectorStoreService {
      */
     public ClassifiedSearchResult searchByCategories(String query, List<String> categories, int maxResults) {
         try {
-            log.info("🎯 执行分类检索: 查询=\"{}\", 类别={}, 最大结果数={}", query, categories, maxResults);
+            log.info(" 执行分类检索: 查询=\"{}\", 类别={}, 最大结果数={}", query, categories, maxResults);
             
             // 1. 查询向量化
             Embedding queryEmbedding = embeddingModel.embed(query).content();
@@ -246,7 +246,7 @@ public class VectorStoreService {
             Map<String, Integer> categoryMatchCounts = new HashMap<>();
             
             for (String category : categories) {
-                log.debug("🔍 检索类别: {}", category);
+                log.debug(" 检索类别: {}", category);
                 
                 // 执行向量搜索
                 EmbeddingSearchRequest searchRequest = EmbeddingSearchRequest.builder()
@@ -266,7 +266,7 @@ public class VectorStoreService {
                 allMatches.addAll(filteredMatches);
                 categoryMatchCounts.put(category, filteredMatches.size());
                 
-                log.debug("✅ 类别 {} 检索完成：原始={}, 过滤后={}", 
+                log.debug(" 类别 {} 检索完成：原始={}, 过滤后={}", 
                     category, categoryMatches.size(), filteredMatches.size());
             }
             
@@ -288,16 +288,16 @@ public class VectorStoreService {
             result.setCategoryMatchCounts(categoryMatchCounts);
             result.setTotalMatches(finalMatches.size());
             
-            log.info("🎯 分类检索完成：总结果={}, 类别统计={}", 
+            log.info(" 分类检索完成：总结果={}, 类别统计={}", 
                 finalMatches.size(), categoryMatchCounts);
             
             return result;
             
         } catch (Exception e) {
-            log.error("❌ 分类检索失败: 查询=\"{}\", 类别={}, 错误: {}", query, categories, e.getMessage(), e);
+            log.error(" 分类检索失败: 查询=\"{}\", 类别={}, 错误: {}", query, categories, e.getMessage(), e);
             
             // 降级到全局检索
-            log.info("🔄 降级到全局检索...");
+            log.info(" 降级到全局检索...");
             List<EmbeddingMatch<TextSegment>> fallbackResults = search(query, maxResults);
             
             ClassifiedSearchResult fallbackResult = new ClassifiedSearchResult();
@@ -417,7 +417,7 @@ public class VectorStoreService {
      * 清空向量存储
      */
     public void clear() {
-        log.info("��️ 清空向量存储");
+        log.info("️ 清空向量存储");
         try {
             // 如果底层存储支持清空，优先调用其清空逻辑
             // 兼容不同实现：尝试反射调用 clear()/deleteAll()/reset()
@@ -426,19 +426,19 @@ public class VectorStoreService {
                 java.lang.reflect.Method m = embeddingStore.getClass().getMethod("clear");
                 m.invoke(embeddingStore);
                 cleared = true;
-                log.info("✅ 通过 embeddingStore.clear() 清空成功");
+                log.info("  通过 embeddingStore.clear() 清空成功");
             } catch (NoSuchMethodException ignore) {
                 try {
                     java.lang.reflect.Method m = embeddingStore.getClass().getMethod("deleteAll");
                     m.invoke(embeddingStore);
                     cleared = true;
-                    log.info("✅ 通过 embeddingStore.deleteAll() 清空成功");
+                    log.info("  通过 embeddingStore.deleteAll() 清空成功");
                 } catch (NoSuchMethodException ignore2) {
                     try {
                         java.lang.reflect.Method m = embeddingStore.getClass().getMethod("reset");
                         m.invoke(embeddingStore);
                         cleared = true;
-                        log.info("✅ 通过 embeddingStore.reset() 清空成功");
+                        log.info("  通过 embeddingStore.reset() 清空成功");
                     } catch (NoSuchMethodException ignore3) {
                         // 无可用API，跳过
                     }
@@ -449,23 +449,23 @@ public class VectorStoreService {
                 // 若无清空API，则根据当前类型做保守处理
                 if (embeddingStore instanceof InMemoryEmbeddingStore) {
         embeddingStore = new InMemoryEmbeddingStore<>();
-                    log.info("✅ 已重建 InMemoryEmbeddingStore");
+                    log.info("  已重建 InMemoryEmbeddingStore");
                 } else {
-                    log.warn("⚠️ 当前向量存储不支持直接清空API，将继续在原集合上追加重建数据");
+                    log.warn(" ️ 当前向量存储不支持直接清空API，将继续在原集合上追加重建数据");
                 }
             }
         } catch (Exception e) {
-            log.warn("⚠️ 清空向量存储时出现问题: {}", e.getMessage());
+            log.warn(" ️ 清空向量存储时出现问题: {}", e.getMessage());
         }
         vectorCache.clear();
     }
     
     /**
-     * 🚨 安全清理：删除向量数据库中的用户敏感信息
+     *   安全清理：删除向量数据库中的用户敏感信息
      * 该方法用于清理之前错误同步到向量数据库的用户敏感数据
      */
     public void clearUserSensitiveData() {
-        log.warn("🚨 开始清理向量数据库中的用户敏感信息...");
+        log.warn("  开始清理向量数据库中的用户敏感信息...");
         
         try {
             // 清理缓存中以 "user_" 开头的所有用户相关数据
@@ -479,12 +479,12 @@ public class VectorStoreService {
                 }
             }
             
-            log.warn("✅ 已从缓存中清理 {} 条用户敏感数据", removedFromCache);
-            log.warn("⚠️ 注意：已存储在持久化向量数据库中的用户数据需要重建整个向量数据库才能完全清理");
+            log.warn("  已从缓存中清理 {} 条用户敏感数据", removedFromCache);
+            log.warn(" ️ 注意：已存储在持久化向量数据库中的用户数据需要重建整个向量数据库才能完全清理");
             log.warn("建议：执行完整的向量数据库重建操作，确保用户隐私安全");
             
         } catch (Exception e) {
-            log.error("❌ 清理用户敏感数据失败: {}", e.getMessage(), e);
+            log.error(" 清理用户敏感数据失败: {}", e.getMessage(), e);
         }
     }
 
@@ -497,9 +497,9 @@ public class VectorStoreService {
      */
     public void upsert(String type, Long businessId, String text) {
         try {
-            log.debug("📝 Upsert文档到向量存储: 类型={}, ID={}, 文本长度={}", type, businessId, text.length());
+            log.debug(" Upsert文档到向量存储: 类型={}, ID={}, 文本长度={}", type, businessId, text.length());
             
-            // 🎯 智能选择处理策略
+            //  智能选择处理策略
             String strategy = detectOptimalStrategy(text, type);
             
             if (shouldUseChunking(text, type)) {
@@ -511,7 +511,7 @@ public class VectorStoreService {
             }
             
         } catch (Exception e) {
-            log.error("❌ Upsert操作失败: 类型={}, ID={}, 错误: {}", type, businessId, e.getMessage(), e);
+            log.error(" Upsert操作失败: 类型={}, ID={}, 错误: {}", type, businessId, e.getMessage(), e);
         }
     }
 
@@ -524,7 +524,7 @@ public class VectorStoreService {
      * @param strategy 处理策略
      */
     private void upsertWithChunking(String type, Long businessId, String text, String strategy) {
-        log.info("🔪 开始文档切分向量化: 类型={}, ID={}, 文本长度={}", type, businessId, text.length());
+        log.info(" 开始文档切分向量化: 类型={}, ID={}, 文本长度={}", type, businessId, text.length());
         
         // 1. 智能文本预处理
         String optimizedText = optimizeTextForEmbedding(text, type);
@@ -532,7 +532,7 @@ public class VectorStoreService {
         // 2. 文档切分
         List<TextChunk> chunks = splitDocument(optimizedText, type);
         
-        log.info("📊 文档切分完成: 原文长度={}, 切片数={}", text.length(), chunks.size());
+        log.info(" 文档切分完成: 原文长度={}, 切片数={}", text.length(), chunks.size());
         
         // 3. 删除旧的chunks（如果存在）
         deleteExistingChunks(type, businessId);
@@ -562,17 +562,17 @@ public class VectorStoreService {
                 successCount++;
                 
                 if (log.isDebugEnabled()) {
-                    log.debug("📥 Chunk向量化完成: {} (长度: {}, 位置: {}-{})", 
+                    log.debug(" Chunk向量化完成: {} (长度: {}, 位置: {}-{})",
                              chunkId, chunk.getText().length(), chunk.getStartPosition(), chunk.getEndPosition());
                 }
                 
             } catch (Exception e) {
-                log.warn("⚠️ Chunk向量化失败: 类型={}, ID={}, chunk={}, 错误: {}", 
+                log.warn(" ️ Chunk向量化失败: 类型={}, ID={}, chunk={}, 错误: {}", 
                         type, businessId, i, e.getMessage());
             }
         }
         
-        log.info("✅ 文档切分向量化完成: 类型={}, ID={}, 成功={}/{}, 策略={}", 
+        log.info("  文档切分向量化完成: 类型={}, ID={}, 成功={}/{}, 策略={}", 
                 type, businessId, successCount, chunks.size(), strategy);
     }
 
@@ -595,11 +595,11 @@ public class VectorStoreService {
         String optimizedText = optimizeTextForEmbedding(text, type);
         addDocument(documentId, optimizedText, metadata);
         
-        log.debug("✅ 整体向量化完成: {} (策略: {})", documentId, strategy);
+        log.debug("  整体向量化完成: {} (策略: {})", documentId, strategy);
     }
 
     /**
-     * 🧠 智能文本优化 - 基于文档类型和内容特征优化embedding效果
+     *  智能文本优化 - 基于文档类型和内容特征优化embedding效果
      */
     private String optimizeTextForEmbedding(String originalText, String type) {
         StringBuilder optimizedText = new StringBuilder();
@@ -635,7 +635,7 @@ public class VectorStoreService {
     }
 
     /**
-     * 🔍 检测最优策略
+     *  检测最优策略
      */
     private String detectOptimalStrategy(String text, String type) {
         if (text.length() > 1500 && text.split("\n\n").length > 3) {
@@ -833,7 +833,7 @@ public class VectorStoreService {
             // TODO: 实现删除逻辑，根据向量数据库的具体实现
             log.debug("🗑️ 删除已存在的chunks: type={}, businessId={}", type, businessId);
         } catch (Exception e) {
-            log.warn("⚠️ 删除chunks失败: type={}, businessId={}, error={}", type, businessId, e.getMessage());
+            log.warn(" ️ 删除chunks失败: type={}, businessId={}, error={}", type, businessId, e.getMessage());
         }
     }
 
@@ -940,7 +940,7 @@ public class VectorStoreService {
     }
 
     /**
-     * 📋 检查是否为结构化内容
+     *  检查是否为结构化内容
      */
     private boolean isStructuredContent(String text, String type) {
         return text.contains(":") || text.contains("：") || 
@@ -950,7 +950,7 @@ public class VectorStoreService {
     }
 
     /**
-     * 📝 获取类型描述
+     *  获取类型描述
      */
     private String getTypeDescription(String type) {
         switch (type) {
@@ -980,12 +980,12 @@ public class VectorStoreService {
             
             // 注意：当前的InMemoryEmbeddingStore不支持按ID删除
             // 在切换到Milvus后，这里需要调用相应的删除API
-            // 目前我们只从缓存中删除，下次全量重建时就不会包含这个文档了
+
             
-            log.debug("✅ 删除操作完成: {}", documentId);
+            log.debug("  删除操作完成: {}", documentId);
             
         } catch (Exception e) {
-            log.error("❌ 删除操作失败: 类型={}, ID={}, 错误: {}", type, businessId, e.getMessage(), e);
+            log.error(" 删除操作失败: 类型={}, ID={}, 错误: {}", type, businessId, e.getMessage(), e);
         }
     }
 
@@ -1028,19 +1028,19 @@ public class VectorStoreService {
                 if (!testResult.isEmpty()) {
                     // 如果能搜索到结果，说明有数据，返回一个非零值
                     // 这里我们无法获得确切数量，但至少知道不是空的
-                    log.debug("🔍 外部向量数据库检测到数据存在");
+                    log.debug(" 外部向量数据库检测到数据存在");
                     return 1; // 表示非空
                 } else {
-                    log.debug("🔍 外部向量数据库未检测到数据");
+                    log.debug(" 外部向量数据库未检测到数据");
                     return 0;
                 }
             } catch (Exception e) {
-                log.debug("🔍 无法检测外部向量数据库状态，假设为非空: {}", e.getMessage());
+                log.debug(" 无法检测外部向量数据库状态，假设为非空: {}", e.getMessage());
                 return 1; // 出错时假设有数据，避免重复初始化
             }
             
         } catch (Exception e) {
-            log.warn("⚠️ 获取文档数量失败，返回缓存大小: {}", e.getMessage());
+            log.warn(" ️ 获取文档数量失败，返回缓存大小: {}", e.getMessage());
             return vectorCache.size();
         }
     }
@@ -1052,9 +1052,9 @@ public class VectorStoreService {
         try {
             File file = new File(storagePath + "/vectors.json");
             objectMapper.writeValue(file, vectorCache);
-            log.info("💾 向量数据已持久化到文件: {}", file.getAbsolutePath());
+            log.info(" 向量数据已持久化到文件: {}", file.getAbsolutePath());
         } catch (IOException e) {
-            log.error("❌ 持久化向量数据失败", e);
+            log.error(" 持久化向量数据失败", e);
         }
     }
 
@@ -1063,9 +1063,9 @@ public class VectorStoreService {
      */
     @PreDestroy
     public void shutdown() {
-        log.info("🛑 向量存储服务关闭中...");
+        log.info(" 向量存储服务关闭中...");
         persistToFile();
-        log.info("✅ 向量存储服务已关闭");
+        log.info("  向量存储服务已关闭");
     }
 
     // ===================================================================
@@ -1080,9 +1080,9 @@ public class VectorStoreService {
         if (!dir.exists()) {
             boolean created = dir.mkdirs();
             if (created) {
-                log.info("📁 创建存储目录: {}", dir.getAbsolutePath());
+                log.info(" 创建存储目录: {}", dir.getAbsolutePath());
             } else {
-                log.warn("⚠️ 创建存储目录失败: {}", dir.getAbsolutePath());
+                log.warn(" ️ 创建存储目录失败: {}", dir.getAbsolutePath());
             }
         }
     }
@@ -1103,10 +1103,10 @@ public class VectorStoreService {
                     addDocument(data.getId(), data.getText(), data.getMetadata());
                 }
                 
-                log.info("📥 已加载 {} 个持久化向量", persistedData.size());
+                log.info(" 已加载 {} 个持久化向量", persistedData.size());
             }
         } catch (Exception e) {
-            log.warn("⚠️ 加载持久化向量数据失败: {}", e.getMessage());
+            log.warn(" ️ 加载持久化向量数据失败: {}", e.getMessage());
         }
     }
 

@@ -312,7 +312,7 @@ Page({
   onShareAppMessage() {
     return {
       title: `${this.data.userName}的荣誉证书`,
-      path: `/pages/user/achievements/index?userId=${this.data.userId}&userName=${this.data.userName}`
+      path: `/subpackages/user-related/pages/achievements/index?userId=${this.data.userId}&userName=${this.data.userName}`
     };
   }
 });

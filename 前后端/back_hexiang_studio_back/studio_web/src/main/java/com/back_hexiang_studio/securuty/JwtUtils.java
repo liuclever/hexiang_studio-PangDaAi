@@ -20,22 +20,39 @@ public class JwtUtils {
     @Value("${jwt.secret}")
     private String secret;
 
-    // token过期时间，从配置文件读取（单位：毫秒）
-    @Value("${jwt.expiration}")
-    private long expiration;
+    // Access Token过期时间（30分钟）
+    @Value("${jwt.access-expiration}")
+    private long accessExpiration;
+
+    // Refresh Token过期时间（7天）
+    @Value("${jwt.refresh-expiration}")
+    private long refreshExpiration;
     
     // 签发人，从配置文件读取
     @Value("${jwt.issuer}")
     private String issuer;
 
-    //根据用户id生成Token
-    public String generateToken(Long user_id){
+    //根据用户id生成AccessToken
+    public String generateAccessToken(Long userId){
         return Jwts.builder()
-                .setSubject(user_id.toString())//用户id放到subject中
+                .setSubject(userId.toString())//用户id放到subject中
+                .claim("type","access")//设置type为access
                 .signWith(SignatureAlgorithm.HS512, secret) //使用HS512算法，secret作为密钥
                 .setIssuer(issuer)//设置签发人
                 .setIssuedAt(new Date())//设置签发时间
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))//设置过期时间
+                .setExpiration(new Date(System.currentTimeMillis() + accessExpiration))//设置过期时间
+                .compact();//生成token
+    }
+
+    //根据用户id生成RefreshToken
+    public String generateRefreshToken(Long userId){
+        return Jwts.builder()
+                .setSubject(userId.toString())//用户id放到subject中
+                .claim("type","refresh")//设置type为refresh
+                .signWith(SignatureAlgorithm.HS512, secret) //使用HS512算法，secret作为密钥
+                .setIssuer(issuer)//设置签发人
+                .setIssuedAt(new Date())//设置签发时间
+                .setExpiration(new Date(System.currentTimeMillis() + refreshExpiration))//设置7天过期时间
                 .compact();//生成token
     }
 
@@ -49,18 +66,77 @@ public class JwtUtils {
         return Long.valueOf(claims.getSubject());//获取用户id
     }
 
-    //  检查令牌是否有效
-    public boolean isTokenValid(String token){
+    //  检查access token是否有效
+    public boolean isAccessTokenValid(String token){
         try{
-            //传入token ，利用 密钥解析 token
-            Jwts.parser().setSigningKey(secret).parseClaimsJws(token);
-            //如果解析成功，说明token没有过期
-            return true;
+            Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+
+            //验证token类型
+            String tokenType = claims.get("type", String.class);
+            if (!"access".equals(tokenType)){
+                return false;   //类型不匹配
+            }
+
+            // ✅ 修复：未过期返回true
+            return !claims.getExpiration().before(new Date());
         }catch (JwtException e){
             //如果解析失败，说明token过期
             return false;
         }
     }
 
+    // 检查refresh token是否有效
+    public boolean isRefreshTokenValid(String token){
+        try{
+            Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
 
+            //验证token类型
+            String tokenType = claims.get("type", String.class);
+            if (!"refresh".equals(tokenType)){
+                return false;   //类型不匹配
+            }
+
+            // ✅ 修复：未过期返回true
+            return !claims.getExpiration().before(new Date());
+        }catch (JwtException e){
+            //如果解析失败，说明token过期
+            return false;
+        }
+    }
+
+    //获取token剩余时间
+    public long getRemainingTime(String token){
+      try {
+          Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+          Date expiration = claims.getExpiration();
+          Long remaining = expiration.getTime() - System.currentTimeMillis();
+          return remaining > 0 ? remaining : -1;
+      }catch (JwtException e){
+          return -1;
+      }
+    }
+
+    //检查token是否过期 5分钟
+    public boolean isTokenAboutToExpired(String token){
+        long remainingTime = getRemainingTime(token);
+        return remainingTime >0 && remainingTime < 5*60*1000;
+    }
+
+    /**
+     * 根据用户id生成长期RefreshToken（记住密码用）
+     * @param userId 用户ID
+     * @return 长期RefreshToken（30天有效期）
+     */
+    public String generateLongTermRefreshToken(Long userId) {
+        long longTermExpiration = 30L * 24 * 60 * 60 * 1000; // 30天
+
+        return Jwts.builder()
+                .setSubject(userId.toString())
+                .claim("type", "refresh")
+                .signWith(SignatureAlgorithm.HS512, secret)
+                .setIssuer(issuer)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + longTermExpiration))
+                .compact();
+    }
 }
